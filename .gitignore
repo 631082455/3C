@@ -1,0 +1,12 @@
+# 本地私有知识区：公司/项目内部资料放这里，永不提交
+knowledge-local/
+
+# 编辑器与系统杂项
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# 本地 AI 会话残留
+.claude/
