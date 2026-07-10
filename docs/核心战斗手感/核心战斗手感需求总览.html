@@ -1,0 +1,4437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>核心战斗手感需求总览</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --paper: #ffffff;
+      --ink: #22272e;
+      --muted: #65717f;
+      --line: #d9dee5;
+      --soft: #eef2f5;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --bad: #8d3b3b;
+      --bad-soft: #fbe9e7;
+      --code: #172530;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, #eef2f5 0%, #f6f8fa 360px, #f5f6f8 100%);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    a { color: inherit; }
+    p, li, td, th { overflow-wrap: anywhere; }
+    h1, h2, h3, h4 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    ul, ol { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+      overflow-wrap: anywhere;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 24px;
+      width: min(1440px, calc(100vw - 36px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+    .toc {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: 0 16px 40px rgba(31, 42, 53, 0.06);
+    }
+    .toc-title {
+      padding: 8px 10px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .toc-title strong { display: block; font-size: 16px; }
+    .toc-title span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .toc nav { margin-top: 8px; }
+    .toc a {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      padding: 9px 10px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .toc a:hover { color: var(--ink); background: var(--soft); }
+    .toc a.is-active {
+      color: var(--ink);
+      background: var(--accent-soft);
+      font-weight: 720;
+    }
+    .toc a span {
+      flex: 0 0 auto;
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 22px;
+      border-radius: 6px;
+      background: #eef4f2;
+      color: var(--accent);
+      font-weight: 760;
+      font-size: 12px;
+    }
+    .section-nav-block {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .section-nav-title {
+      padding: 0 8px 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+    .section-nav a {
+      padding-left: 14px;
+      font-size: 12px;
+    }
+
+    .content { min-width: 0; }
+    .home {
+      scroll-margin-top: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      overflow: hidden;
+      box-shadow: 0 18px 44px rgba(31, 42, 53, 0.07);
+    }
+    .hero {
+      position: relative;
+      padding: 38px 42px 30px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(226, 241, 238, 0.78) 0%, rgba(255, 255, 255, 0) 48%),
+        #ffffff;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: 34px;
+      top: 34px;
+      width: 260px;
+      height: 128px;
+      border: 1px solid #d5e0e6;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, transparent 0 31%, #d5e0e6 31% 32%, transparent 32% 64%, #d5e0e6 64% 65%, transparent 65%),
+        radial-gradient(circle at 18% 50%, #256f65 0 7px, #e2f1ee 8px 34px, transparent 35px),
+        radial-gradient(circle at 50% 50%, #22577a 0 7px, #e5f0f8 8px 34px, transparent 35px),
+        radial-gradient(circle at 82% 50%, #8a5b18 0 7px, #fff4dd 8px 34px, transparent 35px),
+        #fbfcfd;
+      opacity: 0.95;
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hero h1 { margin-top: 8px; max-width: 760px; font-size: 40px; font-weight: 780; }
+    .hero p { max-width: 760px; font-size: 16px; }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .hero-meta span, .module-index {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .home-body { padding: 30px 34px 36px; }
+    .home-body h2 { font-size: 22px; font-weight: 760; }
+    .home-lead {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: end;
+    }
+    .home-lead p { max-width: 620px; }
+    .home-count {
+      color: #a8b2bc;
+      font-size: 42px;
+      font-weight: 780;
+      line-height: 1;
+    }
+    .module-group-title {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 760;
+    }
+    .module-group-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .module-cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .module-card {
+      position: relative;
+      display: grid;
+      align-content: start;
+      gap: 9px;
+      min-height: 156px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      text-decoration: none;
+      box-shadow: 0 10px 26px rgba(31, 42, 53, 0.04);
+      transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+    .module-card:hover {
+      border-color: #9bcfc5;
+      background: #fbfefd;
+      box-shadow: 0 18px 34px rgba(31, 42, 53, 0.08);
+      transform: translateY(-2px);
+    }
+    .module-card .card-index,
+    .module-card .card-group {
+      display: none;
+    }
+    .module-card strong { font-size: 17px; line-height: 1.35; }
+    .card-summary { color: var(--ink); font-weight: 700; line-height: 1.55; }
+    .card-effect { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    .module-section {
+      display: none;
+      margin-top: 26px;
+      scroll-margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      overflow: hidden;
+    }
+    .module-section.is-active { display: block; }
+    body.view-module .home { display: none; }
+    .module-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 28px 32px 22px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .module-top h2 { margin-top: 10px; font-size: 28px; font-weight: 780; }
+    .module-top p { max-width: 880px; }
+    .module-actions {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 8px;
+      align-items: flex-start;
+      padding-top: 2px;
+    }
+    .module-actions a {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .module-actions a:hover { color: var(--ink); background: var(--soft); }
+    .module-brief {
+      margin: 24px 32px 0;
+      padding: 14px 16px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+    .module-brief strong { font-size: 15px; }
+    .module-body { padding: 0 0 12px; }
+    .module-body > section, .module-body .section {
+      padding: 26px 32px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 20px;
+    }
+    .module-body > section:last-child, .module-body .section:last-child { border-bottom: none; }
+    .module-body h2 { font-size: 22px; font-weight: 760; }
+    .module-body h3 { font-size: 17px; font-weight: 720; }
+    .module-body h4 { font-size: 15px; font-weight: 720; }
+    .module-body h2 + p, .module-body h3 + p { margin-top: 8px; }
+
+    .module-body table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    .module-body th, .module-body td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    .module-body th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 13px;
+      font-weight: 740;
+    }
+    .module-body tr:last-child td { border-bottom: none; }
+    .module-body pre {
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #e8f1f7;
+      overflow: auto;
+      font: 13px/1.65 var(--mono);
+    }
+    .module-body svg { display: block; width: 100%; height: auto; }
+    .diagram, .media-frame, .media-demo {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    .caption { margin-top: 8px; color: var(--muted); font-size: 13px; }
+
+    .grid, .split, .mini-grid, .case-grid, .media-grid, .scene-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .grid, .split, .mini-grid, .case-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .media-grid, .scene-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .wide, .full, .single { grid-column: 1 / -1; }
+    .box, .panel, .case-card, .decision, .block, .scene, .callout {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .scene { padding: 0; overflow: hidden; }
+    .scene-body { padding: 12px 14px 14px; }
+    .blue { border-color: #c8dced; background: var(--blue-soft); }
+    .note, .rule, .risk, .danger, .success, .priority {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+    }
+    .note { border: 1px solid #ecd6ad; background: var(--warn-soft); color: #604219; }
+    .rule, .success { border-left: 4px solid var(--accent); background: var(--accent-soft); }
+    .risk, .danger { border: 1px solid #e8c1bc; background: var(--bad-soft); color: #6b302c; }
+    .priority, .p0, .p1, .p2, .cancel, .parallel, .cache, .protect, .later {
+      border-radius: var(--radius);
+    }
+    .p0 { background: #fbe9e7; }
+    .p1 { background: #fff4dd; }
+    .p2 { background: #e5f0f8; }
+
+    .chips, .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .chip, .tag, .pill, .label, .num, .legend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 3px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .mint, .green { color: #256f65; background: #e2f1ee; border-color: #9bcfc5; }
+    .rose { color: #8d3b3b; background: #fbe9e7; border-color: #e8c1bc; }
+    .gold, .warn { color: #8a5b18; background: #fff4dd; border-color: #ecd6ad; }
+    .lead { font-size: 16px; color: var(--muted); }
+    .eyebrow, .diagram-kicker, .scene-kicker {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .diagram-title, .section-head { margin-top: 16px; }
+    .hero { border-radius: 0; }
+
+    @media (max-width: 1100px) {
+      .shell { grid-template-columns: 1fr; }
+      .toc { position: static; max-height: none; }
+      .hero::after { display: none; }
+      .hero h1, .hero p { max-width: none; }
+      .module-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .module-top { flex-direction: column; }
+      .module-actions { flex-wrap: wrap; }
+    }
+    @media (max-width: 780px) {
+      .shell { width: min(100vw - 20px, 1500px); padding-top: 14px; }
+      .hero, .home-body, .module-top, .module-body > section, .module-body .section { padding-left: 20px; padding-right: 20px; }
+      .module-brief { margin-left: 20px; margin-right: 20px; }
+      .hero h1 { font-size: 30px; }
+      .module-top h2 { font-size: 24px; }
+      .home-lead { display: block; }
+      .home-count { display: none; }
+      .module-cards { grid-template-columns: 1fr; }
+      .grid, .split, .mini-grid, .case-grid, .media-grid, .scene-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="toc">
+      <div class="toc-title">
+        <strong>核心战斗手感</strong>
+        <span>需求总览 / 合并阅读页</span>
+      </div>
+      <nav class="module-nav" id="moduleNav">
+        <a href="#home"><span>00</span>首页总览</a>
+        <a href="#skill-release"><span>01</span>Skill - 技能释放关系系统</a>
+        <a href="#single-target"><span>02</span>Skill - 单体施法选取 V2</a>
+        <a href="#area-placement"><span>03</span>Skill - 范围施法落点</a>
+        <a href="#camera"><span>04</span>Camera - 镜头迭代需求</a>
+        <a href="#upper-body-animation"><span>05</span>Animation - 上半身动作融合部分盆骨表现</a>
+        <a href="#projectile-muzzle"><span>06</span>Projectile - 实体弹道发射点</a>
+        <a href="#hit-effect"><span>07</span>Effect - 命中特效系统 V1</a>
+      </nav>
+      <div class="section-nav-block" id="sectionNavBlock" hidden>
+        <div class="section-nav-title" id="sectionNavTitle">当前模块章节</div>
+        <nav class="section-nav" id="sectionNav"></nav>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="home" id="home">
+        <div class="hero">
+          <div class="kicker">Combat 3C Requirement Hub</div>
+          <h1>核心战斗手感需求总览</h1>
+          <p>当前战斗手感的问题不只来自单个技能，而是来自输入、镜头、动画、弹道、命中反馈和服务器判定之间的口径不一致。这个总览把相关需求收在一起，先统一规则边界和验收标准，再逐步落到具体模块。</p>
+          <div class="hero-meta">
+            <span>覆盖 7 个 H5 文档</span>
+            <span>左侧目录可直接跳转</span>
+            <span>原始文档保留为独立文件</span>
+            <span>排序按技能链路优先</span>
+          </div>
+        </div>
+        <div class="home-body">
+          <div class="home-lead">
+            <div>
+              <h2>模块带来的效果和提升</h2>
+              <p>按技能释放、3C 表现、命中链路分组。点击卡片进入单模块视图，左侧会切换成该模块章节导航。</p>
+            </div>
+            <div class="home-count">7</div>
+          </div>
+          <div class="module-cards">
+          <div class="module-group-title">技能释放链路</div>
+          <a class="module-card" href="#skill-release">
+            <span class="card-index">01</span>
+            <span class="card-group">技能释放</span>
+            <strong>Skill - 技能释放关系系统</strong>
+            <span class="card-summary">统一打断、并行、互斥、缓存语义，减少技能特判，让释放手感可预测。</span>
+            <span class="card-effect">关注：技能相遇规则、输入缓存、窗口例外。</span>
+          </a>
+          <a class="module-card" href="#single-target">
+            <span class="card-index">02</span>
+            <span class="card-group">技能释放</span>
+            <strong>Skill - 单体施法选取 V2</strong>
+            <span class="card-summary">降低单体技能选人负担，统一预选、锁定、释放决议和失效反馈。</span>
+            <span class="card-effect">关注：预选、锁定、失效、服务器校验。</span>
+          </a>
+          <a class="module-card" href="#area-placement">
+            <span class="card-index">03</span>
+            <span class="card-group">技能释放</span>
+            <strong>Skill - 范围施法落点</strong>
+            <span class="card-summary">统一范围技能落点、吸附、合法性和服务器复检，提升预览可信度。</span>
+            <span class="card-effect">关注：地面点、吸附边界、抛物线终点。</span>
+          </a>
+          <div class="module-group-title">3C 表现链路</div>
+          <a class="module-card" href="#camera">
+            <span class="card-index">04</span>
+            <span class="card-group">3C 表现</span>
+            <strong>Camera - 镜头迭代需求</strong>
+            <span class="card-summary">统一基础镜头、状态修饰和反馈层，提升移动、瞄准、战斗可读性，减少晕感和镜头特判。</span>
+            <span class="card-effect">关注：基础镜头、状态修饰、战斗反馈。</span>
+          </a>
+          <a class="module-card" href="#upper-body-animation">
+            <span class="card-index">05</span>
+            <span class="card-group">3C 表现</span>
+            <strong>Animation - 上半身动作融合部分盆骨表现</strong>
+            <span class="card-summary">解决上半身动作和下半身移动互相抢表现的问题，提升移动射击、移动施法时的身体稳定性。</span>
+            <span class="card-effect">关注：移动开火、移动施法、骨盆稳定。</span>
+          </a>
+          <div class="module-group-title">命中反馈链路</div>
+          <a class="module-card" href="#projectile-muzzle">
+            <span class="card-index">06</span>
+            <span class="card-group">命中链路</span>
+            <strong>Projectile - 实体弹道发射点</strong>
+            <span class="card-summary">统一镜头、枪口、手部、弹道起点的关系，减少实体弹偏移、穿模、打不到准星的问题。</span>
+            <span class="card-effect">关注：视觉起点、逻辑起点、准星意图。</span>
+          </a>
+          <a class="module-card" href="#hit-effect">
+            <span class="card-index">07</span>
+            <span class="card-group">命中链路</span>
+            <strong>Effect - 命中特效系统 V1</strong>
+            <span class="card-summary">统一命中特效的触发、材质、部位、伤害反馈，提升打击反馈一致性和配置效率。</span>
+            <span class="card-effect">关注：触发源、材质、部位、结果反馈。</span>
+          </a>
+          </div>
+        </div>
+      </section>
+
+      <article class="module-section" id="skill-release">
+        <div class="module-top">
+          <div>
+            <span class="module-index">01 · 技能释放</span>
+            <h2>Skill - 技能释放关系系统</h2>
+            <p>统一打断、并行、互斥、缓存语义，减少技能特判，让释放手感可预测。</p>
+          </div>
+          <div class="module-actions">
+            <a href="#home">回到首页</a>
+            <a href="Skill%20-%20%E6%8A%80%E8%83%BD%E9%87%8A%E6%94%BE%E5%85%B3%E7%B3%BB%E7%B3%BB%E7%BB%9F%EF%BC%88%E6%89%93%E6%96%AD%E3%80%81%E5%B9%B6%E8%A1%8C%E3%80%81%E4%BA%92%E6%96%A5%E3%80%81%E7%BC%93%E5%AD%98%EF%BC%89.html" target="_blank" rel="noreferrer">打开原文件</a>
+          </div>
+        </div>
+        <div class="module-brief">
+          <strong>效果提升</strong>
+          <p>把“新技能遇到旧技能时发生什么”变成可配置、可验收的公共语义，降低后续技能扩展成本。</p>
+        </div>
+        <div class="module-body">
+<section id="skill-release-background">
+          <h2>1. 背景与目标</h2>
+          <p>当前项目已经有 GAS 的标签阻挡、取消能力，也有 <code>HeroAbility</code> 层的输入、动画、RootMotion、镜头等自定义逻辑。随着角色技能增多，如果继续靠单个技能特判处理“谁能打断谁、谁能并行、谁互斥”，策划会很难预测最终表现，程序也会很难维护。</p>
+
+          <div class="decision">
+            <strong>本版目标：</strong>
+            <ul>
+              <li>统一技能相遇时的策划语义，避免“互斥”“打断”“阻挡”混用。</li>
+              <li>策划能配置技能默认关系，也能为少数关键窗口配置例外。</li>
+              <li>输入缓存作为全局输入策略管理，技能卡只声明少量例外。</li>
+              <li>程序能按固定顺序判定，不允许单个技能绕过公共规则。</li>
+              <li>逻辑允许并行时，必须同步检查动画、移动、镜头等表现层是否成立。</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="skill-release-scope">
+          <h2>2. 本版范围</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>类型</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>本版支持</td>
+                <td>阻挡、打断、并行、全局输入缓存策略、不可打断窗口；默认关系；少量窗口和缓存例外；表现层并行验收。</td>
+              </tr>
+              <tr>
+                <td>本版不做</td>
+                <td>全技能全窗口的 N × N × M 完整矩阵；技能对技能缓存矩阵；所有角色历史技能一次性重配；完整编辑器工具链；AI 自动平衡技能关系。</td>
+              </tr>
+              <tr>
+                <td>首批样例</td>
+                <td>普通攻击与技能的双向关系；技能期间是否阻挡开火；开火期间是否阻挡技能；持续开火类技能与 Dash 并行；强技能起手不可打断；Holding / 蓄力技能的取消与缓存例外。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            本版先解决“语义和配置口径”，不是要求一次性重构底层实现。能映射到现有 GAS 字段的先映射，不能映射的放入窗口规则或程序备注。
+          </div>
+
+          <div class="risk">
+            <strong>配置方向必须明确：</strong>
+            “技能期间不能开火”和“开火期间不能放技能”是两个方向。前者应让开火技能在启动时被技能 Tag 阻挡；后者才是让技能在启动时被开火 Tag 阻挡。
+          </div>
+        </section>
+
+        <section id="skill-release-terms">
+          <h2>3. 术语与规则</h2>
+          <p>策划可以使用“互斥”这个词讨论需求，但正式配置和验收时必须拆成具体结果：是新技能被阻挡，还是新技能启动并打断旧技能。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>术语</th>
+                <th>类型</th>
+                <th>策划定义</th>
+                <th>验收口径</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="pill block">阻挡</span></td>
+                <td>结果</td>
+                <td>技能 A 正在释放时，技能 B 输入进来，但 B 不能启动。</td>
+                <td>A 继续，B 不启动；是否缓存由全局输入策略决定。</td>
+              </tr>
+              <tr>
+                <td><span class="pill cancel">打断</span></td>
+                <td>结果</td>
+                <td>B 可以启动，并结束当前正在释放的 A。</td>
+                <td>B 成功激活，A 被取消或结束。</td>
+              </tr>
+              <tr>
+                <td><span class="pill parallel">并行</span></td>
+                <td>结果</td>
+                <td>B 可以启动，A 继续存在。</td>
+                <td>A 和 B 同时有效，表现层也不能冲突。</td>
+              </tr>
+              <tr>
+                <td><span class="pill cache">缓存</span></td>
+                <td>全局输入策略</td>
+                <td>B 因阻挡不能启动时，系统短时间保留这次输入。</td>
+                <td>阻挡原因解除后重新尝试激活 B；技能只配置例外，不配置完整关系矩阵。</td>
+              </tr>
+              <tr>
+                <td><span class="pill protect">不可打断</span></td>
+                <td>窗口属性</td>
+                <td>A 当前窗口不接受普通打断。</td>
+                <td>普通打断规则不能结束 A；B 是否被阻挡由关系判定，缓存由全局策略判定。</td>
+              </tr>
+              <tr>
+                <td>互斥</td>
+                <td>策划讨论词</td>
+                <td>A 和 B 不能稳定共存。</td>
+                <td>正式配置时必须落为“阻挡 B”或“B 打断 A”。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">判定顺序</h3>
+          <div class="diagram">
+            <svg viewBox="0 0 980 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能语义判定流程图">
+              <rect width="980" height="240" fill="#fff"/>
+              <g fill="#e2f1ee" stroke="#78aaa1" stroke-width="2">
+                <rect x="24" y="84" width="130" height="58" rx="8"/>
+                <rect x="188" y="84" width="130" height="58" rx="8"/>
+                <rect x="352" y="84" width="130" height="58" rx="8"/>
+                <rect x="516" y="84" width="130" height="58" rx="8"/>
+                <rect x="680" y="84" width="130" height="58" rx="8"/>
+                <rect x="844" y="84" width="112" height="58" rx="8"/>
+              </g>
+              <g fill="#25313a" font-family="Segoe UI, Microsoft YaHei" font-size="16" text-anchor="middle">
+                <text x="89" y="108">输入技能 B</text>
+                <text x="89" y="130">尝试释放</text>
+                <text x="253" y="108">基础条件</text>
+                <text x="253" y="130">冷却/消耗/状态</text>
+                <text x="417" y="108">读取技能 A</text>
+                <text x="417" y="130">当前窗口</text>
+                <text x="581" y="108">关系判定</text>
+                <text x="581" y="130">阻挡/打断/并行</text>
+                <text x="745" y="108">全局缓存</text>
+                <text x="745" y="130">仅阻挡时进入</text>
+                <text x="900" y="108">执行表现</text>
+                <text x="900" y="130">并行需验证</text>
+              </g>
+              <g stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#skill-release-arrow)">
+                <path d="M154 113 H188"/>
+                <path d="M318 113 H352"/>
+                <path d="M482 113 H516"/>
+                <path d="M646 113 H680"/>
+                <path d="M810 113 H844"/>
+              </g>
+              <defs>
+                <marker id="skill-release-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+        </section>
+
+        <section id="skill-release-scenes">
+          <h2>4. 使用场景</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>需求</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>普攻输入打断弱技能</td>
+                <td>普通攻击作为基础高频输入时，可以打断部分弱技能或技能收招段。</td>
+                <td>需要避免普攻无脑打断强技能关键窗口。</td>
+              </tr>
+              <tr>
+                <td>Dash 插入持续开火</td>
+                <td>持续开火 Active 期允许 Dash 并行，保留移动射击手感。</td>
+                <td>逻辑并行后，动画、Overlay、武器状态必须稳定。</td>
+              </tr>
+              <tr>
+                <td>强技能起手保护</td>
+                <td>强技能 Startup 可配置不可打断，防止被轻技能低成本压制。</td>
+                <td>不可打断不是全程霸体，窗口需要明确。</td>
+              </tr>
+              <tr>
+                <td>蓄力 / Holding 技能被取消</td>
+                <td>部分技能输入进来时可以取消 Holding；部分情况下应阻挡或缓存。</td>
+                <td>需要和现有 HoldingAbility 逻辑兼容。</td>
+              </tr>
+              <tr>
+                <td>RootMotion 技能中输入新技能</td>
+                <td>新技能是否能启动，需要考虑移动控制权和动画完整性。</td>
+                <td>不能只看 GAS 关系，必须有表现层验收。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">技能窗口示意</h3>
+          <div class="diagram">
+            <svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能窗口时间轴">
+              <rect width="900" height="210" fill="#fff"/>
+              <line x1="70" y1="100" x2="820" y2="100" stroke="#66727e" stroke-width="3"/>
+              <g fill="#256f65">
+                <circle cx="90" cy="100" r="6"/>
+                <circle cx="260" cy="100" r="6"/>
+                <circle cx="520" cy="100" r="6"/>
+                <circle cx="730" cy="100" r="6"/>
+              </g>
+              <g fill="#25313a" font-family="Segoe UI, Microsoft YaHei" font-size="15" text-anchor="middle">
+                <text x="90" y="64">0.00s</text>
+                <text x="90" y="130">输入 / 起手</text>
+                <text x="260" y="64">Startup</text>
+                <text x="260" y="130">可被打断或保护</text>
+                <text x="520" y="64">Active</text>
+                <text x="520" y="130">命中 / 持续效果</text>
+                <text x="730" y="64">Recovery</text>
+                <text x="730" y="130">收招 / 可取消</text>
+              </g>
+              <rect x="204" y="150" width="150" height="32" rx="16" fill="#eee6ff"/>
+              <text x="279" y="171" text-anchor="middle" fill="#584180" font-family="Segoe UI, Microsoft YaHei" font-size="14">可配置不可打断</text>
+              <rect x="455" y="150" width="130" height="32" rx="16" fill="#dff2ec"/>
+              <text x="520" y="171" text-anchor="middle" fill="#1e604f" font-family="Segoe UI, Microsoft YaHei" font-size="14">可配置并行</text>
+            </svg>
+          </div>
+        </section>
+
+        <section id="skill-release-config">
+          <h2>5. 配置需求</h2>
+          <p>推荐使用“全局策略 + 技能卡 + 窗口规则 + 表现协议”的配置方式。这里先说明各层各管什么，具体怎么填看后面的“策划最终配置口径”。</p>
+
+          <div class="decision">
+            <strong>静态 GAS 字段的配置方向：</strong>
+            <ul>
+              <li><code>ActivationBlockedTags</code> 配在“来袭技能 B”上，含义是：B 启动时，如果角色身上已有 A 的 Tag，则 B 被阻挡。</li>
+              <li><code>CancelAbilitiesWithTag</code> 也配在“来袭技能 B”上，含义是：B 启动成功后，取消身上带 A Tag 的旧技能。</li>
+              <li>因此“技能期间不能开火”应配置在开火技能上：<code>Attack.ActivationBlockedTags += 技能Tag</code>。</li>
+            </ul>
+          </div>
+
+          <div class="diagram">
+            <svg viewBox="0 0 980 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GAS 标签关系配置方向示意">
+              <rect width="980" height="300" fill="#fff"/>
+              <defs>
+                <marker id="skill-release-arrow-config" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+              <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle">
+                <rect x="48" y="66" width="210" height="72" rx="8" fill="#eee6ff" stroke="#a492c9" stroke-width="2"/>
+                <text x="153" y="96" font-size="18" fill="#2f2a37" font-weight="700">当前技能 A</text>
+                <text x="153" y="121" font-size="14" fill="#584180">正在 Active，身上有 ATag</text>
+
+                <rect x="388" y="66" width="210" height="72" rx="8" fill="#e5f0f8" stroke="#8bb4d1" stroke-width="2"/>
+                <text x="493" y="96" font-size="18" fill="#2f2a37" font-weight="700">来袭技能 B</text>
+                <text x="493" y="121" font-size="14" fill="#22577a">玩家此刻输入，尝试启动</text>
+
+                <rect x="722" y="42" width="210" height="56" rx="8" fill="#ffded9" stroke="#d69a91" stroke-width="2"/>
+                <text x="827" y="66" font-size="14" fill="#7a2d24">B.ActivationBlockedTags</text>
+                <text x="827" y="84" font-size="14" fill="#7a2d24">包含 ATag</text>
+                <rect x="722" y="122" width="210" height="56" rx="8" fill="#ffe9bf" stroke="#e3bc75" stroke-width="2"/>
+                <text x="827" y="146" font-size="14" fill="#6f3f08">B.CancelAbilitiesWithTag</text>
+                <text x="827" y="164" font-size="14" fill="#6f3f08">包含 ATag</text>
+                <rect x="722" y="202" width="210" height="56" rx="8" fill="#dff2ec" stroke="#8dbfb1" stroke-width="2"/>
+                <text x="827" y="235" font-size="15" fill="#1e604f">两者都没有命中</text>
+
+                <text x="322" y="104" font-size="14" fill="#66727e">输入关系看 B 的配置</text>
+                <text x="660" y="58" font-size="13" fill="#7a2d24">结果：阻挡 B</text>
+                <text x="660" y="138" font-size="13" fill="#6f3f08">结果：B 打断 A</text>
+                <text x="660" y="218" font-size="13" fill="#1e604f">结果：可能并行</text>
+              </g>
+              <g stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#skill-release-arrow-config)">
+                <path d="M258 102 H388"/>
+                <path d="M598 102 C650 102 666 70 722 70"/>
+                <path d="M598 102 C650 102 666 150 722 150"/>
+                <path d="M598 102 C650 102 666 230 722 230"/>
+              </g>
+              <g font-family="Segoe UI, Microsoft YaHei" font-size="14" fill="#604219">
+                <rect x="48" y="214" width="550" height="48" rx="8" fill="#fff4dd" stroke="#ecd6ad"/>
+                <text x="70" y="244">示例：要让 Dash / Bomb 期间不能开火，配置点是 GA_Attack.ActivationBlockedTags += Dash / Bomb。</text>
+              </g>
+            </svg>
+          </div>
+
+          <h3 style="margin-top:22px;">配置分层</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>配置层</th>
+                <th>负责内容</th>
+                <th>不负责内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>全局策略</td>
+                <td>统一默认值，例如缓存时长、输入槽规则、判定顺序。</td>
+                <td>不按技能对技能维护特殊表。</td>
+              </tr>
+              <tr>
+                <td>技能卡</td>
+                <td>每个技能自己的默认关系：谁阻挡我、我打断谁、我和谁并行。</td>
+                <td>不写模糊的“互斥”，不假定并行表现一定成立。</td>
+              </tr>
+              <tr>
+                <td>窗口规则</td>
+                <td>Startup / Active / Recovery 中少量不同于默认关系的例外。</td>
+                <td>不替代整段 Ability 的默认关系。</td>
+              </tr>
+              <tr>
+                <td>缓存例外</td>
+                <td>默认走全局策略；只有特殊技能或窗口声明能缓存、不能缓存、改写时长。</td>
+                <td>不作为阻挡、打断、并行之外的第四种关系。</td>
+              </tr>
+              <tr>
+                <td>表现协议</td>
+                <td>并行成立后的动画、移动、镜头、武器和特效验收。</td>
+                <td>不反过来决定逻辑关系；表现不稳时回退到阻挡或打断。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">Montage 式窗口关系图</h3>
+          <p>技能关系的细颗粒度不是“技能 A 和技能 B 是否互斥”这么简单，而是“技能 A 当前处在哪个时间窗口时，来袭技能 B 应该得到什么结果”。</p>
+
+          <div class="diagram">
+            <svg viewBox="0 0 980 390" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能窗口与来袭输入关系矩阵">
+              <rect width="980" height="390" fill="#fff"/>
+              <defs>
+                <marker id="skill-release-arrow-window" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+              <g font-family="Segoe UI, Microsoft YaHei">
+                <text x="48" y="42" font-size="20" fill="#22272e" font-weight="760">当前技能 A：FastFire 时间轴</text>
+                <rect x="168" y="72" width="190" height="68" rx="8" fill="#eee6ff" stroke="#a492c9" stroke-width="2"/>
+                <rect x="358" y="72" width="310" height="68" rx="0" fill="#dff2ec" stroke="#8dbfb1" stroke-width="2"/>
+                <rect x="668" y="72" width="190" height="68" rx="8" fill="#fff4dd" stroke="#ecd6ad" stroke-width="2"/>
+                <text x="263" y="100" font-size="17" fill="#584180" text-anchor="middle" font-weight="700">Startup</text>
+                <text x="263" y="124" font-size="13" fill="#584180" text-anchor="middle">起手，可保护/可被打断</text>
+                <text x="513" y="100" font-size="17" fill="#1e604f" text-anchor="middle" font-weight="700">Active</text>
+                <text x="513" y="124" font-size="13" fill="#1e604f" text-anchor="middle">持续开火，可能允许位移并行</text>
+                <text x="763" y="100" font-size="17" fill="#604219" text-anchor="middle" font-weight="700">Recovery</text>
+                <text x="763" y="124" font-size="13" fill="#604219" text-anchor="middle">收招，可接续/可缓存</text>
+
+                <line x1="110" y1="106" x2="168" y2="106" stroke="#66727e" stroke-width="2" marker-end="url(#skill-release-arrow-window)"/>
+                <text x="48" y="110" font-size="14" fill="#66727e">时间推进</text>
+
+                <g text-anchor="middle" font-size="13">
+                  <rect x="92" y="178" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
+                  <text x="140" y="203" fill="#22577a">输入 Attack</text>
+                  <rect x="92" y="238" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
+                  <text x="140" y="263" fill="#22577a">输入 Dash</text>
+                  <rect x="92" y="298" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
+                  <text x="140" y="323" fill="#22577a">输入 Bomb</text>
+                </g>
+
+                <g font-size="13" text-anchor="middle">
+                  <rect x="212" y="178" width="130" height="40" rx="6" fill="#ffded9"/>
+                  <text x="277" y="203" fill="#7a2d24">阻挡 Attack</text>
+                  <rect x="442" y="178" width="150" height="40" rx="6" fill="#ffded9"/>
+                  <text x="517" y="203" fill="#7a2d24">阻挡或并行，需定</text>
+                  <rect x="704" y="178" width="130" height="40" rx="6" fill="#ffe9bf"/>
+                  <text x="769" y="203" fill="#6f3f08">允许/打断收招</text>
+
+                  <rect x="212" y="238" width="130" height="40" rx="6" fill="#ffe9bf"/>
+                  <text x="277" y="263" fill="#6f3f08">打断或阻挡</text>
+                  <rect x="442" y="238" width="150" height="40" rx="6" fill="#dff2ec"/>
+                  <text x="517" y="263" fill="#1e604f">并行 Dash + 开火</text>
+                  <rect x="704" y="238" width="130" height="40" rx="6" fill="#ffe9bf"/>
+                  <text x="769" y="263" fill="#6f3f08">Dash 打断收招</text>
+
+                  <rect x="212" y="298" width="130" height="40" rx="6" fill="#ffded9"/>
+                  <text x="277" y="323" fill="#7a2d24">阻挡 Bomb</text>
+                  <rect x="442" y="298" width="150" height="40" rx="6" fill="#ffded9"/>
+                  <text x="517" y="323" fill="#7a2d24">阻挡 Bomb</text>
+                  <rect x="704" y="298" width="130" height="40" rx="6" fill="#dfecff"/>
+                  <text x="769" y="323" fill="#274d7d">接续/缓存例外</text>
+                </g>
+
+                <g stroke="#66727e" stroke-width="1.5" fill="none" marker-end="url(#skill-release-arrow-window)">
+                  <path d="M188 198 H212"/>
+                  <path d="M188 258 H212"/>
+                  <path d="M188 318 H212"/>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <div class="note">
+            静态 GAS 字段只能表达“整段 Ability Active 期间”的默认关系。如果同一个来袭输入在 Startup、Active、Recovery 的结果不同，就需要窗口 Tag、AnimNotifyState 或统一求值器支持窗口级覆盖。
+          </div>
+
+          <h3 style="margin-top:22px;">全局缓存策略</h3>
+          <p>缓存不是第四种技能关系，也不需要做成“技能 A 对技能 B 是否缓存”的完整矩阵。关系求值只回答阻挡、打断、并行；当结果是阻挡时，系统再按全局输入缓存策略处理这次输入。技能卡只声明少量例外。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>策略项</th>
+                <th>建议口径</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>触发前提</td>
+                <td>来袭技能被阻挡，且输入来源属于可缓存输入。</td>
+              </tr>
+              <tr>
+                <td>默认窗口</td>
+                <td>系统层统一短窗口，例如 100-180ms；首版建议先定一个全局值。</td>
+              </tr>
+              <tr>
+                <td>缓存槽</td>
+                <td>默认每个输入通道只保留最后一次有效输入，避免旧输入连锁触发。</td>
+              </tr>
+              <tr>
+                <td>重试时机</td>
+                <td>阻挡 Tag 或窗口解除后，在统一输入刷新点重新尝试激活。</td>
+              </tr>
+              <tr>
+                <td>重试校验</td>
+                <td>必须重新检查冷却、消耗、目标、距离、状态和服务器权限。</td>
+              </tr>
+              <tr>
+                <td>例外来源</td>
+                <td>技能卡或窗口规则只声明：能缓存、不能缓存，或覆盖缓存时长。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="risk">
+            <strong>不要做成关系矩阵：</strong>
+            “Dash 被 Bomb 阻挡时能缓存、Attack 被 Bomb 阻挡时不能缓存”这类需求，落点应是 Dash / Attack 自己的缓存例外，或 Bomb 某个窗口的缓存例外，而不是给每一对技能新增一个缓存关系。
+          </div>
+
+          <h3 style="margin-top:22px;">策划最终配置口径</h3>
+          <p>策划最终不是直接写“互斥”或“并行感觉可以”，而是按“来袭技能 B 怎么处理当前技能 A”的方向，给每个技能填三类静态关系；缓存另按全局策略处理，只在技能或窗口上记录少量例外。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>策划要填的内容</th>
+                <th>问题口径</th>
+                <th>程序落点</th>
+                <th>例子</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>阻挡我启动的技能</td>
+                <td>我这个技能 B 输入时，如果 A 正在释放，我是否不能启动？</td>
+                <td><code>B.ActivationBlockedTags += ATag</code></td>
+                <td>技能期间不能开火：在 <code>Attack</code> 的阻挡列表加入该技能 Tag。</td>
+              </tr>
+              <tr>
+                <td>我会打断的技能</td>
+                <td>我这个技能 B 成功启动后，是否要结束当前 A？</td>
+                <td><code>B.CancelAbilitiesWithTag += ATag</code></td>
+                <td>Dash 打断当前开火：在 <code>Dash</code> 的打断列表加入 <code>Attack</code> Tag。</td>
+              </tr>
+              <tr>
+                <td>我允许并行的技能</td>
+                <td>我这个技能 B 和当前 A 是否允许同时 active？</td>
+                <td>不互相配置 Block / Cancel，并登记表现层验收。</td>
+                <td>FastFire Active + Dash 并行：逻辑允许后，还要验 Overlay、武器和移动。</td>
+              </tr>
+              <tr>
+                <td>缓存例外声明</td>
+                <td>我这个技能是否需要覆盖全局缓存默认策略？</td>
+                <td>技能卡缓存例外 / 窗口缓存例外。</td>
+                <td>全局能缓存 120ms；Dash 可声明能缓存；Attack 可声明不能缓存；特殊窗口可改写缓存时长。</td>
+              </tr>
+              <tr>
+                <td>窗口例外</td>
+                <td>A 在 Startup / Active / Recovery 时，对 B 是否和默认关系不同？</td>
+                <td>窗口 Tag / AnimNotifyState / 统一求值器。</td>
+                <td>RadicalFire Startup 阻挡 Attack，Recovery 可允许 Attack 接续。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="decision">
+            <strong>推荐填写顺序：</strong>
+            <ol>
+              <li>先按整段 Ability 填默认关系：谁阻挡我、我打断谁、我和谁并行。</li>
+              <li>再只挑关键手感补窗口例外：Startup 保护、Active 并行、Recovery 可接续。</li>
+              <li>最后配置缓存全局默认值，并补技能或窗口例外：能缓存、不能缓存、改写时长。</li>
+              <li>所有“并行”关系单独进入《技能并行表现层协议》验收，不在主关系表里假定成立。</li>
+            </ol>
+          </div>
+
+          <div class="risk">
+            <strong>最小交付标准：</strong>
+            每个技能至少要能回答三类关系和一类例外：谁会阻挡我启动；我启动后会打断谁；我和谁允许并行；我是否有缓存例外。缓存没有例外时走全局默认，答不出来的关系默认不要开放并行，也不要写成模糊的“互斥”。
+          </div>
+
+          <h3 style="margin-top:22px;">技能卡模板</h3>
+          <pre>技能名：
+主标签：
+
+默认关系：
+  阻挡：
+  打断：
+  并行：
+
+缓存例外（默认走全局策略）：
+  技能级：无例外 / 能缓存 / 不能缓存 / 改写时长
+  窗口级：无例外 / 能缓存 / 不能缓存 / 改写时长
+
+窗口规则：
+  Startup：
+  Active：
+  Recovery：
+  不可打断窗口：
+
+表现验证：
+  动画：
+  移动：
+  镜头：
+  武器 / 特效状态：
+
+  备注：
+    历史特判：
+    程序支持需求：</pre>
+        </section>
+
+        <section id="skill-release-twinblast">
+          <h2>6. Twinblast 配置示例</h2>
+          <p>以下表格用于防止把“技能期间不能开火”和“开火期间不能放技能”配反。每一行都以“当前技能 A + 来袭技能 B”的口径描述。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>当前状态 A</th>
+                <th>来袭输入 B</th>
+                <th>期望结果</th>
+                <th>配置落点</th>
+                <th>代价 / 注意</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Dash / Bomb / RadicalFire 正在释放</td>
+                <td>Attack</td>
+                <td><span class="pill block">阻挡 Attack</span></td>
+                <td><code>GA_TwinblastAttack.ActivationBlockedTags += Dash / Bomb / RadicalFire</code></td>
+                <td>最省事，语义稳定；但默认是整段技能期间禁开火。</td>
+              </tr>
+              <tr>
+                <td>Bomb Startup</td>
+                <td>Attack</td>
+                <td><span class="pill block">阻挡 Attack</span> 或 <span class="pill protect">不可打断保护</span></td>
+                <td>静态字段可先全程阻挡；只保护 Startup 时需要窗口 Tag。</td>
+                <td>如果 Recovery 想允许开火，不能只靠静态 <code>ActivationBlockedTags</code>。</td>
+              </tr>
+              <tr>
+                <td>Attack 正在释放</td>
+                <td>Dash / Bomb / RadicalFire</td>
+                <td><span class="pill block">阻挡技能</span> 或 <span class="pill cancel">技能打断 Attack</span></td>
+                <td>阻挡技能配在来袭技能上；技能打断开火则配在来袭技能的 <code>CancelAbilitiesWithTag</code>。</td>
+                <td>这是另一个方向，不等同于“技能期间不能开火”。</td>
+              </tr>
+              <tr>
+                <td>FastFire Active</td>
+                <td>Dash</td>
+                <td><span class="pill parallel">并行</span></td>
+                <td>双方不要互相 Block / Cancel，并额外验 Overlay、移动、武器状态。</td>
+                <td>逻辑允许不代表表现成立；未验收前不要正式开放。</td>
+              </tr>
+              <tr>
+                <td>RadicalFire Startup</td>
+                <td>Attack / 轻技能</td>
+                <td><span class="pill block">阻挡来袭</span> 或 <span class="pill protect">不可打断</span></td>
+                <td>强保护建议走窗口级规则；静态字段只能先做全程保护近似。</td>
+                <td>保护大招起手，避免低成本输入压掉强技能。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="risk">
+            <strong>Twinblast 当前最容易配反的点：</strong>
+            在技能蓝图里写 <code>ActivationBlockedTags = Attack</code>，表达的是“开火期间不能启动这个技能”；要表达“这个技能期间不能开火”，配置点必须回到 <code>GA_TwinblastAttack</code>。
+          </div>
+        </section>
+
+        <section id="skill-release-feedback">
+          <h2>7. 表现与交互要求</h2>
+          <p>技能语义不是只影响能不能激活，也会影响输入响应、动画连续性、移动控制权和镜头稳定性。</p>
+
+          <div class="grid">
+            <div class="box blue">
+              <h3>输入手感</h3>
+              <ul>
+                <li>缓存不是逐对技能关系，而是所有阻挡结果共享的输入策略。</li>
+                <li>位移、反制、普攻等高频输入需要确认全局默认和少量例外。</li>
+                <li>缓存命中时必须重新校验冷却、消耗、目标、距离、状态。</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>表现层并行</h3>
+              <ul>
+                <li>逻辑并行不等于动作一定正确。</li>
+                <li>正式配置为并行的组合，需要验证动画、Overlay、RootMotion、Camera。</li>
+                <li>表现层不稳定时，应回退为阻挡或打断，不让程序临场兜底。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="note">
+            PVP 手感优先级建议：先保证输入响应一致，再保证强技能起手保护，最后再开放并行和高级穿插。
+          </div>
+        </section>
+
+        <section id="skill-release-migration">
+          <h2>8. 兼容与迁移</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>当前项目能力</th>
+                <th>迁移要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>ActivationBlockedTags</code></td>
+                <td>继续用于静态“阻挡新技能启动”的关系；配置方向必须理解为“我启动时被哪些已有 Tag 阻挡”。</td>
+              </tr>
+              <tr>
+                <td><code>CancelAbilitiesWithTag</code></td>
+                <td>继续用于“新技能启动后打断旧技能”的关系。</td>
+              </tr>
+              <tr>
+                <td><code>HeroAbility</code> 层输入与特判</td>
+                <td>需要把历史特判列入技能卡，逐步迁移到统一语义。</td>
+              </tr>
+              <tr>
+                <td>输入缓存 / 输入队列</td>
+                <td>沉到全局输入策略；技能卡只保留能缓存、不能缓存、改写时长等例外。</td>
+              </tr>
+              <tr>
+                <td>Montage / Overlay / Movement / Camera 模块</td>
+                <td>所有“并行”组合必须经过表现层验收，不能只看 GAS 是否允许。</td>
+              </tr>
+              <tr>
+                <td>Holding / 蓄力 / 持续技能</td>
+                <td>先记录现有取消逻辑，再决定哪些关系进入窗口规则。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="skill-release-acceptance">
+          <h2>9. 优先级与验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>需求</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="priority p0">P0</span></td>
+                <td>统一术语和判定顺序。</td>
+                <td>任意两个技能相遇时，能明确回答关系结果是阻挡、打断或并行；阻挡后的输入缓存由全局策略处理。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p0">P0</span></td>
+                <td>静态关系接入现有 GAS 字段。</td>
+                <td>阻挡和打断能通过现有配置稳定生效，不依赖新增特判。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p1">P1</span></td>
+                <td>关键窗口支持不可打断和并行例外。</td>
+                <td>强技能 Startup 可保护；持续开火 Active 可与 Dash 并行。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p1">P1</span></td>
+                <td>输入缓存统一策略。</td>
+                <td>短窗口内输入不丢失，过期输入不会乱触发；缓存例外不需要维护技能对技能矩阵。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p2">P2</span></td>
+                <td>表现层并行标准。</td>
+                <td>正式并行组合不出现动作瞬断、根运动冲突、镜头突跳、武器状态错乱。</td>
+              </tr>
+              <tr>
+                <td><span class="priority later">暂不做</span></td>
+                <td>全技能全窗口矩阵、技能对技能缓存矩阵和完整编辑器工具。</td>
+                <td>后续版本再评估。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="skill-release-tech-notes">
+          <h2>10. 程序备注</h2>
+          <p>以下内容是实现参考，不是策划正文配置口径。</p>
+
+          <div class="grid">
+            <div class="box">
+              <h3>建议求值抽象</h3>
+              <pre>ActiveAbility
+ActiveWindow
+IncomingAbility
+IncomingInputContext
+  -> BlockIncoming
+  -> CancelActive
+  -> AllowParallel
+  -> ApplyGlobalInputCache</pre>
+            </div>
+            <div class="box">
+              <h3>实现注意</h3>
+              <ul>
+                <li>基础条件校验、窗口属性、技能关系、全局缓存策略需要固定顺序。</li>
+                <li>不可打断是窗口属性，不是关系结果。</li>
+                <li>互斥需要落为阻挡或打断，不能作为运行时模糊结果。</li>
+                <li>并行需要拆成逻辑层允许和表现层验收两件事。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="risk">
+            <strong>禁止做法：</strong>
+            某个技能绕过统一判定流程，先播动画、先生成投射物、先停旧技能，再回头判断语义。这样会让输入、表现和服务器结果出现不一致。
+          </div>
+        </section>
+        </div>
+      </article>
+
+      <article class="module-section" id="single-target">
+        <div class="module-top">
+          <div>
+            <span class="module-index">02 · 技能释放</span>
+            <h2>Skill - 单体施法选取 V2</h2>
+            <p>降低单体技能选人负担，统一预选、锁定、释放决议和失效反馈。</p>
+          </div>
+          <div class="module-actions">
+            <a href="#home">回到首页</a>
+            <a href="Skill%20-%20%E5%8D%95%E4%BD%93%E6%96%BD%E6%B3%95%E9%80%89%E5%8F%96%20V2.html" target="_blank" rel="noreferrer">打开原文件</a>
+          </div>
+        </div>
+        <div class="module-brief">
+          <strong>效果提升</strong>
+          <p>让点人技能在移动、瞄准、目标丢失、服务器校验下都保持同一套选择逻辑。</p>
+        </div>
+        <div class="module-body">
+<section id="single-target-goal">
+          <h2>1. 背景与目标</h2>
+          <p>单体目标技能既要顺手，也要可控。系统可以在前段持续找候选目标、给 UI 提示、减少空放；但进入施法决议后，不能把玩家已表达的目标意图改成另一种语义。</p>
+          <div class="rule">
+            <h3>核心规则</h3>
+            <p>系统可以帮助玩家稳定锁住“已经想选的人”，不能在目标失效时自动发明一个新目标或自动切成自施法。</p>
+          </div>
+        </section>
+
+        <section id="single-target-scope">
+          <h2>2. 本版范围</h2>
+          <div class="grid">
+            <div class="box">
+              <h3>本版要做</h3>
+              <ul>
+                <li>常驻软锁定：空闲时维护最优候选目标，用于 UI 和点按快放。</li>
+                <li>武装目标：技能按下进入 Holding 时锁存当前目标。</li>
+                <li>释放决议：Release 时优先读取武装目标，不重新按最近目标计算。</li>
+                <li>宽容时间：处理短暂出框、遮挡、目标边缘抖动。</li>
+                <li>技能级配置：不同技能通过 Profile 与 ResolvePolicy 表达差异。</li>
+                <li>UI 与网络验收：目标状态、失效原因、服务器校验口径明确。</li>
+              </ul>
+            </div>
+            <div class="box blue">
+              <h3>本版不做</h3>
+              <ul>
+                <li>不把普通施法默认等价为自动自施法。</li>
+                <li>不允许每个技能在蓝图里重复写一套目标搜索逻辑。</li>
+                <li>不把宽容时间用于重新创造新目标。</li>
+                <li>不覆盖范围技能、地面点选、锁敌相机、辅助瞄准完整方案。</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="single-target-terms">
+          <h2>3. 术语</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>术语</th>
+                <th>定义</th>
+                <th>使用边界</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>候选目标</td>
+                <td>被采集到、可能成为技能目标的 Actor。</td>
+                <td>进入评分前必须先过硬过滤。</td>
+              </tr>
+              <tr>
+                <td>硬过滤</td>
+                <td>阵营、死亡、距离、不可选中、LOS、技能目标类型等硬条件。</td>
+                <td>不满足则直接出局，不参与评分。</td>
+              </tr>
+              <tr>
+                <td>Soft Target</td>
+                <td>空闲或非施法阶段的当前推荐目标。</td>
+                <td>用于提示和点按快放，不代表最终施法一定成功。</td>
+              </tr>
+              <tr>
+                <td>Armed Target</td>
+                <td>技能按下或进入 Holding 后锁存的目标。</td>
+                <td>Release 时优先读取；目标失效后按 ResolvePolicy 处理。</td>
+              </tr>
+              <tr>
+                <td>LockProtectTime</td>
+                <td>新锁定目标的短暂保护时间。</td>
+                <td>防止刚锁上就被相邻目标抢走。</td>
+              </tr>
+              <tr>
+                <td>LostGraceTime</td>
+                <td>目标短暂丢失后的保持窗口。</td>
+                <td>保 UI 和锁定感，不生成新目标。</td>
+              </tr>
+              <tr>
+                <td>SwitchCooldown</td>
+                <td>自动切换目标后的冷却窗口。</td>
+                <td>防止 A/B 抖动；手动切换可覆盖。</td>
+              </tr>
+              <tr>
+                <td>ResolvePolicy</td>
+                <td>Release 时目标无效的收口规则。</td>
+                <td>必须技能级显式配置。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="single-target-rules">
+          <h2>4. 行为规则</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>阶段</th>
+                <th>系统行为</th>
+                <th>禁止行为</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>空闲</td>
+                <td>持续采集候选，经过硬过滤和评分后更新 Soft Target。</td>
+                <td>把 Soft Target 当成已经完成施法决议。</td>
+              </tr>
+              <tr>
+                <td>点按快放</td>
+                <td>按下时读取当前 Soft Target，并立即进入 Resolve。</td>
+                <td>Release 或执行帧再重算最近目标。</td>
+              </tr>
+              <tr>
+                <td>按住 / 蓄力</td>
+                <td>进入 Holding 时锁存 Armed Target；Holding 期间显示更强锁定反馈。</td>
+                <td>目标短暂丢失时偷偷换成另一个目标。</td>
+              </tr>
+              <tr>
+                <td>手动切换</td>
+                <td>玩家明确输入切换目标时，可覆盖 SwitchCooldown。</td>
+                <td>自动切换压过明确手动输入。</td>
+              </tr>
+              <tr>
+                <td>目标短暂丢失</td>
+                <td>LostGraceTime 内保持 UI 与 Armed 状态，并标记为 Grace。</td>
+                <td>Grace 结束后自动跳到下一个目标或自动自施法。</td>
+              </tr>
+              <tr>
+                <td>Release</td>
+                <td>读取 Armed Target，做服务器可验证的合法性检查，再按 ResolvePolicy 处理。</td>
+                <td>用“最近友军 / 最近敌人”替代已锁存目标。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="risk">
+            <h3>默认红线</h3>
+            <p>普通施法路径下，无合法外部目标不能默认转成给自己。自施法必须来自明确输入、modifier、双击或技能级例外配置。</p>
+          </div>
+        </section>
+
+        <section id="single-target-flow">
+          <h2>5. 运行流程</h2>
+          <p>目标选择分成两段：前段负责“当前推荐谁”，后段负责“这次施法按什么目标结算”。两段共用 Profile，但职责不同。</p>
+          <div class="diagram" aria-label="单体目标选择流程图">
+            <svg viewBox="0 0 1180 420" role="img">
+              <defs>
+                <marker id="single-target-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                </marker>
+              </defs>
+              <rect x="40" y="72" width="145" height="70" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="112" y="103" text-anchor="middle" font-size="18" fill="#22272e">采集候选</text>
+              <text x="112" y="127" text-anchor="middle" font-size="13" fill="#66727e">屏幕 / 范围</text>
+
+              <rect x="230" y="72" width="145" height="70" rx="8" fill="#eef2f5" stroke="#d9dee5"></rect>
+              <text x="302" y="103" text-anchor="middle" font-size="18" fill="#22272e">硬过滤</text>
+              <text x="302" y="127" text-anchor="middle" font-size="13" fill="#66727e">阵营 / LOS</text>
+
+              <rect x="420" y="72" width="145" height="70" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="492" y="103" text-anchor="middle" font-size="18" fill="#22272e">分桶评分</text>
+              <text x="492" y="127" text-anchor="middle" font-size="13" fill="#66727e">英雄优先级</text>
+
+              <rect x="610" y="72" width="145" height="70" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
+              <text x="682" y="103" text-anchor="middle" font-size="18" fill="#22272e">Soft Target</text>
+              <text x="682" y="127" text-anchor="middle" font-size="13" fill="#66727e">UI 提示</text>
+
+              <rect x="800" y="72" width="145" height="70" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
+              <text x="872" y="103" text-anchor="middle" font-size="18" fill="#22272e">Armed Target</text>
+              <text x="872" y="127" text-anchor="middle" font-size="13" fill="#66727e">按下锁存</text>
+
+              <rect x="990" y="72" width="145" height="70" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="1062" y="103" text-anchor="middle" font-size="18" fill="#22272e">Resolve</text>
+              <text x="1062" y="127" text-anchor="middle" font-size="13" fill="#66727e">释放结算</text>
+
+              <line x1="185" y1="107" x2="230" y2="107" stroke="#66727e" stroke-width="2" marker-end="url(#single-target-arrow)"></line>
+              <line x1="375" y1="107" x2="420" y2="107" stroke="#66727e" stroke-width="2" marker-end="url(#single-target-arrow)"></line>
+              <line x1="565" y1="107" x2="610" y2="107" stroke="#66727e" stroke-width="2" marker-end="url(#single-target-arrow)"></line>
+              <line x1="755" y1="107" x2="800" y2="107" stroke="#66727e" stroke-width="2" marker-end="url(#single-target-arrow)"></line>
+              <line x1="945" y1="107" x2="990" y2="107" stroke="#66727e" stroke-width="2" marker-end="url(#single-target-arrow)"></line>
+
+              <rect x="230" y="235" width="260" height="86" rx="8" fill="#fbfcfd" stroke="#d9dee5"></rect>
+              <text x="360" y="268" text-anchor="middle" font-size="18" fill="#22272e">宽容机制</text>
+              <text x="360" y="294" text-anchor="middle" font-size="14" fill="#66727e">LockProtect / LostGrace / Cooldown</text>
+
+              <rect x="690" y="235" width="260" height="86" rx="8" fill="#fbe9e7" stroke="#e8c1bc"></rect>
+              <text x="820" y="268" text-anchor="middle" font-size="18" fill="#22272e">禁止重写语义</text>
+              <text x="820" y="294" text-anchor="middle" font-size="14" fill="#66727e">不自动换目标 / 不自动自施法</text>
+
+              <line x1="682" y1="142" x2="360" y2="235" stroke="#66727e" stroke-width="2" marker-end="url(#single-target-arrow)"></line>
+              <line x1="872" y1="142" x2="820" y2="235" stroke="#66727e" stroke-width="2" marker-end="url(#single-target-arrow)"></line>
+            </svg>
+          </div>
+        </section>
+
+        <section id="single-target-config">
+          <h2>6. 配置需求</h2>
+          <p>目标规则统一放入 <code>TargetSelectionProfile</code>，技能只引用 Profile，并选择自己的 ResolvePolicy。</p>
+
+          <h3>6.1 TargetSelectionProfile</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>用途</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AllowedTargetTeam / Type</td>
+                <td>允许友军、敌人、自身、召唤物、建筑等目标类型。</td>
+                <td>不满足则硬过滤。</td>
+              </tr>
+              <tr>
+                <td>Range / ScreenCone</td>
+                <td>世界距离和屏幕选取区域。</td>
+                <td>第三人称技能优先同时考虑屏幕与距离。</td>
+              </tr>
+              <tr>
+                <td>LineOfSightRule</td>
+                <td>是否需要视线、允许短暂遮挡的时间。</td>
+                <td>遮挡宽容只保锁定，不创造目标。</td>
+              </tr>
+              <tr>
+                <td>PriorityBuckets</td>
+                <td>按英雄、小兵、召唤物等分桶。</td>
+                <td>先比桶优先级，再在桶内评分。</td>
+              </tr>
+              <tr>
+                <td>ScoreWeights</td>
+                <td>屏幕中心、朝向、世界距离、范围余量、当前目标粘滞。</td>
+                <td>权重需可配置、可 Debug。</td>
+              </tr>
+              <tr>
+                <td>LockRetainRadius</td>
+                <td>已锁定目标维持半径。</td>
+                <td>避免边界抖动导致频繁脱锁。</td>
+              </tr>
+              <tr>
+                <td>LockProtectTime</td>
+                <td>新目标锁定保护时间。</td>
+                <td>建议默认 0.15s - 0.3s。</td>
+              </tr>
+              <tr>
+                <td>LostGraceTime</td>
+                <td>目标短暂出框 / 遮挡后的保留时间。</td>
+                <td>建议按技能类型配置。</td>
+              </tr>
+              <tr>
+                <td>SwitchCooldown</td>
+                <td>自动切换后的冷却。</td>
+                <td>手动切换输入可覆盖。</td>
+              </tr>
+              <tr>
+                <td>ResolvePolicy</td>
+                <td>Release 时目标无效的处理方式。</td>
+                <td>技能级必填。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>6.2 技能卡模板</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>填写内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SkillId</td>
+                <td>技能 ID，例如 <code>Skill_Muriel_Shield</code>。</td>
+              </tr>
+              <tr>
+                <td>SelectionProfile</td>
+                <td>引用目标选择 Profile。</td>
+              </tr>
+              <tr>
+                <td>InputMode</td>
+                <td>点按、按住、蓄力、二段释放。</td>
+              </tr>
+              <tr>
+                <td>SelfCastInput</td>
+                <td>是否存在明确自施法输入，以及输入方式。</td>
+              </tr>
+              <tr>
+                <td>ResolvePolicy</td>
+                <td>目标无效时失败、取消、自施法例外或同目标重校验。</td>
+              </tr>
+              <tr>
+                <td>UIStyle</td>
+                <td>Soft、Armed、Grace、Invalid 的显示样式。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="single-target-resolve">
+          <h2>7. ResolvePolicy</h2>
+          <p>Release 时目标无效必须走显式策略。策略由技能选择，中层系统不自行猜测。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>策略</th>
+                <th>行为</th>
+                <th>适用场景</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>FailOnInvalid</td>
+                <td>目标无效则释放失败，给失败反馈。</td>
+                <td>PVP 默认策略，输入语义最稳定。</td>
+              </tr>
+              <tr>
+                <td>CancelCast</td>
+                <td>取消本次技能，不进入消耗或冷却，按技能配置处理。</td>
+                <td>蓄力、按住类辅助技能。</td>
+              </tr>
+              <tr>
+                <td>RevalidateSameTarget</td>
+                <td>只重新验证同一个 Armed Target 是否恢复合法。</td>
+                <td>短暂遮挡或出框后可能恢复的技能。</td>
+              </tr>
+              <tr>
+                <td>ExplicitSelfCastOnly</td>
+                <td>只有明确自施法输入时才能以自己为目标。</td>
+                <td>友军保护、治疗、护盾类技能的默认口径。</td>
+              </tr>
+              <tr>
+                <td>AllowSelfFallback</td>
+                <td>无目标时允许自动转为自己。</td>
+                <td>技能级特例；必须在技能卡中标记并给 UI 提示。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">
+            <strong>默认建议：</strong>友军目标技能使用 <code>ExplicitSelfCastOnly</code> 或 <code>FailOnInvalid</code>。自动自施法只能作为明确技能例外。
+          </div>
+        </section>
+
+        <section id="single-target-ui-network">
+          <h2>8. UI 与网络</h2>
+          <h3>8.1 UI 状态</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>表现要求</th>
+                <th>目的</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Soft</td>
+                <td>轻量框、描边或准星提示。</td>
+                <td>告诉玩家当前推荐目标。</td>
+              </tr>
+              <tr>
+                <td>Armed</td>
+                <td>更强锁定框、连线、目标高亮。</td>
+                <td>告诉玩家 Release 将优先读取该目标。</td>
+              </tr>
+              <tr>
+                <td>Grace</td>
+                <td>目标框变淡、倒计时或丢失态提示。</td>
+                <td>告诉玩家目标处于宽容保持期。</td>
+              </tr>
+              <tr>
+                <td>Invalid</td>
+                <td>红色短反馈、音效或 HUD 文案。</td>
+                <td>说明失败原因，避免误以为系统没响应。</td>
+              </tr>
+              <tr>
+                <td>SelfCast</td>
+                <td>角色脚下或 HUD 显示自施法态。</td>
+                <td>避免玩家误以为仍在指向外部目标。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>8.2 网络与权威</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>事项</th>
+                <th>要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>客户端</td>
+                <td>可以预测 Soft / Armed UI，并随输入上报技能、ArmedTarget、SelfCastFlag。</td>
+              </tr>
+              <tr>
+                <td>服务器</td>
+                <td>验证目标合法性、技能范围、阵营、死亡、不可选中和 ResolvePolicy。</td>
+              </tr>
+              <tr>
+                <td>目标无效</td>
+                <td>服务器返回失败原因，不自动替换为其他目标。</td>
+              </tr>
+              <tr>
+                <td>回放 / 观战</td>
+                <td>记录最终决议目标、失败原因和自施法标记。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="single-target-example">
+          <h2>9. 技能示例：Muriel Shield</h2>
+          <p>护盾类技能需要同时支持低输入负担和明确自施法。默认流程优先保护玩家已选友军目标，目标无效时不自动改成给自己。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>项</th>
+                <th>建议配置</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AllowedTargetTeam</td>
+                <td>FriendlyHero，可按需求包含 FriendlySummon。</td>
+              </tr>
+              <tr>
+                <td>Soft Target</td>
+                <td>空闲时持续预选屏幕中心附近、距离合法、LOS 合法的友军。</td>
+              </tr>
+              <tr>
+                <td>Armed Target</td>
+                <td>按下技能时锁存当前友军目标。</td>
+              </tr>
+              <tr>
+                <td>LostGraceTime</td>
+                <td>短暂出框可保留 UI 和 Armed 状态。</td>
+              </tr>
+              <tr>
+                <td>ResolvePolicy</td>
+                <td><code>ExplicitSelfCastOnly</code> 或 <code>FailOnInvalid</code>，不默认自施法。</td>
+              </tr>
+              <tr>
+                <td>SelfCastInput</td>
+                <td>独立按键、modifier 或双击；触发时 UI 明确显示自施法态。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="single-target-acceptance">
+          <h2>10. 验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>验收项</th>
+                <th>通过标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P0</td>
+                <td>Soft / Armed / Resolve 三阶段语义一致。</td>
+                <td>Holding 后 Release 不重新按最近目标计算。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>普通施法不自动自施法。</td>
+                <td>友军目标失效时，不会默认把技能放给自己。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>LostGrace 只保锁定表现。</td>
+                <td>Grace 期间 UI 可保持，Grace 结束不自动跳新目标。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>服务器权威校验。</td>
+                <td>客户端预测与服务器失败原因一致，目标无效不会被服务器替换。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>Profile 数据化。</td>
+                <td>至少两个技能可复用同一套目标选择逻辑，只改配置。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>Debug 可解释。</td>
+                <td>能看到候选列表、过滤原因、评分、SoftTarget、ArmedTarget、ResolvePolicy。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="single-target-tech-notes">
+          <h2>11. 程序备注</h2>
+          <p>实现可以按以下数据与状态拆分，具体命名以项目代码风格为准。</p>
+          <pre>TargetSelectionProfile
+  AllowedTargetTypes
+  Range / ScreenCone / LOS
+  PriorityBuckets
+  ScoreWeights
+  LockProtectTime / LostGraceTime / SwitchCooldown
+  ResolvePolicy
+
+RuntimeState
+  CandidateTargets
+  SoftTarget
+  ArmedTarget
+  SelfCastFlag
+  LastInvalidReason</pre>
+          <table>
+            <thead>
+              <tr>
+                <th>约束</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>统一入口</td>
+                <td>目标搜索、评分、锁存和释放决议应走同一中层服务。</td>
+              </tr>
+              <tr>
+                <td>技能只给配置</td>
+                <td>技能蓝图不重复实现“找最近目标”。</td>
+              </tr>
+              <tr>
+                <td>失败可追踪</td>
+                <td>失败原因至少包含 OutOfRange、NoLOS、Dead、InvalidTeam、NotTargetable、GraceExpired。</td>
+              </tr>
+              <tr>
+                <td>手动优先</td>
+                <td>明确切换、自施法、取消输入优先级高于自动软锁。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+        </div>
+      </article>
+
+      <article class="module-section" id="area-placement">
+        <div class="module-top">
+          <div>
+            <span class="module-index">03 · 技能释放</span>
+            <h2>Skill - 范围施法落点</h2>
+            <p>统一范围技能落点、吸附、合法性和服务器复检，提升预览可信度。</p>
+          </div>
+          <div class="module-actions">
+            <a href="#home">回到首页</a>
+            <a href="Skill%20-%20%E8%8C%83%E5%9B%B4%E6%96%BD%E6%B3%95%E8%90%BD%E7%82%B9.html" target="_blank" rel="noreferrer">打开原文件</a>
+          </div>
+        </div>
+        <div class="module-brief">
+          <strong>效果提升</strong>
+          <p>减少“预览能放但释放失败”“边缘吸到另一层”“抛物线落点不准”等空间施法问题。</p>
+        </div>
+        <div class="module-body">
+<section id="area-placement-goal">
+          <h2>1. 背景与目标</h2>
+          <p>范围施法落点如果每个技能各写一套规则，最容易出现三类问题：预览能放但释放失败、释放位置和预览位置不一致、边缘或高低差场景被吸到玩家没想选的位置。这里统一落点决议口径，让策划配置、客户端预览、服务器复检和 QA 验收说同一种语言。</p>
+          <div class="rule">
+            <h3>一句话规则</h3>
+            <p>系统可以把玩家的原始落点修正到“同一语义位置”的合法点；不能把楼上修到楼下、墙前修到墙后、目标地面修成另一个平台，也不能在失败时悄悄消耗技能。</p>
+          </div>
+          <div class="grid">
+            <div class="box">
+              <h3>需要解决</h3>
+              <ul>
+                <li>地面范围圈、召唤物、陷阱、投射落点使用统一判定流程。</li>
+                <li>预览表现和正式生效位置一致，修正后的最终落点必须可见。</li>
+                <li>非法原因可枚举，失败时能给 UI、网络和 QA 明确结果。</li>
+              </ul>
+            </div>
+            <div class="box blue">
+              <h3>交付结果</h3>
+              <ul>
+                <li><code>PlacementProfile</code>：技能落点配置。</li>
+                <li><code>PlacementResolver</code>：客户端和服务端共用的决议函数。</li>
+                <li><code>ResolvePolicy</code> 与 <code>FailureReason</code>：修正规则和失败原因。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="scene-grid">
+            <div class="scene">
+              <svg viewBox="0 0 360 220" role="img" aria-label="桥面边缘放置示意">
+                <defs>
+                  <linearGradient id="area-placement-bridgeBg" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0" stop-color="#172530"/>
+                    <stop offset="1" stop-color="#283947"/>
+                  </linearGradient>
+                </defs>
+                <rect width="360" height="220" fill="url(#area-placement-bridgeBg)"/>
+                <polygon points="20,112 252,78 340,116 94,165" fill="#435362"/>
+                <polygon points="94,165 340,116 340,139 96,188" fill="#2b343d"/>
+                <circle cx="245" cy="110" r="34" fill="rgba(143,223,166,.25)" stroke="#8fdfa6" stroke-width="3"/>
+                <circle cx="245" cy="110" r="6" fill="#8fdfa6"/>
+                <circle cx="303" cy="147" r="24" fill="rgba(255,152,135,.16)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <path d="M65 141 L226 113" stroke="#79c6ff" stroke-width="2" stroke-dasharray="7 5"/>
+                <circle cx="66" cy="141" r="9" fill="#79c6ff"/>
+                <text x="20" y="28" fill="#edf3f7" font-size="14" font-weight="700">桥面边缘</text>
+                <text x="218" y="73" fill="#8fdfa6" font-size="12">同层贴边</text>
+                <text x="266" y="185" fill="#ff9887" font-size="12">掉层失败</text>
+              </svg>
+              <div class="scene-body">
+                <h3>边缘部署</h3>
+                <p>同一桥面内可以贴边修正；桥下是另一个语义位置，不能自动掉层。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 220" role="img" aria-label="抛物线落点一致示意">
+                <rect width="360" height="220" fill="#182431"/>
+                <rect x="0" y="158" width="360" height="62" fill="#2c3b42"/>
+                <path d="M48 158 C120 58, 222 58, 300 158" fill="none" stroke="#79c6ff" stroke-width="4"/>
+                <circle cx="300" cy="158" r="30" fill="rgba(143,223,166,.22)" stroke="#8fdfa6" stroke-width="3"/>
+                <circle cx="300" cy="158" r="6" fill="#8fdfa6"/>
+                <circle cx="244" cy="158" r="24" fill="rgba(255,152,135,.14)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <text x="20" y="28" fill="#edf3f7" font-size="14" font-weight="700">抛投终点</text>
+                <text x="264" y="126" fill="#8fdfa6" font-size="12">预览 = 真实落点</text>
+                <text x="196" y="194" fill="#ff9887" font-size="12">错位不可接受</text>
+              </svg>
+              <div class="scene-body">
+                <h3>抛物线落点</h3>
+                <p>Reticle、范围圈和服务器命中点必须是一回事，不能只让轨迹看起来对。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 220" role="img" aria-label="预览承诺示意">
+                <rect width="360" height="220" fill="#f8fbfc"/>
+                <rect x="48" y="56" width="90" height="90" rx="8" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <rect x="136" y="56" width="90" height="90" rx="8" fill="#fff4dd" stroke="#ecd6ad"/>
+                <rect x="224" y="56" width="90" height="90" rx="8" fill="#fbe9e7" stroke="#e8c1bc"/>
+                <circle cx="93" cy="101" r="24" fill="rgba(37,111,101,.18)" stroke="#256f65" stroke-width="3"/>
+                <circle cx="181" cy="101" r="24" fill="rgba(214,157,55,.16)" stroke="#d69d37" stroke-width="3"/>
+                <circle cx="269" cy="101" r="24" fill="rgba(141,59,59,.14)" stroke="#8d3b3b" stroke-width="3" stroke-dasharray="6 5"/>
+                <text x="93" y="169" fill="#256f65" font-size="13" text-anchor="middle">合法</text>
+                <text x="181" y="169" fill="#8a5b18" font-size="13" text-anchor="middle">已修正</text>
+                <text x="269" y="169" fill="#8d3b3b" font-size="13" text-anchor="middle">非法</text>
+              </svg>
+              <div class="scene-body">
+                <h3>预览承诺</h3>
+                <p>玩家松手前看到的状态要可信：合法就释放，修正就显示修正点，非法就明确失败。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="area-placement-scope">
+          <h2>2. 本版范围</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>范围</th>
+                <th>本版要求</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>地面范围技能</td>
+                <td>必须接入统一落点流程。</td>
+                <td>圆形、扇形、矩形等范围先得到 <code>FinalPlacement</code>，再进入伤害或区域系统。</td>
+              </tr>
+              <tr>
+                <td>召唤 / 陷阱 / 放置物</td>
+                <td>必须校验占地、阻挡、导航和高度。</td>
+                <td>不能只判断中心点合法，必须判断实际 <code>Footprint</code>。</td>
+              </tr>
+              <tr>
+                <td>投射落点 / 抛物线终点</td>
+                <td>预览终点和服务器终点需要共享落点口径。</td>
+                <td>飞行过程的命中仍由投射物系统负责，本稿只定义“落到哪里”。</td>
+              </tr>
+              <tr>
+                <td>墙面 / 天花板 / 任意 3D 放置</td>
+                <td>不进入 V1。</td>
+                <td>需要单独的表面朝向、附着、遮挡和动画规则，避免拖慢地面技能落地。</td>
+              </tr>
+              <tr>
+                <td>自动替玩家选目标</td>
+                <td>不进入本系统。</td>
+                <td>锁敌、辅助瞄准、目标选择归目标选择系统；落点系统只处理空间位置是否合法。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">V1 先把“地面落点可信”做稳。特殊技能可以先不接入，但接入后必须遵守同一套预览、释放和服务器复检口径。</div>
+        </section>
+
+        <section id="area-placement-terms">
+          <h2>3. 术语</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>术语</th>
+                <th>含义</th>
+                <th>验收口径</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>AimRay</code></td>
+                <td>玩家当前瞄准方向，通常来自镜头或准星。</td>
+                <td>客户端预览和服务端复检应能得到同类输入。</td>
+              </tr>
+              <tr>
+                <td><code>IntentPoint</code></td>
+                <td>由瞄准射线或最大距离投影得到的原始意图点。</td>
+                <td>用于表达玩家想点哪里，不一定合法。</td>
+              </tr>
+              <tr>
+                <td><code>SupportSurface</code></td>
+                <td>承载落点的地面或平台。</td>
+                <td>同一支撑面内可以修正，跨支撑面默认失败。</td>
+              </tr>
+              <tr>
+                <td><code>Footprint</code></td>
+                <td>技能实际占地形状，可能是点、圆、盒、胶囊或自定义形状。</td>
+                <td>放置物和范围技能必须检查完整占地。</td>
+              </tr>
+              <tr>
+                <td><code>PlacementProfile</code></td>
+                <td>技能落点配置，包括形状、距离、表面、修正策略和失败反馈。</td>
+                <td>策划配置入口，不在技能蓝图里散写找点逻辑。</td>
+              </tr>
+              <tr>
+                <td><code>FinalPlacement</code></td>
+                <td>最终用于释放、生成、伤害范围、VFX 和网络同步的位置。</td>
+                <td>正式表现必须以它为准。</td>
+              </tr>
+              <tr>
+                <td><code>FailureReason</code></td>
+                <td>落点失败原因。</td>
+                <td>UI、日志、QA 用同一份枚举，不用猜失败原因。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="area-placement-pipeline">
+          <h2>4. 落点流程</h2>
+          <p>所有接入技能按同一条流水线求值。客户端预览可以高频调用，服务器释放时必须用同一套配置重新求值。</p>
+          <div class="diagram">
+            <svg viewBox="0 0 980 310" role="img" aria-label="落点决议流程图">
+              <defs>
+                <marker id="area-placement-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="310" fill="#ffffff"/>
+              <text x="40" y="42" fill="#65717f" font-size="16" font-weight="700">Placement Resolver</text>
+              <g fill="#f8fbfc" stroke="#cfd8df" stroke-width="1.5">
+                <rect x="42" y="82" width="120" height="72" rx="8"/>
+                <rect x="202" y="82" width="120" height="72" rx="8"/>
+                <rect x="362" y="82" width="120" height="72" rx="8"/>
+                <rect x="522" y="82" width="120" height="72" rx="8"/>
+                <rect x="682" y="82" width="120" height="72" rx="8"/>
+                <rect x="842" y="82" width="96" height="72" rx="8"/>
+              </g>
+              <g fill="#202830" font-size="15" text-anchor="middle" font-weight="700">
+                <text x="102" y="113">Input</text>
+                <text x="262" y="113">IntentPoint</text>
+                <text x="422" y="113">Surface</text>
+                <text x="582" y="113">Footprint</text>
+                <text x="742" y="113">Resolve</text>
+                <text x="890" y="113">Result</text>
+              </g>
+              <g fill="#65717f" font-size="12" text-anchor="middle">
+                <text x="102" y="136">AimRay / Profile</text>
+                <text x="262" y="136">原始意图点</text>
+                <text x="422" y="136">候选支撑面</text>
+                <text x="582" y="136">占地合法性</text>
+                <text x="742" y="136">修正或失败</text>
+                <text x="890" y="136">Final / Reason</text>
+              </g>
+              <g stroke="#6b7580" stroke-width="2" marker-end="url(#area-placement-arrow)">
+                <line x1="162" y1="118" x2="194" y2="118"/>
+                <line x1="322" y1="118" x2="354" y2="118"/>
+                <line x1="482" y1="118" x2="514" y2="118"/>
+                <line x1="642" y1="118" x2="674" y2="118"/>
+                <line x1="802" y1="118" x2="834" y2="118"/>
+              </g>
+              <path d="M102 168 C102 238, 742 238, 742 168" fill="none" stroke="#256f65" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#area-placement-arrow)"/>
+              <text x="422" y="255" fill="#256f65" font-size="14" text-anchor="middle">拖拽预览可持续复用上一次输入，但释放时仍重新决议</text>
+            </svg>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>步骤</th>
+                <th>输入</th>
+                <th>输出</th>
+                <th>要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1. 构建上下文</td>
+                <td>施法者、瞄准、技能配置、当前移动状态</td>
+                <td><code>PlacementInput</code></td>
+                <td>预览和释放使用同一类输入结构。</td>
+              </tr>
+              <tr>
+                <td>2. 求原始意图点</td>
+                <td><code>AimRay</code>、最大距离、准星命中</td>
+                <td><code>IntentPoint</code></td>
+                <td>只表达玩家想点哪里，不在这一步做吸附。</td>
+              </tr>
+              <tr>
+                <td>3. 找候选面</td>
+                <td><code>IntentPoint</code> 附近的地形 / Nav / 碰撞</td>
+                <td><code>SupportSurface</code></td>
+                <td>默认优先同一支撑面，不跨平台找点。</td>
+              </tr>
+              <tr>
+                <td>4. 校验占地</td>
+                <td>候选面、技能形状、阻挡信息</td>
+                <td>合法 / 非法原因</td>
+                <td>范围和放置物都按完整 <code>Footprint</code> 判断。</td>
+              </tr>
+              <tr>
+                <td>5. 执行修正策略</td>
+                <td>非法原因、容差配置、候选点</td>
+                <td><code>FinalPlacement</code> 或 <code>FailureReason</code></td>
+                <td>修正结果必须能反馈给玩家。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="area-placement-validation">
+          <h2>5. 合法性规则</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>规则</th>
+                <th>默认要求</th>
+                <th>失败原因</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>距离</td>
+                <td>落点必须在技能最大距离内；超出距离时可沿同一方向夹取到最大距离。</td>
+                <td><code>OutOfRange</code></td>
+              </tr>
+              <tr>
+                <td>支撑面</td>
+                <td>落点必须在允许的地面类型上，默认不允许墙面、天花板、空中点。</td>
+                <td><code>InvalidSurface</code></td>
+              </tr>
+              <tr>
+                <td>高度</td>
+                <td>同一支撑面内允许小高度差；跨楼层、跨平台、穿过断崖默认失败。</td>
+                <td><code>HeightMismatch</code></td>
+              </tr>
+              <tr>
+                <td>占地</td>
+                <td><code>Footprint</code> 内不能与不可穿越物、角色胶囊或禁止区域冲突。</td>
+                <td><code>FootprintBlocked</code></td>
+              </tr>
+              <tr>
+                <td>导航</td>
+                <td>需要落地实体的技能必须落在可导航或技能指定的可站立区域。</td>
+                <td><code>NavInvalid</code></td>
+              </tr>
+              <tr>
+                <td>坡度</td>
+                <td>超过技能配置的坡度上限时失败，避免放置物倾斜或穿地。</td>
+                <td><code>SlopeTooSteep</code></td>
+              </tr>
+              <tr>
+                <td>视线 / 遮挡</td>
+                <td>是否需要直视由技能配置决定。需要直视的技能不能隔墙放置。</td>
+                <td><code>LineOfSightBlocked</code></td>
+              </tr>
+              <tr>
+                <td>动态状态</td>
+                <td>施法者死亡、被控制、技能进入 CD、资源不足时，落点结果无效。</td>
+                <td><code>CasterStateInvalid</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <pre>FailureReason:
+  None
+  OutOfRange
+  InvalidSurface
+  HeightMismatch
+  FootprintBlocked
+  NavInvalid
+  SlopeTooSteep
+  LineOfSightBlocked
+  CasterStateInvalid
+  Unknown</pre>
+        </section>
+
+        <section id="area-placement-resolve">
+          <h2>6. 宽容与修正</h2>
+          <p>宽容只解决“差一点”的手感问题，不改变玩家的目标语义。所有修正都需要落在同一支撑面或同一可理解区域内。</p>
+          <div class="diagram">
+            <svg viewBox="0 0 980 330" role="img" aria-label="同层修正和跨层失败示意">
+              <defs>
+                <marker id="area-placement-arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="330" fill="#ffffff"/>
+              <text x="70" y="48" fill="#256f65" font-size="18" font-weight="700">允许：同一支撑面内贴边</text>
+              <rect x="70" y="95" width="340" height="42" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+              <rect x="70" y="137" width="280" height="72" rx="4" fill="#d7e6dc" stroke="#9bcfc5"/>
+              <circle cx="370" cy="115" r="18" fill="#fff4dd" stroke="#d69d37" stroke-width="2"/>
+              <circle cx="333" cy="115" r="18" fill="#e5f0f8" stroke="#22577a" stroke-width="2"/>
+              <line x1="365" y1="115" x2="341" y2="115" stroke="#6b7580" stroke-width="2" marker-end="url(#area-placement-arrow2)"/>
+              <text x="352" y="250" fill="#65717f" font-size="14" text-anchor="middle">原始点略出边缘，可夹到同面最近合法点</text>
+
+              <text x="570" y="48" fill="#8d3b3b" font-size="18" font-weight="700">禁止：跨层改意图</text>
+              <rect x="570" y="88" width="330" height="42" rx="6" fill="#fbe9e7" stroke="#e1aaa3"/>
+              <rect x="630" y="205" width="270" height="42" rx="6" fill="#fbe9e7" stroke="#e1aaa3"/>
+              <circle cx="745" cy="109" r="18" fill="#fff4dd" stroke="#d69d37" stroke-width="2"/>
+              <circle cx="745" cy="226" r="18" fill="#fbe9e7" stroke="#8d3b3b" stroke-width="2"/>
+              <path d="M745 132 C745 160, 745 180, 745 203" stroke="#8d3b3b" stroke-width="2" stroke-dasharray="6 6" fill="none"/>
+              <text x="735" y="280" fill="#65717f" font-size="14" text-anchor="middle">楼上点不能自动改成楼下点</text>
+            </svg>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>策略</th>
+                <th>行为</th>
+                <th>适用场景</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>Reject</code></td>
+                <td>非法即失败，不修正。</td>
+                <td>精准放置、强策略技能、会造成不公平误放的技能。</td>
+              </tr>
+              <tr>
+                <td><code>ClampToRange</code></td>
+                <td>超出距离时沿瞄准方向夹到最大距离。</td>
+                <td>普通地面范围技能。</td>
+              </tr>
+              <tr>
+                <td><code>SnapSameSurface</code></td>
+                <td>在同一支撑面内找最近合法点，距离不超过配置容差。</td>
+                <td>召唤、陷阱、地面圈在边缘附近的手感优化。</td>
+              </tr>
+              <tr>
+                <td><code>UseLastValidPreviewOnly</code></td>
+                <td>拖拽预览时短暂保留上一个合法点，释放时仍重新判定。</td>
+                <td>鼠标或摇杆抖动导致的预览闪烁。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="risk">
+            禁止行为：跨层吸附、穿墙吸附、绕过遮挡吸附、把失败改成自动自施法、释放失败仍消耗资源或进入 CD。
+          </div>
+        </section>
+
+        <section id="area-placement-profiles">
+          <h2>7. 技能配置</h2>
+          <h3>7.1 PlacementProfile</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>说明</th>
+                <th>示例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>PlacementMode</code></td>
+                <td>技能落点类型。</td>
+                <td><code>GroundAOE</code> / <code>Deployable</code> / <code>ProjectileLanding</code></td>
+              </tr>
+              <tr>
+                <td><code>MaxRange</code></td>
+                <td>最大施法距离。</td>
+                <td>1200 cm</td>
+              </tr>
+              <tr>
+                <td><code>SurfaceMask</code></td>
+                <td>允许承载的表面类型。</td>
+                <td>地面、可站立平台、技能专用区域</td>
+              </tr>
+              <tr>
+                <td><code>FootprintShape</code></td>
+                <td>实际占地形状。</td>
+                <td>点、圆、盒、胶囊</td>
+              </tr>
+              <tr>
+                <td><code>RequireNav</code></td>
+                <td>是否要求可导航。</td>
+                <td>召唤物默认开启，纯范围圈可按技能关闭。</td>
+              </tr>
+              <tr>
+                <td><code>RequireLineOfSight</code></td>
+                <td>是否需要施法者到落点无遮挡。</td>
+                <td>隔墙不能放的技能开启。</td>
+              </tr>
+              <tr>
+                <td><code>HeightPolicy</code></td>
+                <td>高低差规则。</td>
+                <td>同层允许、小台阶允许、跨层失败。</td>
+              </tr>
+              <tr>
+                <td><code>ResolvePolicy</code></td>
+                <td>非法或略微越界时的处理。</td>
+                <td><code>Reject</code> / <code>ClampToRange</code> / <code>SnapSameSurface</code></td>
+              </tr>
+              <tr>
+                <td><code>PreviewStyle</code></td>
+                <td>预览表现规则。</td>
+                <td>颜色、边缘、失败提示、吸附标记。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">7.2 技能类型默认值</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>类型</th>
+                <th>默认规则</th>
+                <th>程序接入点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>地面范围圈</td>
+                <td>允许距离夹取；需要完整范围可显示；是否需要 Nav 由技能决定。</td>
+                <td><code>SkillAreaPreviewDataAsset</code> / <code>SkillAreaSystem</code></td>
+              </tr>
+              <tr>
+                <td>召唤物</td>
+                <td>必须校验完整占地、导航和阻挡；默认允许同层小范围贴边。</td>
+                <td><code>SkillModuleSpawnMobaUnit</code></td>
+              </tr>
+              <tr>
+                <td>陷阱 / 放置物</td>
+                <td>必须校验占地；是否允许和角色、机关、其他陷阱重叠由技能配置。</td>
+                <td>放置物 Spawn 模块</td>
+              </tr>
+              <tr>
+                <td>投射落点</td>
+                <td>预览终点、抛物线落点和服务器落点使用同一 <code>FinalPlacement</code>。</td>
+                <td><code>SkillModuleLaunchProjectile</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <pre>PlacementProfile:
+  PlacementMode: GroundAOE | Deployable | ProjectileLanding
+  FootprintShape: Point | Circle | Box | Capsule
+  ResolvePolicy: Reject | ClampToRange | SnapSameSurface
+  RequireNav: true / false
+  RequireLineOfSight: true / false
+  MaxSameSurfaceSnapDistance: number
+  MaxHeightDelta: number</pre>
+        </section>
+
+        <section id="area-placement-preview">
+          <h2>8. 预览与反馈</h2>
+          <p>玩家看到的位置必须接近最终结果。发生修正时，预览显示修正后的落点；发生失败时，预览进入非法状态，释放不应产生隐藏的成功或隐藏的消耗。</p>
+          <div class="scene-grid">
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="合法预览示意">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <rect x="42" y="84" width="236" height="58" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="160" cy="112" r="42" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
+                <circle cx="160" cy="112" r="5" fill="#256f65"/>
+                <text x="160" y="45" fill="#256f65" font-size="16" font-weight="700" text-anchor="middle">合法预览</text>
+                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">范围圈、中心点、实际生效位置一致</text>
+              </svg>
+              <div class="scene-body">
+                <h3>合法</h3>
+                <p>正常颜色显示完整 footprint，释放时直接使用当前 <code>FinalPlacement</code>。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="非法预览示意">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <polygon points="54,146 266,86 266,126 54,186" fill="#fbe9e7" stroke="#e8c1bc"/>
+                <circle cx="176" cy="121" r="42" fill="rgba(141,59,59,.12)" stroke="#8d3b3b" stroke-width="3" stroke-dasharray="7 5"/>
+                <line x1="146" y1="91" x2="206" y2="151" stroke="#8d3b3b" stroke-width="4"/>
+                <line x1="206" y1="91" x2="146" y2="151" stroke="#8d3b3b" stroke-width="4"/>
+                <text x="160" y="45" fill="#8d3b3b" font-size="16" font-weight="700" text-anchor="middle">非法 · 坡度过陡</text>
+                <text x="160" y="190" fill="#65717f" font-size="12" text-anchor="middle">失败原因要能给 UI / QA 读取</text>
+              </svg>
+              <div class="scene-body">
+                <h3>非法</h3>
+                <p>非法状态要明确，不释放、不消耗；例外必须由技能单独配置。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="吸附后占地示意">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <rect x="54" y="78" width="180" height="56" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="241" cy="106" r="35" fill="rgba(214,157,55,.12)" stroke="#d69d37" stroke-width="3" stroke-dasharray="6 5"/>
+                <circle cx="214" cy="106" r="35" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
+                <path d="M239 106 L219 106" stroke="#6b7580" stroke-width="2" marker-end="url(#area-placement-snapArrow)"/>
+                <defs>
+                  <marker id="area-placement-snapArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                  </marker>
+                </defs>
+                <text x="160" y="45" fill="#8a5b18" font-size="16" font-weight="700" text-anchor="middle">同层吸附</text>
+                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">显示修正后的真实 footprint</text>
+              </svg>
+              <div class="scene-body">
+                <h3>已修正</h3>
+                <p>吸附不能只移动中心点，还要显示修正后的完整占地范围。</p>
+              </div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>显示</th>
+                <th>释放结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>合法</td>
+                <td>使用正常范围圈、召唤轮廓或落点标记。</td>
+                <td>释放到当前 <code>FinalPlacement</code>。</td>
+              </tr>
+              <tr>
+                <td>已修正</td>
+                <td>显示修正后的最终落点；必要时用细线或边缘提示原始意图和最终点有偏移。</td>
+                <td>释放到修正后的 <code>FinalPlacement</code>。</td>
+              </tr>
+              <tr>
+                <td>非法</td>
+                <td>范围圈变为非法色，召唤轮廓隐藏或变红，失败原因可供 UI 文案读取。</td>
+                <td>默认不释放、不消耗、不进入 CD。</td>
+              </tr>
+              <tr>
+                <td>预览抖动</td>
+                <td>拖拽时可短暂保留上一个合法点，避免边缘闪烁。</td>
+                <td>释放瞬间仍按服务器规则复检。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">预览可以更平滑，但不能骗人。玩家松手时看到的是哪里，正式结果就应该尽量落在哪里；如果服务器拒绝，需要返回明确原因。</div>
+        </section>
+
+        <section id="area-placement-network">
+          <h2>9. 网络与权威</h2>
+          <p>客户端负责高频预览和输入提交，服务器负责最终落点权威。客户端提交的坐标可以作为预测参考，但不能直接作为最终结果。</p>
+          <div class="diagram">
+            <svg viewBox="0 0 980 250" role="img" aria-label="客户端服务器落点同步流程">
+              <defs>
+                <marker id="area-placement-arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="250" fill="#ffffff"/>
+              <rect x="70" y="70" width="230" height="82" rx="8" fill="#e5f0f8" stroke="#9bbfd9"/>
+              <rect x="380" y="70" width="220" height="82" rx="8" fill="#f8fbfc" stroke="#cfd8df"/>
+              <rect x="680" y="70" width="230" height="82" rx="8" fill="#e2f1ee" stroke="#9bcfc5"/>
+              <text x="185" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Client Preview</text>
+              <text x="490" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Cast Request</text>
+              <text x="795" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Server Resolve</text>
+              <text x="185" y="128" fill="#65717f" font-size="13" text-anchor="middle">本地预测 FinalPlacement</text>
+              <text x="490" y="128" fill="#65717f" font-size="13" text-anchor="middle">AimRay / ProfileId / Context</text>
+              <text x="795" y="128" fill="#65717f" font-size="13" text-anchor="middle">权威 FinalPlacement / FailureReason</text>
+              <line x1="300" y1="111" x2="372" y2="111" stroke="#6b7580" stroke-width="2" marker-end="url(#area-placement-arrow3)"/>
+              <line x1="600" y1="111" x2="672" y2="111" stroke="#6b7580" stroke-width="2" marker-end="url(#area-placement-arrow3)"/>
+              <path d="M795 156 C795 210, 185 210, 185 156" fill="none" stroke="#256f65" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#area-placement-arrow3)"/>
+              <text x="490" y="224" fill="#256f65" font-size="14" text-anchor="middle">服务器结果回传，客户端校正表现和失败反馈</text>
+            </svg>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>数据</th>
+                <th>要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>客户端提交</td>
+                <td><code>AimRay</code>、施法者状态、<code>PlacementProfileId</code>、可选预测落点。</td>
+              </tr>
+              <tr>
+                <td>服务器复检</td>
+                <td>用同一 <code>PlacementProfile</code> 调用 <code>PlacementResolver</code>，输出权威结果。</td>
+              </tr>
+              <tr>
+                <td>成功同步</td>
+                <td>实体生成、范围判定、VFX、音效和日志都使用服务器 <code>FinalPlacement</code>。</td>
+              </tr>
+              <tr>
+                <td>失败同步</td>
+                <td>返回 <code>FailureReason</code>，客户端播放失败反馈，不消耗或按技能规则回滚。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="area-placement-cases">
+          <h2>10. 边界案例</h2>
+          <p>边界案例用来验收“系统是否尊重玩家意图”。这些场景不要求每个技能都能成功，但要求成功、修正、失败的口径稳定。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>案例</th>
+                <th>默认结果</th>
+                <th>验收重点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>最大距离外一点点</td>
+                <td>可沿瞄准方向夹取到最大距离。</td>
+                <td>预览圈显示在夹取后位置，不在原始非法点闪烁。</td>
+              </tr>
+              <tr>
+                <td>同平台边缘轻微越界</td>
+                <td>可在容差内向平台内侧收缩。</td>
+                <td>完整 footprint 合法，而不是只有中心点合法。</td>
+              </tr>
+              <tr>
+                <td>桥面瞄到边缘，桥下也可放</td>
+                <td>桥面非法就失败，不自动落到桥下。</td>
+                <td>不能把同屏可见的另一个合法点当成玩家意图。</td>
+              </tr>
+              <tr>
+                <td>楼梯 / 斜坡</td>
+                <td>坡度和高度差在配置内则成功，否则失败。</td>
+                <td>召唤物不倾斜穿地，范围圈不漂浮。</td>
+              </tr>
+              <tr>
+                <td>墙角 / 门框旁放置</td>
+                <td>地面技能只认地面；墙面技能需独立 Profile。</td>
+                <td>不要从一个面偷偷转到另一个面。</td>
+              </tr>
+              <tr>
+                <td>抛物线落点被遮挡</td>
+                <td>按弹道解得到真实终点；如果和预览不一致，需要修正预览或失败。</td>
+                <td>reticle、落点圈、真实命中点一致。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="scene-grid">
+            <div class="scene">
+              <svg viewBox="0 0 360 240" role="img" aria-label="坡面边缘内缩示意">
+                <rect width="360" height="240" fill="#182431"/>
+                <polygon points="34,160 304,88 330,130 60,206" fill="#42525d"/>
+                <polygon points="44,166 282,102 295,123 56,190" fill="#5f7569"/>
+                <circle cx="256" cy="124" r="34" fill="rgba(143,223,166,.22)" stroke="#8fdfa6" stroke-width="3"/>
+                <path d="M286 111 L320 101" stroke="#ff9887" stroke-width="5"/>
+                <circle cx="306" cy="105" r="24" fill="rgba(255,152,135,.14)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <text x="22" y="30" fill="#edf3f7" font-size="14" font-weight="700">坡面边缘</text>
+                <text x="226" y="84" fill="#8fdfa6" font-size="12">内缩后合法</text>
+                <text x="278" y="164" fill="#ff9887" font-size="12">超阈值失败</text>
+              </svg>
+              <div class="scene-body">
+                <h3>有限内缩</h3>
+                <p>轻微越界可以收回，同面内缩距离超过阈值后必须失败。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 240" role="img" aria-label="墙角转面失败示意">
+                <rect width="360" height="240" fill="#172530"/>
+                <polygon points="80,64 202,100 202,206 80,170" fill="#46576a"/>
+                <polygon points="202,100 306,62 306,168 202,206" fill="#344252"/>
+                <circle cx="150" cy="136" r="34" fill="rgba(121,198,255,.2)" stroke="#79c6ff" stroke-width="3"/>
+                <circle cx="247" cy="132" r="30" fill="rgba(255,152,135,.14)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <path d="M112 188 L148 140" stroke="#79c6ff" stroke-width="2" stroke-dasharray="6 5"/>
+                <text x="22" y="30" fill="#edf3f7" font-size="14" font-weight="700">墙角转面</text>
+                <text x="92" y="210" fill="#79c6ff" font-size="12">预览承诺面</text>
+                <text x="222" y="210" fill="#ff9887" font-size="12">不能偷偷换面</text>
+              </svg>
+              <div class="scene-body">
+                <h3>面语义一致</h3>
+                <p>V1 不做墙面放置，但这个案例可以提醒后续扩展时不要提交瞬间换面。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 240" role="img" aria-label="动态阻挡示意">
+                <rect width="360" height="240" fill="#f8fbfc"/>
+                <rect x="54" y="110" width="252" height="58" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="152" cy="139" r="34" fill="rgba(37,111,101,.13)" stroke="#256f65" stroke-width="3"/>
+                <rect x="182" y="112" width="42" height="54" rx="10" fill="#fbe9e7" stroke="#8d3b3b" stroke-width="2"/>
+                <path d="M182 139 L224 139" stroke="#8d3b3b" stroke-width="3"/>
+                <text x="160" y="45" fill="#202830" font-size="15" font-weight="700" text-anchor="middle">动态阻挡</text>
+                <text x="160" y="198" fill="#65717f" font-size="12" text-anchor="middle">预览合法，释放瞬间被挡，需要服务器返回原因</text>
+              </svg>
+              <div class="scene-body">
+                <h3>状态变化</h3>
+                <p>角色、召唤物或机关进入占地区时，服务端复检可以失败并回传原因。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="area-placement-acceptance">
+          <h2>11. 验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>验收项</th>
+                <th>标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P0</td>
+                <td>预览和正式结果一致</td>
+                <td>平地、边缘、斜坡、高低差场景中，释放结果与玩家松手时看到的最终落点一致。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>失败不隐藏消耗</td>
+                <td>非法落点默认不生成实体、不造成伤害、不进入 CD、不消耗资源；例外必须由技能单独配置。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>不跨层吸附</td>
+                <td>楼上、楼下、断崖、平台边缘不会互相吸附；跨层尝试返回 <code>HeightMismatch</code>。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>占地校验有效</td>
+                <td>召唤物和陷阱不会生成在墙里、角色体内、不可导航区或禁止区域。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>边缘手感稳定</td>
+                <td>同一支撑面内的小距离越界可以贴边，拖拽预览不频繁闪烁。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>失败原因可读</td>
+                <td>日志、UI、QA 能看到明确 <code>FailureReason</code>，不出现只有“失败”没有原因的结果。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>网络校正可接受</td>
+                <td>延迟下客户端预测和服务器结果偏差可控；差异较大时能做失败或校正反馈。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">建议 QA 场景：平地、楼梯、平台边缘、上下层平台、窄门、墙角、斜坡、动态阻挡、最大距离边界。</div>
+        </section>
+
+        <section id="area-placement-tech-notes">
+          <h2>12. 程序备注</h2>
+          <p>当前项目已有技能模块、预览数据和范围系统，落点规则建议作为中间层接入。不要让每个技能自己重复写射线、Nav、碰撞和吸附规则。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>模块</th>
+                <th>接入要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>HeroAbility</code></td>
+                <td>组织施法输入和服务器请求，读取技能对应的 <code>PlacementProfileId</code>。</td>
+              </tr>
+              <tr>
+                <td><code>SkillModulePreviewData</code></td>
+                <td>预览阶段调用 <code>PlacementResolver</code>，不在表现层重复找点。</td>
+              </tr>
+              <tr>
+                <td><code>SkillAreaPreviewDataAsset</code></td>
+                <td>只负责范围表现参数；落点合法性由 <code>PlacementProfile</code> 决定。</td>
+              </tr>
+              <tr>
+                <td><code>SkillAreaSystem</code></td>
+                <td>使用已经决议出的 <code>FinalPlacement</code> 创建范围，不再二次改落点。</td>
+              </tr>
+              <tr>
+                <td><code>SkillModuleSpawnMobaUnit</code></td>
+                <td>服务端复检后再 Spawn，生成位置以服务器 <code>FinalPlacement</code> 为准。</td>
+              </tr>
+              <tr>
+                <td><code>SkillModuleLaunchProjectile</code></td>
+                <td>抛物线和落点指示读取同一结果；飞行命中由投射物逻辑继续处理。</td>
+              </tr>
+            </tbody>
+          </table>
+          <h3 style="margin-top:22px;">建议改造顺序</h3>
+          <ol>
+            <li>先建立 <code>PlacementProfile</code>、<code>PlacementResolver</code>、<code>ResolvePolicy</code>、<code>FailureReason</code>。</li>
+            <li>优先接入地面范围圈和召唤物，这两类最容易暴露预览与正式结果不一致。</li>
+            <li>把客户端预览和服务器释放改成调用同一套 resolver。</li>
+            <li>再接入投射落点和抛物线终点，统一终点显示和服务器落点。</li>
+          </ol>
+        </section>
+        </div>
+      </article>
+
+
+      <article class="module-section" id="camera">
+        <div class="module-top">
+          <div>
+            <span class="module-index">04 · 3C 表现</span>
+            <h2>Camera - 镜头迭代需求</h2>
+            <p>统一基础镜头、状态修饰和反馈层，提升移动、瞄准、战斗可读性，减少晕感和镜头特判。</p>
+          </div>
+          <div class="module-actions">
+            <a href="#home">回到首页</a>
+            <a href="Camera%20-%20%E9%95%9C%E5%A4%B4%E8%BF%AD%E4%BB%A3%E9%9C%80%E6%B1%82.html" target="_blank" rel="noreferrer">打开原文件</a>
+          </div>
+        </div>
+        <div class="module-brief">
+          <strong>效果提升</strong>
+          <p>把移动、瞄准、技能、受击等镜头需求分层处理，保证可读性和手感一致。</p>
+        </div>
+        <div class="module-body">
+<section id="camera-position">
+          <h2>1. 背景与目标</h2>
+          <p>当前战斗镜头已经能支撑基础玩法，下一步重点是把镜头需求拆成可配置、可叠加、可验收的规则：什么场景切镜头，镜头变化是否影响判定，技能镜头如何和基础镜头共存。</p>
+          <div class="rule">
+            <h3>一句话目标</h3>
+            <p>玩家能稳定看清战场，输入方向可信；技能镜头有表现力，但不抢走操作权，也不把判定结果变得不可预期。</p>
+          </div>
+          <div class="note">实现可以沿用当前主战斗相机链路；本轮先约定玩家体验、配置边界和验收口径。</div>
+        </section>
+
+        <section id="camera-current">
+          <h2>2. 当前实现理解</h2>
+          <p>当前工程已经有可用的战斗相机骨架，问题不在“从零做相机”，而在配置表达、叠加规则、技能镜头清理和调试口径还不够产品化。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>模块</th>
+                <th>当前已经具备</th>
+                <th>需求层面的判断</th>
+                <th>迭代方向</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>主战斗镜头</td>
+                <td>有自定义 CameraManager、CameraComponent、CameraModeStack，第三人称镜头可稳定输出。</td>
+                <td>可以继续作为主骨架，先不重写。</td>
+                <td>补“角色镜头卡”和状态选择规则，让策划能知道基础参数在哪里改。</td>
+              </tr>
+              <tr>
+                <td>基础镜头参数</td>
+                <td>已有 FOV、Pitch 范围、TargetOffset、碰撞避让、蹲伏偏移等能力。</td>
+                <td>能力够用，但分散在不同资产和代码概念里。</td>
+                <td>收敛成 CameraProfile：基础距离、肩位、视野、Pitch、碰撞、Lag。</td>
+              </tr>
+              <tr>
+                <td>技能镜头</td>
+                <td>技能模块可提交 AbilityCameraData，支持 Offset、FOV、Lag、Blend、Shake。</td>
+                <td>已经能做表现，但更像“覆盖最终镜头”，规则不够显性。</td>
+                <td>定义为 AbilityCameraModifier，并补优先级、叠加策略、清除条件。</td>
+              </tr>
+              <tr>
+                <td>镜头反馈</td>
+                <td>CameraShake、死亡后处理已经接入本地表现。</td>
+                <td>适合做表现层，不能污染技能判定方向。</td>
+                <td>区分 GameplayView 和 PresentationView。</td>
+              </tr>
+              <tr>
+                <td>观战 / 回放</td>
+                <td>当前不是本版完整目标。</td>
+                <td>可以先不做，但状态边界现在要留对。</td>
+                <td>后续基于 CameraState 重建镜头，避免同步每帧最终相机。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="camera-model">
+          <h2>3. 需求模型</h2>
+          <p>每次镜头请求都归到一个明确层级：基础镜头负责常态视野，状态镜头负责瞄准、蹲伏、死亡等持续状态，技能镜头负责短时修饰，反馈镜头负责震屏和后处理。</p>
+          <div class="diagram" aria-label="镜头需求层级图">
+            <svg viewBox="0 0 1000 360" role="img">
+              <defs>
+                <marker id="camera-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                </marker>
+              </defs>
+              <rect x="28" y="42" width="135" height="78" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="96" y="75" text-anchor="middle" font-size="18" fill="#22272e">角色 / 输入</text>
+              <text x="96" y="100" text-anchor="middle" font-size="13" fill="#66727e">移动、瞄准、锁敌</text>
+
+              <rect x="210" y="42" width="135" height="78" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
+              <text x="278" y="75" text-anchor="middle" font-size="18" fill="#22272e">CameraState</text>
+              <text x="278" y="100" text-anchor="middle" font-size="13" fill="#66727e">当前镜头状态</text>
+
+              <rect x="392" y="42" width="135" height="78" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="460" y="75" text-anchor="middle" font-size="18" fill="#22272e">BaseProfile</text>
+              <text x="460" y="100" text-anchor="middle" font-size="13" fill="#66727e">基础距离 / FOV</text>
+
+              <rect x="574" y="42" width="150" height="78" rx="8" fill="#f5f6f8" stroke="#d9dee5"></rect>
+              <text x="649" y="75" text-anchor="middle" font-size="18" fill="#22272e">StateRules</text>
+              <text x="649" y="100" text-anchor="middle" font-size="13" fill="#66727e">瞄准、蹲伏、死亡</text>
+
+              <rect x="770" y="42" width="180" height="78" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="860" y="75" text-anchor="middle" font-size="18" fill="#22272e">AbilityModifier</text>
+              <text x="860" y="100" text-anchor="middle" font-size="13" fill="#66727e">技能 Offset / FOV / Lag</text>
+
+              <line x1="163" y1="81" x2="210" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+              <line x1="345" y1="81" x2="392" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+              <line x1="527" y1="81" x2="574" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+              <line x1="724" y1="81" x2="770" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+
+              <rect x="290" y="205" width="180" height="82" rx="8" fill="#ffffff" stroke="#d9dee5"></rect>
+              <text x="380" y="238" text-anchor="middle" font-size="18" fill="#22272e">GameplayView</text>
+              <text x="380" y="263" text-anchor="middle" font-size="13" fill="#66727e">判定可信的视角基准</text>
+
+              <rect x="530" y="205" width="200" height="82" rx="8" fill="#ffffff" stroke="#d9dee5"></rect>
+              <text x="630" y="238" text-anchor="middle" font-size="18" fill="#22272e">PresentationView</text>
+              <text x="630" y="263" text-anchor="middle" font-size="13" fill="#66727e">玩家看到的最终表现</text>
+
+              <rect x="770" y="205" width="180" height="82" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="860" y="238" text-anchor="middle" font-size="18" fill="#22272e">FeedbackLayer</text>
+              <text x="860" y="263" text-anchor="middle" font-size="13" fill="#66727e">Shake / 后处理</text>
+
+              <line x1="460" y1="120" x2="380" y2="205" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+              <line x1="860" y1="120" x2="630" y2="205" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+              <line x1="860" y1="205" x2="730" y2="246" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+              <line x1="470" y1="246" x2="530" y2="246" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow)"></line>
+            </svg>
+          </div>
+          <div class="rule">
+            <h3>核心判断</h3>
+            <p>移动、瞄准、投射物、近战朝向等和判定相关的系统，优先读 GameplayView；技能镜头、震屏、死亡滤镜等表现变化，优先落在 PresentationView。两者可以相同，但不能默认混在一起。</p>
+          </div>
+        </section>
+
+        <section id="camera-scope">
+          <h2>4. 本版范围</h2>
+          <div class="grid">
+            <div class="box">
+              <h3>本版要做</h3>
+              <ul>
+                <li>定义基础镜头、状态镜头、技能镜头、反馈镜头的分层。</li>
+                <li>补角色镜头卡、状态规则表、技能镜头卡的配置需求。</li>
+                <li>明确技能镜头的叠加、优先级、自动清理和打断清理。</li>
+                <li>明确 GameplayView / PresentationView 的判定边界。</li>
+                <li>补调试显示与配置错误提示，方便策划验收。</li>
+              </ul>
+            </div>
+            <div class="box blue">
+              <h3>本版不做</h3>
+              <ul>
+                <li>不做完整电影镜头、Sequence 演出系统。</li>
+                <li>不重写所有 CameraMode，当前主相机仍作为默认运行链路。</li>
+                <li>不展开完整观战 / 回放协议，只预留 CameraState 边界。</li>
+                <li>具体动画资产、蒙太奇资产和美术镜头曲线由对应技能或表现需求单独列出。</li>
+                <li>镜头参数以策划可读、可复查、可回滚为准。</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="camera-scenes">
+          <h2>5. 场景需求</h2>
+          <p>镜头需求先按场景写。每个场景都要能回答：玩家应该看见什么、是否影响操作方向、策划要配什么、程序怎么验收。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>玩家感受</th>
+                <th>策划配置</th>
+                <th>程序验收</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>普通移动</td>
+                <td>角色、前方威胁和准星区域稳定可见，转向不拖泥带水。</td>
+                <td>默认 FOV、Pitch 上下限、目标偏移、肩位、碰撞避让。</td>
+                <td>连续转身、跳跃、贴墙时无明显抖动和穿墙。</td>
+              </tr>
+              <tr>
+                <td>瞄准 / 精确射击</td>
+                <td>视野更集中，准星更可信，但不遮挡角色关键动作。</td>
+                <td>瞄准 FOV、肩位偏移、进入 / 退出混合时间、灵敏度联动标记。</td>
+                <td>开镜和关镜期间，投射物方向与 GameplayView 一致。</td>
+              </tr>
+              <tr>
+                <td>锁敌 / 横移</td>
+                <td>敌人保持在可读区域，玩家仍能感知侧向空间。</td>
+                <td>锁敌目标优先级、水平偏移、目标丢失后的恢复时间。</td>
+                <td>目标切换、丢失、死亡时镜头能稳定回退。</td>
+              </tr>
+              <tr>
+                <td>突进 / 翻越 / 位移</td>
+                <td>速度感增强，但落点和朝向不能让玩家迷失。</td>
+                <td>短时 FOV、拉远 / 拉近、Lag、Blend、是否跟随位移方向。</td>
+                <td>高速位移中镜头不穿墙，技能结束后能回到正确基础状态。</td>
+              </tr>
+              <tr>
+                <td>技能释放</td>
+                <td>重招、蓄力、近战命中有镜头强调，但不打断玩家读场。</td>
+                <td>技能镜头卡：触发时点、Offset、FOV、Lag、Shake、持续时间、清除条件。</td>
+                <td>技能正常结束、被打断、角色死亡时，镜头请求都会清理。</td>
+              </tr>
+              <tr>
+                <td>命中 / 受击反馈</td>
+                <td>有冲击感，但不影响下一次瞄准和移动判断。</td>
+                <td>Shake 强度、方向、衰减，是否叠加屏幕后处理。</td>
+                <td>Shake 只影响 PresentationView，不改变核心判定方向。</td>
+              </tr>
+              <tr>
+                <td>贴墙 / 狭窄空间</td>
+                <td>镜头自动收近或避让，角色和威胁仍可读。</td>
+                <td>碰撞半径、预测避让、收近 / 放回时间。</td>
+                <td>墙角、门框、坡面连续测试无大幅跳变。</td>
+              </tr>
+              <tr>
+                <td>死亡 / 复活</td>
+                <td>死亡状态明确，复活后迅速回到可操作镜头。</td>
+                <td>死亡后处理、FOV、镜头是否锁定目标、复活恢复时间。</td>
+                <td>死亡和复活不会残留技能镜头或 Shake 状态。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="camera-terms">
+          <h2>6. 镜头语义</h2>
+          <p>后续配置和验收统一使用下面这些词，避免“切镜头”“加镜头”“震一下”在不同人嘴里指向不同实现。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>术语</th>
+                <th>定义</th>
+                <th>策划写法</th>
+                <th>程序关注点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>基础镜头</td>
+                <td>角色没有特殊状态时的第三人称镜头。</td>
+                <td>默认距离、FOV、Pitch、肩位。</td>
+                <td>永远有回退值，不允许空状态。</td>
+              </tr>
+              <tr>
+                <td>状态镜头</td>
+                <td>由瞄准、蹲伏、锁敌、死亡等状态触发的镜头规则。</td>
+                <td>进入状态 A 时切到 Profile B，退出时回退。</td>
+                <td>需要状态优先级和互斥关系。</td>
+              </tr>
+              <tr>
+                <td>技能镜头修饰</td>
+                <td>技能期间短时改变 Offset、FOV、Lag 或 Shake。</td>
+                <td>技能某窗口内加一个 modifier。</td>
+                <td>必须有持续时间、清除条件、叠加策略。</td>
+              </tr>
+              <tr>
+                <td>反馈镜头</td>
+                <td>命中、受击、死亡等带来的 Shake、后处理、短时冲击。</td>
+                <td>本地表现反馈，不参与判定。</td>
+                <td>默认 owner-only，不能污染 GameplayView。</td>
+              </tr>
+              <tr>
+                <td>GameplayView</td>
+                <td>投射物、近战朝向、辅助瞄准等使用的可信视角基准。</td>
+                <td>需要稳定，不被震屏和演出镜头带偏。</td>
+                <td>要和 PresentationView 分离或至少明确采样时机。</td>
+              </tr>
+              <tr>
+                <td>PresentationView</td>
+                <td>玩家最终看到的画面，可以叠加表现层。</td>
+                <td>可以服务手感和冲击，但不能制造误判。</td>
+                <td>Shake、后处理、技能镜头大多落在这一层。</td>
+              </tr>
+              <tr>
+                <td>清除条件</td>
+                <td>镜头请求什么时候结束。</td>
+                <td>技能结束、窗口结束、被打断、死亡、换英雄。</td>
+                <td>需要兜底，避免 modifier 残留。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="camera-config">
+          <h2>7. 配置需求</h2>
+          <p>镜头配置按“角色、状态、技能”三种粒度组织。角色决定默认视野，状态决定持续变化，技能决定短时修饰。</p>
+
+          <h3>7.1 角色镜头卡</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>用途</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>角色 / 相机模板</td>
+                <td>指定该角色默认使用哪套基础镜头。</td>
+                <td>英雄之间可以继承同一模板，再局部覆盖。</td>
+              </tr>
+              <tr>
+                <td>默认 FOV / Pitch</td>
+                <td>决定默认视野和上下视角限制。</td>
+                <td>需要 Clamp，非法值给 warning。</td>
+              </tr>
+              <tr>
+                <td>目标偏移 / 肩位</td>
+                <td>决定角色在屏幕中的位置。</td>
+                <td>射击角色通常需要稳定准星空间。</td>
+              </tr>
+              <tr>
+                <td>碰撞避让</td>
+                <td>处理贴墙、角落、狭窄空间。</td>
+                <td>需要测试收近和恢复是否平滑。</td>
+              </tr>
+              <tr>
+                <td>基础 Lag</td>
+                <td>控制跟随柔和度。</td>
+                <td>竞技操作优先低延迟，表现型状态再单独加。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>7.2 状态规则表</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>触发条件</th>
+                <th>镜头变化</th>
+                <th>优先级 / 退出</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Normal</td>
+                <td>无特殊状态。</td>
+                <td>使用默认 Profile。</td>
+                <td>最低优先级，所有状态退出后回到这里。</td>
+              </tr>
+              <tr>
+                <td>Aim</td>
+                <td>按住瞄准、进入精确射击。</td>
+                <td>FOV 收窄，肩位微调，降低表现 Lag。</td>
+                <td>高于 Normal，低于 Death / 强制演出。</td>
+              </tr>
+              <tr>
+                <td>LockTarget</td>
+                <td>锁定有效目标。</td>
+                <td>保持目标读场，可给水平偏移。</td>
+                <td>目标无效后按恢复时间退出。</td>
+              </tr>
+              <tr>
+                <td>Death</td>
+                <td>角色死亡或等待复活。</td>
+                <td>死亡后处理、可能切观察目标。</td>
+                <td>最高优先级，并清理技能镜头。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>7.3 技能镜头卡</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>用途</th>
+                <th>示例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>技能 ID / 窗口</td>
+                <td>说明哪个技能、哪个时段触发镜头。</td>
+                <td><code>HAD_SteelAttack</code>：出手前拉近，命中帧 Shake。</td>
+              </tr>
+              <tr>
+                <td>Offset / FOV</td>
+                <td>短时调整构图和速度感。</td>
+                <td>重击可轻微拉近并降低 FOV；位移可短时拉远。</td>
+              </tr>
+              <tr>
+                <td>Lag</td>
+                <td>控制技能期间镜头跟随柔和度。</td>
+                <td>突进可加位置 Lag，但精确射击不建议加。</td>
+              </tr>
+              <tr>
+                <td>Shake / 后处理</td>
+                <td>只表达冲击反馈。</td>
+                <td>命中帧 0.12s 轻震，强度按技能等级或距离缩放。</td>
+              </tr>
+              <tr>
+                <td>Blend / Duration</td>
+                <td>进入、退出和最长持续时间。</td>
+                <td>所有 0 值和负值都要有明确含义或报错。</td>
+              </tr>
+              <tr>
+                <td>清除条件</td>
+                <td>防止技能镜头残留。</td>
+                <td>技能结束、被打断、死亡、切换 Pawn、超时。</td>
+              </tr>
+              <tr>
+                <td>叠加策略</td>
+                <td>多个镜头请求同时存在时如何处理。</td>
+                <td>Override、Additive、Max、Min、IgnoreLowerPriority。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="camera-stacking">
+          <h2>8. 叠加规则</h2>
+          <p>镜头最怕“看起来能配，其实互相覆盖”。本版需要把叠加顺序写死成规则，策划只在规则内填参数。</p>
+          <div class="diagram" aria-label="镜头叠加时间线">
+            <svg viewBox="0 0 1000 320" role="img">
+              <defs>
+                <marker id="camera-arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                </marker>
+              </defs>
+              <line x1="80" y1="258" x2="930" y2="258" stroke="#66727e" stroke-width="2" marker-end="url(#camera-arrow2)"></line>
+              <text x="80" y="284" font-size="14" fill="#66727e">输入 / 状态</text>
+              <text x="880" y="284" font-size="14" fill="#66727e">最终输出</text>
+
+              <rect x="90" y="55" width="820" height="44" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="115" y="83" font-size="17" fill="#22272e">BaseProfile：全程存在，负责默认 FOV、Pitch、距离、碰撞</text>
+
+              <rect x="250" y="120" width="460" height="44" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
+              <text x="275" y="148" font-size="17" fill="#22272e">StateRule：瞄准 / 锁敌 / 蹲伏，按优先级切换或修饰</text>
+
+              <rect x="390" y="185" width="280" height="44" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="415" y="213" font-size="17" fill="#22272e">AbilityModifier：技能窗口内生效</text>
+
+              <rect x="585" y="229" width="150" height="28" rx="8" fill="#f8e5e5" stroke="#e0bcbc"></rect>
+              <text x="610" y="249" font-size="14" fill="#8d3b3b">Shake：短时反馈</text>
+
+              <line x1="125" y1="99" x2="125" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="300" y1="164" x2="300" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="430" y1="229" x2="430" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="670" y1="229" x2="670" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="850" y1="99" x2="850" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+            </svg>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>规则</th>
+                <th>需求说明</th>
+                <th>验收方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>基础镜头永远兜底</td>
+                <td>任何状态退出、技能结束、配置缺失，都必须回到基础镜头。</td>
+                <td>删除技能镜头配置后，角色仍能正常游戏。</td>
+              </tr>
+              <tr>
+                <td>状态镜头先于技能镜头</td>
+                <td>瞄准、锁敌等状态先确定当前镜头基准，技能只在其上做短时修饰。</td>
+                <td>瞄准中释放技能，技能结束后仍回到瞄准镜头。</td>
+              </tr>
+              <tr>
+                <td>技能镜头必须可清理</td>
+                <td>每个技能镜头请求都要有 owner、持续时间和清除条件。</td>
+                <td>技能被打断或角色死亡时，不残留 Offset / FOV / Lag。</td>
+              </tr>
+              <tr>
+                <td>同层冲突按优先级</td>
+                <td>同一层多个请求同时存在时，先比优先级，再按策略处理。</td>
+                <td>两个技能镜头重叠时，结果能从 debug 信息解释。</td>
+              </tr>
+              <tr>
+                <td>Shake 不参与判定</td>
+                <td>Shake 和后处理只影响最终表现，不改变投射物、近战朝向、移动输入。</td>
+                <td>强 Shake 下连续射击，命中方向不随画面抖动漂移。</td>
+              </tr>
+              <tr>
+                <td>非法配置要可见</td>
+                <td>Blend 为 0、FOV 越界、Duration 不合法、引用为空，都要有明确处理。</td>
+                <td>PIE 或日志能看到配置 warning，且不会出现 NaN 或瞬移。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="camera-acceptance">
+          <h2>9. 优先级验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>需求</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P0</td>
+                <td>明确基础镜头、状态镜头、技能镜头、反馈镜头的边界。</td>
+                <td>策划能按角色镜头卡和技能镜头卡补配置；程序能按分层判断落点。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>补技能镜头清理规则和非法配置保护。</td>
+                <td>技能结束、打断、死亡、超时都不会残留镜头；Blend / FOV 非法值不会导致异常画面。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>确认 Shake、后处理、死亡滤镜属于表现层。</td>
+                <td>投射物、近战方向、移动输入不受表现层扰动。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>补 CameraProfile、StateRule、AbilityModifier 三类配置资产或等价数据结构。</td>
+                <td>不改 C++ 代码即可调整普通态、瞄准态、一个技能镜头表现。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>实现清晰的 modifier stack 和 debug 显示。</td>
+                <td>能看到当前生效的 Profile、State、Modifier、优先级、剩余时间。</td>
+              </tr>
+              <tr>
+                <td>P2</td>
+                <td>为观战 / 回放预留 CameraState。</td>
+                <td>旁观端未来能基于状态重建基础镜头，不依赖同步每帧最终 transform。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="rule">
+            <h3>最小可交付版本</h3>
+            <p>至少完成 P0：需求语义统一、技能镜头不残留、表现层不污染判定、非法配置可见。P1 再做数据驱动和堆栈化，P2 留给观战和回放。</p>
+          </div>
+        </section>
+
+        <section id="camera-tech-notes">
+          <h2>10. 程序备注</h2>
+          <p>当前代码可承接以下实现点，后续实现时按需求分层逐步收敛。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>当前代码</th>
+                <th>可承接的需求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>AGameMatchCameraManager</code></td>
+                <td>仍作为主相机管理入口，负责输出最终 ViewTarget。</td>
+              </tr>
+              <tr>
+                <td><code>UGameMatchCameraComponent</code></td>
+                <td>承接 AbilityCameraData、死亡后处理、最终视图输出，可扩展 modifier stack。</td>
+              </tr>
+              <tr>
+                <td><code>UGameCameraModeStack</code></td>
+                <td>继续负责基础 CameraMode 的求值和混合。</td>
+              </tr>
+              <tr>
+                <td><code>UHeroCameraMode_ThirdPerson</code></td>
+                <td>承接第三人称基础镜头、碰撞避让、Pitch 曲线和基础偏移。</td>
+              </tr>
+              <tr>
+                <td><code>FSkillModuleCamera</code> / <code>UAbilityCameraData</code></td>
+                <td>短期可继续作为技能镜头入口；中期建议升级为 AbilityCameraModifier 请求。</td>
+              </tr>
+            </tbody>
+          </table>
+          <pre>建议求值顺序：
+CameraState
+-> BaseProfile
+-> StateRule
+-> AbilityModifierStack
+-> FeedbackLayer
+-> GameplayView / PresentationView</pre>
+          <div class="note">实现节奏以低风险迭代为主：先补需求语义、配置边界和清理规则，再逐步整理数据结构和调试工具。</div>
+        </section>
+        </div>
+      </article>
+
+      <article class="module-section" id="upper-body-animation">
+        <div class="module-top">
+          <div>
+            <span class="module-index">05 · 3C 表现</span>
+            <h2>Animation - 上半身动作融合部分盆骨表现</h2>
+            <p>解决上半身动作和下半身移动互相抢表现的问题，提升移动射击、移动施法时的身体稳定性。</p>
+          </div>
+          <div class="module-actions">
+            <a href="#home">回到首页</a>
+            <a href="Animation%20-%20%E4%B8%8A%E5%8D%8A%E8%BA%AB%E5%8A%A8%E4%BD%9C%E8%9E%8D%E5%90%88%E9%83%A8%E5%88%86%E7%9B%86%E9%AA%A8%E8%A1%A8%E7%8E%B0.html" target="_blank" rel="noreferrer">打开原文件</a>
+          </div>
+        </div>
+        <div class="module-brief">
+          <strong>效果提升</strong>
+          <p>让角色在移动中开火、施法、转向时不出现骨盆漂、上半身抢动、下半身割裂。</p>
+        </div>
+        <div class="module-body">
+<section id="upper-body-animation-goal">
+          <h2>1. 目标</h2>
+          <p>角色在移动、转向、瞄准、普攻、蓄力或释放上半身技能时，下半身应继续保持 Motion Matching 的移动稳定性，上半身则表达技能意图。</p>
+          <div class="decision">
+            <h3>一句话目标</h3>
+            <p>玩家看到的是“移动稳定 + 技能动作清晰”，系统内部仍然让 Motion Matching 使用原始可靠的移动数据做选帧。</p>
+          </div>
+          <figure class="media-demo">
+            <h3>效果示意</h3>
+            <p>用于观察上半身动作叠加后，骨盆和下半身是否仍保持移动稳定。重点看移动节奏、骨盆偏移、腿部滑步和技能姿态之间的关系。</p>
+            <div class="media-frame">
+              <img src="./v2-04de6115bf27d7f9995823a12fdf88b7_b.gif" alt="上半身动作融合时的骨盆表现效果示意" />
+            </div>
+            <figcaption class="caption">示意图：移动中叠加上半身动作时的骨盆与下半身表现</figcaption>
+          </figure>
+        </section>
+
+        <section id="upper-body-animation-behavior">
+          <h2>2. 策划功能描述</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>期望表现</th>
+                <th>不接受表现</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>移动中普攻</td>
+                <td>角色保持当前步态和移动方向，上半身完成开火、挥击、瞄准等表现。</td>
+                <td>骨盆被攻击动作带偏，腿部滑步，跑动节奏突然中断。</td>
+              </tr>
+              <tr>
+                <td>移动中释放技能</td>
+                <td>技能动作可以明显影响胸腔、肩膀、手臂和武器，但下半身继续表达移动。</td>
+                <td>上半身动作污染大腿或脚，导致身体撕裂、异常扭转。</td>
+              </tr>
+              <tr>
+                <td>蓄力 / 持续施法</td>
+                <td>上半身保持施法姿态，下半身根据输入继续移动、减速或停步。</td>
+                <td>持续动作循环时骨盆抖动，BlendIn / BlendOut 时姿态弹跳。</td>
+              </tr>
+              <tr>
+                <td>技能结束</td>
+                <td>平滑回到普通移动或上半身待机状态。</td>
+                <td>技能结束瞬间上身或骨盆明显弹回。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">
+            <strong>优先级：</strong>战斗可读性 &gt; 移动稳定性 &gt; 技能表现强度 &gt; 原始动画还原度。
+          </div>
+        </section>
+
+        <section id="upper-body-animation-config">
+          <h2>3. 配置需求</h2>
+          <p>技能或动作资产需要能声明自己的混合语义，避免所有技能共用同一套上半身规则。</p>
+          <div class="split">
+            <div class="box">
+              <h3>动作类型</h3>
+              <ul>
+                <li>全身动作</li>
+                <li>上半身动作</li>
+                <li>上半身强表现动作</li>
+                <li>瞄准 / 持续施法动作</li>
+                <li>禁止移动中播放的动作</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>关键参数</h3>
+              <ul>
+                <li>混合权重</li>
+                <li>BlendIn / BlendOut 时间</li>
+                <li>起始骨骼，如 <code>spine_01</code></li>
+                <li>是否允许影响 pelvis</li>
+                <li>是否启用移动中视觉修正</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="upper-body-animation-technical">
+          <h2>4. 技术方案</h2>
+          <p>本方案不改变 Motion Matching 的移动选帧逻辑，而是在上半身混合之后，对最终显示姿态做一层受控修正。</p>
+          <pre>Locomotion Motion Matching
+  -> PoseSearchHistoryCollector
+  -> AimOffset / Overlay / UpperBody Slot
+  -> Layered Blend Per Bone
+  -> UpperBody Visual Correction
+  -> IK / Final Output</pre>
+          <table>
+            <thead>
+              <tr>
+                <th>步骤</th>
+                <th>处理内容</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>缓存移动姿态</td>
+                <td>在上半身混合前保留 Motion Matching 输出的 locomotion pose。</td>
+                <td>作为下半身稳定基准。</td>
+              </tr>
+              <tr>
+                <td>播放上半身动作</td>
+                <td>继续使用现有 <code>UpperBody</code> Slot、Overlay、Layered Bone Blend。</td>
+                <td>优先复用当前动画蓝图管线。</td>
+              </tr>
+              <tr>
+                <td>视觉修正</td>
+                <td>对 pelvis / thigh 的异常偏移做小幅还原，必要时把差异分摊到 spine 链。</td>
+                <td>目标是减少扭腰、滑步和撕裂感。</td>
+              </tr>
+              <tr>
+                <td>IK 收尾</td>
+                <td>在修正后再进行脚部、手部或武器对齐处理。</td>
+                <td>保证最终接地和持武表现稳定。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="upper-body-animation-mm-boundary">
+          <h2>5. Motion Matching 边界</h2>
+          <div class="risk">
+            <strong>关键风险：</strong>如果修正后的 pelvis、thigh、foot 进入 PoseHistory 或 Motion Matching Query，下一帧可能会影响选帧，造成步态跳变、匹配漂移或移动预测不稳定。
+          </div>
+          <div class="split">
+            <div class="box">
+              <h3>禁止影响</h3>
+              <ul>
+                <li>Capsule 位移</li>
+                <li>CharacterMovement 速度与加速度</li>
+                <li>RootMotionSource</li>
+                <li>RootYawOffset 决策</li>
+                <li>Motion Matching Query</li>
+                <li>PoseSearchHistory / PoseHistory</li>
+                <li>Trajectory 预测输入</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>允许影响</h3>
+              <ul>
+                <li>最终输出给 SkeletalMesh 的视觉姿态</li>
+                <li>上半身与下半身混合后的显示结果</li>
+                <li>Spine / Chest / Clavicle / Arm 等技能表现骨骼</li>
+                <li>仅用于视觉稳定的小幅 pelvis 修正</li>
+              </ul>
+            </div>
+          </div>
+          <div class="decision">
+            <h3>落地原则</h3>
+            <p>Motion Matching 看到原始 locomotion pose，玩家看到修正后的最终 pose。修正结果不回写、不参与下一帧搜索、不改变真实移动。</p>
+          </div>
+        </section>
+
+        <section id="upper-body-animation-acceptance">
+          <h2>6. 验收标准</h2>
+          <ul>
+            <li>至少选择一名普通人形英雄和一名体型或武器差异较大的英雄验证。</li>
+            <li>覆盖原地、前进、后退、横移、转向、连续普攻、技能打断、技能 BlendOut 等场景。</li>
+            <li>移动中释放上半身动作时，无明显骨盆异常、腿部错位、滑步或身体撕裂感。</li>
+            <li>技能方向、武器朝向和命中表现保持一致。</li>
+            <li>开启修正前后，Motion Matching 选帧稳定性无明显变差。</li>
+            <li>Debug 模式下可以确认修正节点位于 PoseHistory 采集之后，且不改变移动预测输入。</li>
+          </ul>
+        </section>
+        </div>
+      </article>
+
+      <article class="module-section" id="projectile-muzzle">
+        <div class="module-top">
+          <div>
+            <span class="module-index">06 · 命中链路</span>
+            <h2>Projectile - 实体弹道发射点</h2>
+            <p>统一镜头、枪口、手部、弹道起点的关系，减少实体弹偏移、穿模、打不到准星的问题。</p>
+          </div>
+          <div class="module-actions">
+            <a href="#home">回到首页</a>
+            <a href="Projectile%20-%20%E5%AE%9E%E4%BD%93%E5%BC%B9%E9%81%93%E5%8F%91%E5%B0%84%E7%82%B9.html" target="_blank" rel="noreferrer">打开原文件</a>
+          </div>
+        </div>
+        <div class="module-brief">
+          <strong>效果提升</strong>
+          <p>明确视觉起点、逻辑起点和瞄准意图的优先级，提升射击可信度。</p>
+        </div>
+        <div class="module-body">
+<section id="projectile-muzzle-background">
+          <h2>1. 背景</h2>
+          <p>当前 Twinblast 普攻的即时子弹在逻辑上更接近从相机射线发出，枪口 socket 主要用于视觉偏移。这样能保证准星命中感，但会带来 TPS 中常见的公平性问题：角色或武器仍在掩体后，子弹却从镜头线命中目标。</p>
+
+          <div class="rule">
+            <strong>本需求的核心结论：</strong>
+            <ul>
+              <li>玩家的瞄准意图由相机准星决定。</li>
+              <li>实体子弹的真实出生点由武器口或逻辑枪口决定。</li>
+              <li>子弹方向由枪口指向相机解析出的 <code>AimPoint</code>。</li>
+              <li>需要支持旧逻辑兼容，不能一次性改变全项目所有投射物手感。</li>
+            </ul>
+          </div>
+
+          <div class="danger">
+            <strong>不要把本需求理解成“所有技能都从枪口发射”。</strong>
+            这是一个可配置的发射策略需求，优先服务 Twinblast 普攻和同类 TPS 实体子弹。
+          </div>
+        </section>
+
+        <section id="projectile-muzzle-scope">
+          <h2>2. 范围</h2>
+          <p>本文档只定义实体子弹发射起点与准星意图的需求，不替代动画、武器绑定、AO、IK、命中伤害和网络预测文档。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>范围项</th>
+                <th>是否纳入</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Twinblast 普攻即时子弹</td>
+                <td><span class="tag p0">P0</span></td>
+                <td>首个接入目标。当前资产已有 <code>IPD_TwinblastAttack</code> 与 <code>hand_l / hand_r</code> 多枪口配置基础。</td>
+              </tr>
+              <tr>
+                <td>其他英雄普攻即时子弹</td>
+                <td><span class="tag p1">P1</span></td>
+                <td>待 Twinblast 验证后按技能类型逐步接入，不做全量自动迁移。</td>
+              </tr>
+              <tr>
+                <td>LifeTime Projectile</td>
+                <td><span class="tag p1">P1</span></td>
+                <td>逻辑相似，但生命周期、预测和碰撞成本更高，建议第二阶段接入。</td>
+              </tr>
+              <tr>
+                <td>Beam / Laser</td>
+                <td><span class="tag p2">P2</span></td>
+                <td>需要单独定义持续射线、遮挡更新、端点吸附和表现拉线规则。</td>
+              </tr>
+              <tr>
+                <td>AO、右手 IK、开火 Overlay</td>
+                <td><span class="tag no">不纳入</span></td>
+                <td>属于身体资源和动画表现并行问题。本文只要求枪口位置可被正确读取和验收。</td>
+              </tr>
+              <tr>
+                <td>伤害数值、射速、弹道速度平衡</td>
+                <td><span class="tag no">不纳入</span></td>
+                <td>发射点改变可能影响手感，但不在本文内调整数值。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="projectile-muzzle-current">
+          <h2>3. 当前工程现状</h2>
+          <p>当前工程已经有即时子弹系统和视觉枪口配置，但逻辑发射点与视觉发射点不是同一概念。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>模块 / 资产</th>
+                <th>当前职责</th>
+                <th>问题</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>FSkillModuleContinuousFire</code></td>
+                <td>技能激活后按射击间隔启动连续即时子弹。</td>
+                <td>只负责启动连续开火，不决定每发子弹的真实起点。</td>
+              </tr>
+              <tr>
+                <td><code>UInstantProjectileSystem::SpawnAndLaunchInstantProjectileFromContinuousFire</code></td>
+                <td>每次开火时从控制器获取相机视角，计算 <code>StartLocation</code> 和 <code>LaunchVelocity</code>。</td>
+                <td>当前真实 <code>StartLocation</code> 来自相机视点到角色位置的投影，不是武器口。</td>
+              </tr>
+              <tr>
+                <td><code>USkillProjectileDataBase::VisualStartSocket</code></td>
+                <td>配置表现从哪个骨骼或 socket 出现。</td>
+                <td>当前主要影响视觉偏移，不等于逻辑发射点。</td>
+              </tr>
+              <tr>
+                <td><code>IPD_TwinblastAttack</code></td>
+                <td>配置 Twinblast 普攻即时子弹。</td>
+                <td>已开启多枪口表现，数组为 <code>hand_l</code>、<code>hand_r</code>，但逻辑仍不是从这些点发射。</td>
+              </tr>
+              <tr>
+                <td><code>IPD_TwinblastAttack_R</code></td>
+                <td>右手版本即时子弹配置。</td>
+                <td>配置了 <code>hand_r</code>，仍只作为表现枪口。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            当前项目已经具备“从 socket 找表现枪口”的基础，缺的是“发射策略配置”和“逻辑发射点使用 socket”的代码路径。
+          </div>
+        </section>
+
+        <section id="projectile-muzzle-scenes">
+          <h2>4. 使用场景</h2>
+          <p>需求先从玩家感知最强、最容易出问题的场景出发。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>需求</th>
+                <th>验收关注点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>常规站立开火</td>
+                <td>准星决定目标方向，子弹从当前发射手的枪口或逻辑枪口出生。</td>
+                <td>调试线显示 <code>MuzzleStart</code> 与实际子弹起点一致。</td>
+              </tr>
+              <tr>
+                <td>左右手交替开火</td>
+                <td>Twinblast 每发根据开火序号选择左手或右手枪口。</td>
+                <td>第 1 发、第 2 发分别从预期 socket 出生；视觉枪口和逻辑起点一致。</td>
+              </tr>
+              <tr>
+                <td>肩射贴墙</td>
+                <td>如果准星能看到敌人，但枪口被墙挡住，子弹不得从相机穿墙命中。</td>
+                <td>子弹应命中遮挡物，或 UI 给出枪口遮挡提示。</td>
+              </tr>
+              <tr>
+                <td>近距离贴脸</td>
+                <td>相机命中点过近时，需要避免枪口方向大角度横甩。</td>
+                <td>近距离目标命中稳定，不出现明显反向发射或横飞。</td>
+              </tr>
+              <tr>
+                <td>俯仰高低差</td>
+                <td>枪口方向应收敛到相机解析出的目标点，不能只用枪口 forward。</td>
+                <td>上坡、下坡、空中目标下准星与命中趋势一致。</td>
+              </tr>
+              <tr>
+                <td>非 Twinblast 旧技能</td>
+                <td>默认不改变旧技能逻辑。</td>
+                <td>未接入新策略的投射物表现和命中手感保持不变。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="projectile-muzzle-rules">
+          <h2>5. 核心规则</h2>
+          <p>系统应采用“相机解析意图，枪口兑现物理”的规则。规则顺序必须稳定，否则调试和验收都会困难。</p>
+
+          <div class="diagram">
+            <svg viewBox="0 0 920 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TPS 实体子弹发射流程图">
+              <rect width="920" height="240" fill="#fff"/>
+              <g fill="#e2f1ee" stroke="#78aaa1" stroke-width="2">
+                <rect x="32" y="76" width="140" height="66" rx="8"/>
+                <rect x="220" y="76" width="140" height="66" rx="8"/>
+                <rect x="408" y="76" width="140" height="66" rx="8"/>
+                <rect x="596" y="76" width="140" height="66" rx="8"/>
+                <rect x="784" y="76" width="104" height="66" rx="8"/>
+              </g>
+              <g fill="#172530" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="16" font-weight="700" text-anchor="middle">
+                <text x="102" y="104">CameraRay</text>
+                <text x="102" y="128">解析准星</text>
+                <text x="290" y="104">AimPoint</text>
+                <text x="290" y="128">目标意图点</text>
+                <text x="478" y="104">MuzzleStart</text>
+                <text x="478" y="128">枪口起点</text>
+                <text x="666" y="104">Direction</text>
+                <text x="666" y="128">枪口指向目标</text>
+                <text x="836" y="104">Spawn</text>
+                <text x="836" y="128">实体子弹</text>
+              </g>
+              <g stroke="#66727e" stroke-width="3" fill="none" marker-end="url(#projectile-muzzle-arrow)">
+                <path d="M172 109 H220"/>
+                <path d="M360 109 H408"/>
+                <path d="M548 109 H596"/>
+                <path d="M736 109 H784"/>
+              </g>
+              <defs>
+                <marker id="projectile-muzzle-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>规则</th>
+                <th>说明</th>
+                <th>不允许</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Camera 只表达意图</td>
+                <td>从准星中心发出 <code>CameraRay</code>，解析 <code>AimPoint</code>。</td>
+                <td>不允许直接把相机位置当作实体子弹出生点。</td>
+              </tr>
+              <tr>
+                <td>Muzzle 表达物理来源</td>
+                <td>实体子弹从 <code>LogicalMuzzle</code> 或指定 socket 出生。</td>
+                <td>不允许逻辑从相机出，视觉再从枪口补线伪装。</td>
+              </tr>
+              <tr>
+                <td>方向由枪口指向意图点</td>
+                <td><code>LaunchDirection = Normalize(AimPoint - MuzzleStart)</code>。</td>
+                <td>不允许只用枪口 forward，导致准星和命中趋势分叉。</td>
+              </tr>
+              <tr>
+                <td>近距离需要保护</td>
+                <td><code>AimPoint</code> 过近时使用最小收敛距离或远点回退。</td>
+                <td>不允许近距离下子弹大幅横飞、反向飞或穿过自己身体。</td>
+              </tr>
+              <tr>
+                <td>遮挡必须可信</td>
+                <td>枪口到目标方向被近处障碍挡住时，应表现为打墙或无法射击提示。</td>
+                <td>不允许角色躲在墙后通过镜头线命中敌人。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="projectile-muzzle-config">
+          <h2>6. 配置需求</h2>
+          <p>策划需要能按投射物配置发射起点策略。默认值必须兼容现有项目。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>配置项</th>
+                <th>推荐值</th>
+                <th>需求说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>LaunchOriginPolicy</code></td>
+                <td><code>CameraProjected</code></td>
+                <td>默认保持当前逻辑。可选值建议包含 <code>CameraProjected</code>、<code>VisualStartSocket</code>、<code>CustomSocket</code>。</td>
+              </tr>
+              <tr>
+                <td><code>VisualStartSocket</code></td>
+                <td>按资产配置</td>
+                <td>单枪口模式下作为表现起点；当策略为 <code>VisualStartSocket</code> 时，也可作为逻辑起点。</td>
+              </tr>
+              <tr>
+                <td><code>MultipleVisualStartSocketArray</code></td>
+                <td>按资产配置</td>
+                <td>多枪口模式下根据开火序号选择当前枪口。Twinblast 当前为 <code>hand_l</code>、<code>hand_r</code>。</td>
+              </tr>
+              <tr>
+                <td><code>MinimumAimDistance</code></td>
+                <td>建议 800-1200</td>
+                <td>当相机命中点过近时，用于把 <code>AimPoint</code> 推到合理距离，避免近距离方向剧烈偏转。</td>
+              </tr>
+              <tr>
+                <td><code>bCheckMuzzleBlocked</code></td>
+                <td>建议 P1 开启</td>
+                <td>控制是否检测枪口近距离遮挡。P0 可先用真实枪口发射后的碰撞结果体现遮挡。</td>
+              </tr>
+              <tr>
+                <td><code>MuzzleBlockedFeedback</code></td>
+                <td>后续 UI 配置</td>
+                <td>枪口遮挡时准星、音效或提示表现。该项不阻塞 P0。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="success">
+            <strong>Twinblast 建议：</strong>
+            先把 <code>IPD_TwinblastAttack</code> 的新策略配置为 <code>VisualStartSocket</code>。如果后续武器资产存在更准确的 <code>muzzle_l / muzzle_r</code>，应优先使用真实枪口 socket 替代 <code>hand_l / hand_r</code>。
+          </div>
+        </section>
+
+        <section id="projectile-muzzle-feedback">
+          <h2>7. 表现与交互要求</h2>
+          <p>发射点改变后，玩家会更明显地感知到枪口、准星、弹道、遮挡之间的关系。表现层需要配合解释系统规则。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>表现项</th>
+                <th>需求</th>
+                <th>验收方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>枪口火光</td>
+                <td>火光和实体子弹出生点一致，左右手交替时不能串手。</td>
+                <td>慢速播放开火，确认第 N 发对应第 N 个 socket。</td>
+              </tr>
+              <tr>
+                <td>弹道 / Beam 起点</td>
+                <td>弹道表现从当前枪口开始，不再从准星中心或相机附近出现。</td>
+                <td>开启 debug 线，对比 <code>VisualStartLocation</code> 与 <code>StartLocation</code>。</td>
+              </tr>
+              <tr>
+                <td>准星命中感</td>
+                <td>中远距离下仍应表现为打准星指向位置。</td>
+                <td>站立射击固定靶，中心准星命中趋势稳定。</td>
+              </tr>
+              <tr>
+                <td>枪口遮挡提示</td>
+                <td>P1 需要准星或 UI 提示当前枪口被遮挡。</td>
+                <td>贴墙瞄准敌人时，玩家能理解为什么子弹打墙。</td>
+              </tr>
+              <tr>
+                <td>手部动画</td>
+                <td>本文不要求修正 AO/IK，但要求 socket 位置可被稳定读取。</td>
+                <td>开火期间 socket 不应跳到角色内部或异常位置。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="projectile-muzzle-compat">
+          <h2>8. 兼容与迁移</h2>
+          <p>发射起点会直接影响命中手感和 PVP 公平性，因此必须小步迁移。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>阶段</th>
+                <th>迁移对象</th>
+                <th>要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>阶段 1</td>
+                <td>Twinblast 普攻</td>
+                <td>只接入 <code>IPD_TwinblastAttack</code>，并保留回退到旧逻辑的配置能力。</td>
+              </tr>
+              <tr>
+                <td>阶段 2</td>
+                <td>Twinblast FastFire / 右手版本</td>
+                <td>确认普通开火稳定后，再接入同角色其他即时子弹。</td>
+              </tr>
+              <tr>
+                <td>阶段 3</td>
+                <td>其他英雄普攻</td>
+                <td>按角色逐个验收，不做批量默认切换。</td>
+              </tr>
+              <tr>
+                <td>阶段 4</td>
+                <td>特殊投射物与 Beam</td>
+                <td>根据技能语义单独配置，避免普通子弹规则误伤技能表现。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            旧资产默认继续使用 <code>CameraProjected</code>。只有明确配置为 <code>VisualStartSocket</code> 的投射物才改变真实发射点。
+          </div>
+        </section>
+
+        <section id="projectile-muzzle-acceptance">
+          <h2>9. 优先级与验收</h2>
+          <p>每条需求必须能被策划、程序或 QA 直接检查。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>需求</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>支持按投射物配置发射起点策略。</td>
+                <td>旧资产默认不变；Twinblast 可单独切到枪口发射。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>Twinblast 普攻从当前左右手枪口或逻辑枪口出生。</td>
+                <td>开启 debug 后，实体子弹 <code>StartLocation</code> 与当前发射 socket 位置一致。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>准星仍负责瞄准意图。</td>
+                <td>中远距离打靶时，子弹方向收敛到准星解析出的 <code>AimPoint</code>。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>旧连续开火逻辑可回退。</td>
+                <td>把 Twinblast 策略改回 <code>CameraProjected</code> 后，表现和当前版本一致。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p1">P1</span></td>
+                <td>枪口遮挡检测与提示。</td>
+                <td>贴墙瞄准时不发生相机穿墙命中，UI 或准星能提示遮挡。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p1">P1</span></td>
+                <td>最小瞄准距离保护。</td>
+                <td>贴脸或近距离地面命中点不会导致子弹大角度横飞。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p2">P2</span></td>
+                <td>扩展到 Beam / Laser / LifeTime Projectile。</td>
+                <td>每类投射物有独立验收，不复用即时子弹结论硬套。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="projectile-muzzle-program">
+          <h2>10. 程序备注</h2>
+          <p>本节给程序实现参考，不作为策划正文需求的替代。</p>
+
+          <h3>建议新增发射起点策略</h3>
+          <pre>enum class EProjectileLaunchOriginPolicy : uint8
+{
+    CameraProjected,     // 当前逻辑，默认兼容旧资产
+    VisualStartSocket,  // 使用 VisualStartSocket / MultipleVisualStartSocketArray 作为逻辑起点
+    CustomSocket        // 后续扩展：单独配置逻辑枪口 socket
+};</pre>
+
+          <h3 style="margin-top:22px;">建议运行流程</h3>
+          <pre>CameraRay = GetPlayerViewPointForGameplay()
+AimPoint = ResolveCameraAimPoint(CameraRay, MaxRange, MinimumAimDistance)
+
+if LaunchOriginPolicy == VisualStartSocket:
+    MuzzleStart = ResolveCurrentVisualStartSocketLocation(CustomFireIndex)
+else:
+    MuzzleStart = CurrentCameraProjectedStartLocation
+
+LaunchDirection = Normalize(AimPoint - MuzzleStart)
+StartLocation = MuzzleStart
+LaunchVelocity = LaunchDirection * LaunchSpeed</pre>
+
+          <h3 style="margin-top:22px;">当前可能涉及的代码点</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>文件</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SkillProjectileDataAsset.h</code></td>
+                <td>适合新增策略配置。默认值必须为当前逻辑。</td>
+              </tr>
+              <tr>
+                <td><code>InstantProjectileSystem.cpp</code></td>
+                <td><code>SpawnAndLaunchInstantProjectileFromContinuousFire</code> 是 Twinblast 连续开火每发子弹起点的关键入口。</td>
+              </tr>
+              <tr>
+                <td><code>InstantProjectileSystem.h</code></td>
+                <td>可新增 socket 解析和枪口位置解析辅助函数。</td>
+              </tr>
+              <tr>
+                <td><code>IPD_TwinblastAttack</code></td>
+                <td>接入新策略后的首个配置资产。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="danger">
+            <strong>实现风险：</strong>
+            如果真实枪口 socket 配在武器 mesh 而不是角色 mesh 上，当前只查角色 mesh 的逻辑会找不到准确枪口。需要确认 Twinblast 的真实枪口 socket 所在组件。
+          </div>
+        </section>
+
+        <section id="projectile-muzzle-questions">
+          <h2>11. 待确认</h2>
+          <p>以下问题会影响 P0 的最终表现，但不影响先建立可配置策略。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>问题</th>
+                <th>建议决策</th>
+                <th>影响</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Twinblast 是否已有真实 <code>muzzle_l / muzzle_r</code> socket？</td>
+                <td>优先使用真实枪口；没有则 P0 先用 <code>hand_l / hand_r</code> 验证流程。</td>
+                <td>影响子弹出生点精度和视觉可信度。</td>
+              </tr>
+              <tr>
+                <td>socket 在角色 mesh 还是武器 mesh？</td>
+                <td>若在武器 mesh，需要提供统一武器组件查询入口。</td>
+                <td>影响程序读取枪口位置的方式。</td>
+              </tr>
+              <tr>
+                <td>贴墙时是允许开火打墙，还是直接禁止开火？</td>
+                <td>建议 P0 允许开火并打墙，P1 增加准星遮挡提示。</td>
+                <td>影响玩家反馈和输入响应。</td>
+              </tr>
+              <tr>
+                <td>双枪真实发射是否会导致左右边缘命中不同？</td>
+                <td>先接受真实枪口差异；如果手感过抖，再评估逻辑中点枪口。</td>
+                <td>影响 PVP 边缘命中手感。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+        </div>
+      </article>
+
+      <article class="module-section" id="hit-effect">
+        <div class="module-top">
+          <div>
+            <span class="module-index">07 · 命中链路</span>
+            <h2>Effect - 命中特效系统 V1</h2>
+            <p>统一命中特效的触发、材质、部位、伤害反馈，提升打击反馈一致性和配置效率。</p>
+          </div>
+          <div class="module-actions">
+            <a href="#home">回到首页</a>
+            <a href="Effect%20-%20%E5%91%BD%E4%B8%AD%E7%89%B9%E6%95%88%E7%B3%BB%E7%BB%9F%20V1.html" target="_blank" rel="noreferrer">打开原文件</a>
+          </div>
+        </div>
+        <div class="module-brief">
+          <strong>效果提升</strong>
+          <p>让角色、材质、部位、伤害类型都能映射到稳定的命中反馈，减少表现资源重复接线。</p>
+        </div>
+        <div class="module-body">
+<section id="hit-effect-background">
+          <h2>1. 背景与目标</h2>
+          <p>当前命中特效配置分散在不同技能数据里。随着敌我、墙体、近战、护盾、爆头等差异增多，继续增加平铺字段会让策划配置和程序维护都变得困难。</p>
+
+          <div class="decision">
+            <strong>本版目标：</strong>
+            <ul>
+              <li>策划可以按命中来源、命中对象、结算结果配置不同命中特效。</li>
+              <li>同一套配置支持本机视角和世界视角的不同表现。</li>
+              <li>旧资产不要求一次性重配，程序需要提供默认回退。</li>
+              <li>近战普攻、盾击、挥砍等动画窗口类命中，也需要纳入这套配置。</li>
+            </ul>
+          </div>
+
+          <div class="risk">
+            <strong>本版暂不做：</strong>
+            金属 / 石头 / 木头等复杂表面材质；胸、腹、手、腿等细分身体部位；每个英雄技能的全量重配。
+          </div>
+        </section>
+
+        <section id="hit-effect-config">
+          <h2>2. 配置需求</h2>
+          <p>策划侧需要看到的是“什么场景播什么表现”，而不是程序内部结构。建议每个命中特效配置资产包含默认表现和少量特殊规则。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>配置维度</th>
+                <th>策划含义</th>
+                <th>第一版取值</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>命中来源</td>
+                <td>这次命中是由哪类技能产生的。</td>
+                <td>激光、瞬时投射物、技能命中窗口。</td>
+              </tr>
+              <tr>
+                <td>命中对象</td>
+                <td>打到敌人、友军、墙体，还是护盾 / 部署物。</td>
+                <td>敌方单位、友方单位、世界对象、护盾或部署物。</td>
+              </tr>
+              <tr>
+                <td>单位类型</td>
+                <td>命中的单位具体是什么。</td>
+                <td>英雄、小兵、防御塔、召唤物、投射物。V1 可选配置。</td>
+              </tr>
+              <tr>
+                <td>结算结果</td>
+                <td>这次命中最终造成了什么效果。</td>
+                <td>伤害、治疗、护盾吸收、免疫、格挡。</td>
+              </tr>
+              <tr>
+                <td>命中部位</td>
+                <td>是否命中头部。</td>
+                <td>仅支持敌方单位的头部 / 默认两档。</td>
+              </tr>
+              <tr>
+                <td>表现通道</td>
+                <td>谁能看到这次表现。</td>
+                <td>本机表现、世界表现、目标身上表现。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">配置回退</h3>
+          <p>策划不需要填满所有组合。找不到精确规则时，程序按更通用的规则回退。</p>
+          <pre>敌方 + 头部 + 伤害
+  -> 敌方 + 伤害
+  -> 敌方
+  -> 默认命中表现</pre>
+
+          <div class="note">
+            <strong>配置要求：</strong>每个命中特效配置必须有默认表现。特殊规则只配置真正需要差异的场景。
+          </div>
+        </section>
+
+        <section id="hit-effect-scenes">
+          <h2>3. 支持场景</h2>
+          <p>以下场景是第一版需要覆盖的设计范围。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>需求</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>激光命中敌人</td>
+                <td>可配置敌方命中特效、命中音效、本机反馈。</td>
+                <td>兼容现有 LaserSweep 敌方特效字段。</td>
+              </tr>
+              <tr>
+                <td>激光命中友军</td>
+                <td>可配置友军命中特效，适用于治疗、护盾、增益等技能。</td>
+                <td>是否能命中友军由技能碰撞和过滤规则决定。</td>
+              </tr>
+              <tr>
+                <td>瞬时投射物命中敌人</td>
+                <td>可配置敌方命中特效。本机可以播放命中确认反馈。</td>
+                <td>兼容现有单一 <code>HitParticle</code>。</td>
+              </tr>
+              <tr>
+                <td>瞬时投射物命中世界</td>
+                <td>可配置墙体 / 地面命中特效。</td>
+                <td>V1 不区分金属、石头、木头。</td>
+              </tr>
+              <tr>
+                <td>近战窗口命中敌人</td>
+                <td>可像投射物一样配置命中特效、音效和本机反馈。</td>
+                <td>近战属于“技能命中窗口”的一种，不单独建系统。</td>
+              </tr>
+              <tr>
+                <td>护盾吸收 / 免疫 / 格挡</td>
+                <td>需要能配置不同于普通伤害的反馈。</td>
+                <td>第一版先保留配置能力，具体接入可分阶段。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">Steel 普攻样例</h3>
+          <ul>
+            <li><code>HAD_SteelAttack</code> 的 A / B 段普攻属于近战命中窗口。</li>
+            <li>命中敌方时播放近战命中特效；挥空时不播放命中反馈。</li>
+            <li>本机可以立即播放轻量命中反馈，但伤害数字以服务器结算结果为准。</li>
+            <li>后续需要支持 A / B 段配置不同命中特效。</li>
+          </ul>
+        </section>
+
+        <section id="hit-effect-feedback">
+          <h2>4. 表现要求</h2>
+          <p>同一次命中需要区分本机看到的反馈、其他人看到的反馈，以及目标身上的反馈。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>表现通道</th>
+                <th>用途</th>
+                <th>例子</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>本机表现</td>
+                <td>给释放者看的即时反馈，优先保证手感和清晰度。</td>
+                <td>准星反馈、轻量命中粒子、相机轻微震动、命中音效。</td>
+              </tr>
+              <tr>
+                <td>世界表现</td>
+                <td>其他玩家在场景中能看到的命中效果。</td>
+                <td>受击火花、能量爆点、墙体命中粒子、命中音效。</td>
+              </tr>
+              <tr>
+                <td>目标身上表现</td>
+                <td>挂在被命中目标上的确认反馈。</td>
+                <td>受击闪光、护盾波纹、免疫 / 格挡提示表现。</td>
+              </tr>
+              <tr>
+                <td>UI 反馈</td>
+                <td>和结算结果相关的反馈。</td>
+                <td>伤害数字、治疗数字、暴击、击杀、护盾吸收。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            <strong>GameplayCue 使用方式：</strong>
+            策划可以把 GameplayCue 作为一种表现资源配置。程序需要保证同一套配置能区分本机表现和世界表现，并避免本机预测与服务器确认重复播放。
+          </div>
+        </section>
+
+        <section id="hit-effect-migration">
+          <h2>5. 兼容与迁移</h2>
+          <p>第一版需要兼容当前项目已有配置，避免一次性重配所有技能。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>当前内容</th>
+                <th>迁移要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>LaserSweepData</code> 的默认 / 敌方 / 友方命中特效</td>
+                <td>映射到新配置的默认、敌方、友方规则。</td>
+              </tr>
+              <tr>
+                <td><code>InstantProjectileData</code> 的单一 <code>HitParticle</code></td>
+                <td>没有新配置时，继续作为默认命中特效使用。</td>
+              </tr>
+              <tr>
+                <td><code>ANS_SkillEffectWindow</code> 的命中窗口</td>
+                <td>新增命中特效配置入口，先以 Steel 普攻验证。</td>
+              </tr>
+              <tr>
+                <td><code>Buff.ExecuteCueTag</code></td>
+                <td>可作为短期确认命中特效入口；长期由命中特效配置决定使用哪个 Cue。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="hit-effect-acceptance">
+          <h2>6. 优先级与验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>需求</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="priority p0">P0</span></td>
+                <td>统一命中特效配置入口和默认回退。</td>
+                <td>缺少特殊规则时稳定播放默认命中特效，不报错、不丢表现。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p0">P0</span></td>
+                <td>兼容 LaserSweep 和 InstantProjectile 旧配置。</td>
+                <td>现有激光和瞬时投射物命中特效不退化。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p1">P1</span></td>
+                <td>接入 SkillEffectWindow，并以 Steel 普攻验证近战命中。</td>
+                <td>Steel 普攻击中敌方播放命中特效；挥空不播放命中反馈。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p1">P1</span></td>
+                <td>支持本机表现和世界表现分流。</td>
+                <td>释放者能看到本机反馈，其他客户端能看到世界表现，且不重复播放。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p2">P2</span></td>
+                <td>支持护盾吸收、免疫、格挡等差异反馈。</td>
+                <td>可配置不同于普通伤害的表现。</td>
+              </tr>
+              <tr>
+                <td><span class="priority later">暂不做</span></td>
+                <td>复杂表面材质和细分身体部位。</td>
+                <td>后续版本再评估。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="hit-effect-tech-notes">
+          <h2>7. 程序备注</h2>
+          <p>以下内容不是策划配置口径，只用于帮助程序理解实现边界。</p>
+
+          <div class="split">
+            <div class="box">
+              <h3>建议抽象</h3>
+              <ul>
+                <li><code>HitSourceType</code>：LaserSweep / InstantProjectile / SkillEffectWindow。</li>
+                <li><code>SkillEffectWindowType</code>：Melee / AreaPulse / AttachedSweep。</li>
+                <li><code>TargetCategory</code>：HostileUnit / AllyUnit / World / ShieldOrDeployable。</li>
+                <li><code>ResultType</code>：Pending / Damage / Heal / ShieldAbsorb / Immune / Blocked。</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>实现注意</h3>
+              <ul>
+                <li>GameplayCue 只负责表现触发，不负责规则选择。</li>
+                <li>预测命中和服务器确认需要去重。</li>
+                <li>伤害数字、暴击、击杀、护盾吸收以结算结果为准。</li>
+                <li>SkillEffectWindow 当前不一定有精确 <code>FHitResult</code>，需要定义命中点策略。</li>
+              </ul>
+            </div>
+          </div>
+
+          <pre>HAD_SteelAttack
+  -> Montage
+  -> ANS_SkillEffectWindow
+  -> SkillAreaSystem
+  -> ODB_SteelAttack
+  -> ExecuteDamage</pre>
+        </section>
+        </div>
+      </article>
+    </main>
+  </div>
+  <script>
+    (function () {
+      const modules = [
+        { slug: "skill-release", title: "Skill - 技能释放关系系统" },
+        { slug: "single-target", title: "Skill - 单体施法选取 V2" },
+        { slug: "area-placement", title: "Skill - 范围施法落点" },
+        { slug: "camera", title: "Camera - 镜头迭代需求" },
+        { slug: "upper-body-animation", title: "Animation - 上半身动作融合部分盆骨表现" },
+        { slug: "projectile-muzzle", title: "Projectile - 实体弹道发射点" },
+        { slug: "hit-effect", title: "Effect - 命中特效系统 V1" }
+      ];
+
+      const home = document.getElementById("home");
+      const moduleNav = document.getElementById("moduleNav");
+      const sectionNavBlock = document.getElementById("sectionNavBlock");
+      const sectionNavTitle = document.getElementById("sectionNavTitle");
+      const sectionNav = document.getElementById("sectionNav");
+      const articles = new Map(modules.map((item) => [item.slug, document.getElementById(item.slug)]));
+
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("a[href^='#']");
+        if (!link) return;
+        const href = link.getAttribute("href");
+        if (!href || href === "#") return;
+        event.preventDefault();
+        if (window.location.hash === href) {
+          showCurrentView(true);
+        } else {
+          window.location.hash = href;
+        }
+      });
+
+      function currentId() {
+        try {
+          return decodeURIComponent(window.location.hash.replace(/^#/, ""));
+        } catch (error) {
+          return window.location.hash.replace(/^#/, "");
+        }
+      }
+
+      function moduleFromId(id) {
+        if (!id || id === "home") return null;
+        return modules.find((item) => id === item.slug || id.startsWith(item.slug + "-")) || null;
+      }
+
+      function setActiveLinks(nav, activeHref) {
+        if (!nav) return;
+        nav.querySelectorAll("a").forEach((link) => {
+          link.classList.toggle("is-active", link.getAttribute("href") === activeHref);
+        });
+      }
+
+      function sectionTitleFrom(section) {
+        const heading = section.querySelector("h2, h3, h4");
+        return heading ? heading.textContent.trim() : section.id;
+      }
+
+      function buildSectionNav(module) {
+        sectionNav.innerHTML = "";
+        if (!module) {
+          sectionNavBlock.hidden = true;
+          return;
+        }
+
+        const article = articles.get(module.slug);
+        sectionNavTitle.textContent = module.title;
+        sectionNavBlock.hidden = false;
+
+        const seen = new Set();
+        const sections = Array.from(article.querySelectorAll(".module-body section[id], .module-body .section[id]"))
+          .filter((section) => {
+            if (seen.has(section.id)) return false;
+            seen.add(section.id);
+            return section.id.startsWith(module.slug + "-");
+          });
+
+        if (!sections.length) {
+          const empty = document.createElement("a");
+          empty.href = "#" + module.slug;
+          empty.textContent = "模块顶部";
+          sectionNav.appendChild(empty);
+          return;
+        }
+
+        sections.forEach((section, index) => {
+          const link = document.createElement("a");
+          link.href = "#" + section.id;
+          const num = document.createElement("span");
+          num.textContent = String(index + 1).padStart(2, "0");
+          link.appendChild(num);
+          link.appendChild(document.createTextNode(sectionTitleFrom(section)));
+          sectionNav.appendChild(link);
+        });
+      }
+
+      function showCurrentView(shouldScroll) {
+        const id = currentId();
+        const module = moduleFromId(id);
+
+        document.querySelectorAll(".module-section").forEach((article) => {
+          article.classList.remove("is-active");
+        });
+
+        if (!module) {
+          document.body.classList.remove("view-module");
+          document.body.classList.add("view-home");
+          home.classList.add("is-active");
+          setActiveLinks(moduleNav, "#home");
+          buildSectionNav(null);
+          if (shouldScroll) home.scrollIntoView({ block: "start" });
+          return;
+        }
+
+        document.body.classList.remove("view-home");
+        document.body.classList.add("view-module");
+        home.classList.remove("is-active");
+
+        const article = articles.get(module.slug);
+        article.classList.add("is-active");
+        setActiveLinks(moduleNav, "#" + module.slug);
+        buildSectionNav(module);
+        setActiveLinks(sectionNav, id && id !== module.slug ? "#" + id : "");
+
+        if (shouldScroll) {
+          const target = id && id !== module.slug ? document.getElementById(id) : article;
+          (target || article).scrollIntoView({ block: "start" });
+        }
+      }
+
+      window.addEventListener("hashchange", () => showCurrentView(true));
+      showCurrentView(true);
+    })();
+  </script>
+</body>
+</html>

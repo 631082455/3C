@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>战斗镜头动效层 · 设计稿</title>
+  <style>
+    :root {
+      --bg:#f5f6f8; --paper:#fff; --ink:#22272e; --muted:#66727e; --line:#d9dee5; --soft:#eef2f5;
+      --accent:#256f65; --accent-soft:#e2f1ee; --blue:#22577a; --blue-soft:#e5f0f8;
+      --warn:#8a5b18; --warn-soft:#fff4dd; --danger:#8d3b3b; --danger-soft:#f8e5e5;
+      --radius:8px; --sans:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; --mono:"Cascadia Code",Consolas,monospace;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 var(--sans);}
+    .page{width:min(1180px,calc(100vw - 32px));margin:32px auto 48px;}
+    header{padding-bottom:22px;border-bottom:1px solid var(--line);}
+    .kicker{color:var(--accent);font-size:13px;font-weight:760;letter-spacing:.08em;text-transform:uppercase;}
+    h1,h2,h3{margin:0;line-height:1.28;} h1{margin-top:8px;font-size:34px;font-weight:760;} h2{font-size:23px;font-weight:740;} h3{margin-top:22px;font-size:17px;font-weight:720;}
+    p{margin:8px 0 0;color:var(--muted);} .rule p,.note p{color:inherit;}
+    p,li,td,th{overflow-wrap:anywhere;} ul,ol{margin:8px 0 0;padding-left:20px;} li{color:#3a434d;} li+li{margin-top:4px;} b{color:var(--ink);}
+    code{font-family:var(--mono);color:#1d5f80;font-size:.94em;}
+    .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;color:var(--muted);font-size:13px;} .meta span{padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);} .meta a{color:var(--blue);}
+    .layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;margin-top:24px;}
+    nav{position:sticky;top:16px;align-self:start;padding:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);}
+    nav .title{padding:4px 8px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:740;}
+    nav a{display:block;padding:8px;border-radius:6px;color:var(--muted);font-size:14px;text-decoration:none;} nav a:hover{color:var(--ink);background:var(--soft);}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);}
+    section{padding:28px 32px;border-bottom:1px solid var(--line);scroll-margin-top:20px;} section:last-child{border-bottom:none;}
+    .rule{margin-top:16px;padding:16px 18px;border-left:4px solid var(--accent);border-radius:var(--radius);background:var(--accent-soft);}
+    .note{margin-top:16px;padding:12px 16px;border:1px solid #ecd6ad;border-radius:var(--radius);background:var(--warn-soft);color:#604219;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:16px;}
+    .box{padding:16px;border:1px solid var(--line);border-radius:var(--radius);background:#fbfcfd;}
+    .box.blue{border-color:#c8dced;background:var(--blue-soft);} .box.green{border-color:#badbd4;background:var(--accent-soft);}
+    table{width:100%;margin-top:14px;border-collapse:collapse;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+    th,td{padding:11px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;} th{background:#f2f4f6;color:#303740;font-size:13px;font-weight:740;} tr:last-child td{border-bottom:none;}
+    .ok{color:var(--accent);font-weight:700;} .no{color:var(--danger);font-weight:700;} .later{color:var(--warn);font-weight:700;}
+    @media(max-width:960px){.layout{grid-template-columns:1fr;} nav{position:static;} section{padding:24px 20px;} .grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Combat 3C · Camera Design</div>
+      <h1>战斗镜头动效层 · 设计稿</h1>
+      <p>面向竞技第三人称 MOBA / 射击战斗的技能镜头效果系统(CameraMotionEffect,CME)。定义技能期间镜头的旋转 / 推拉 / FOV / 冲击反馈如何表达、如何叠加、如何收尾,以及它与判定的边界。</p>
+      <div class="meta">
+        <span>需求方:战斗 3C 策划</span>
+        <span>实现方:战斗程序</span>
+        <span>状态:已实现并验证(v2.1 as-built)</span>
+        <span>配套:<a href="Camera - 镜头动效配置手册.html">《配置手册》</a> · <a href="Camera - 战斗镜头动效层实现稿（程序对齐）.html">《实现稿(程序对齐)》</a></span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#background">1. 背景与目标</a>
+        <a href="#laws">2. 设计铁律</a>
+        <a href="#model">3. 设计模型</a>
+        <a href="#mechanics">4. 机制设计</a>
+        <a href="#config">5. 配置粒度设计</a>
+        <a href="#scenes">6. 场景与案例</a>
+        <a href="#scope">7. 范围决策</a>
+        <a href="#acceptance">8. 验收标准</a>
+      </nav>
+
+      <main>
+        <!-- 1 -->
+        <section id="background">
+          <h2>1. 背景与目标</h2>
+          <p>旧的技能镜头(UAbilityCameraData / ACD_*)存在四个结构性问题:<b>配不出任何旋转</b>(大招俯角、命中踢无法表达);<b>多效果互相覆盖</b>(后触发的整体顶掉先前的,结果不可预期);<b>被打断 / 死亡后可能残留</b>(镜头卡在技能状态);<b>偏移写进判定视图</b>(镜头表现悄悄影响弹道)。</p>
+          <div class="rule">
+            <h3 style="margin-top:0">一句话目标</h3>
+            <p>技能镜头效果做成<b>"相对基础镜头的增量":可叠加、必然自动归零、永不触碰判定</b>。策划以"选预设、填强度、画曲线"的粒度表达手感,清理与合法性由系统结构保证,不依赖任何人记得配"清除条件"。</p>
+          </div>
+          <p>本系统与旧 ACD 并存:新技能一律使用 CME;存量 ACD 技能不受影响,按需逐个迁移。</p>
+        </section>
+
+        <!-- 2 -->
+        <section id="laws">
+          <h2>2. 设计铁律(所有配置与验收的最高准绳)</h2>
+          <table>
+            <thead><tr><th style="width:22%">铁律</th><th>含义</th><th style="width:30%">业界依据</th></tr></thead>
+            <tbody>
+              <tr><td><b>① 准星永不说谎</b></td><td>一切镜头表现只作用于画面,永不写入控制朝向 / 判定视图。大招压着俯角开枪,子弹仍打准星指的位置。</td><td>CS / Valorant:视觉后座与弹道彻底分离</td></tr>
+              <tr><td><b>② 玩家输入永远赢</b></td><td>镜头可以建议构图,不能抢杆;全屏演出只允许出现在玩家本无操作权的窗口。</td><td>Nesky《50 个镜头错误》第一条</td></tr>
+              <tr><td><b>③ 绕角色转,不原地转</b></td><td>大幅旋转必须以角色为锚点做轨道运动,角色不滑出画面;原地转视角仅限小幅冲击反馈。</td><td>Nesky:pivot around the avatar</td></tr>
+              <tr><td><b>④ 旋转预算与操作权成反比</b></td><td>玩家操作权越完整,允许的旋转越小:可瞄准窗口仅 ≤3° 视线踢;施法锁定窗口允许中幅演绎(≤25°);全锁定窗口才可自由演出。演绎必须在操作权归还前混出完毕。</td><td>对 Deadlock / 漫威争锋全部旋转案例逐一核实的共同规律</td></tr>
+              <tr><td><b>⑤ 震屏是预算不是调料</b></td><td>冲击类效果有分带与全局上限,接近上限渐进压缩——团战刷屏叠不成晕。</td><td>Predecessor 连续多个补丁砍震屏的教训</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 3 -->
+        <section id="model">
+          <h2>3. 设计模型:两层,各管各的</h2>
+          <div class="grid">
+            <div class="box blue">
+              <h3 style="margin-top:0">基础镜头(底座)</h3>
+              <p>常态第三人称镜头的全部基础参数(臂长、FOV、俯仰限、碰撞避让)。全局一份模板,每英雄可覆盖枢轴偏移。<b>它定义"原样"。</b></p>
+            </div>
+            <div class="box green">
+              <h3 style="margin-top:0">动效层(本设计)</h3>
+              <p>技能期间叠加在底座之上的短时效果:旋转、推拉、FOV、冲击。<b>全部是增量,自带包络必然衰减归零。</b>拿掉全部动效,画面精确回到底座。</p>
+            </div>
+          </div>
+          <div class="rule">
+            <h3 style="margin-top:0">归属判据</h3>
+            <p>一个镜头需求,问"效果结束时回到哪里":<b>归零回原样 → 动效层</b>(本系统,覆盖约 95% 的技能镜头需求);<b>回到另一种持续模式</b>(开镜、俯瞰操控、变身换机位)→ 状态镜头层,<b>本项目已决策不做</b>(见第 7 节)。</p>
+          </div>
+          <h3>旋转的两种语义(动效层内)</h3>
+          <table>
+            <thead><tr><th style="width:22%"></th><th>绕枢轴轨道(Orbit)</th><th>原地视线踢(ViewKick)</th></tr></thead>
+            <tbody>
+              <tr><td>行为</td><td>机位沿以角色为圆心的轨道移动,视线始终穿过角色</td><td>机位不动,视线短暂偏移后回弹</td></tr>
+              <tr><td>用途 / 预算</td><td>施法演绎、大招构图、蓄力(≤25°,限操作权受限窗口)</td><td>命中踢、开火顿挫(≤3°,可瞄准窗口唯一合法旋转)</td></tr>
+              <tr><td>设计理由</td><td>大幅旋转若不绕角色,角色滑出画面、玩家丢失参照(铁律③)</td><td>小幅冲击要的就是"画面被撞了一下",绕圈反而无冲击感</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 4 -->
+        <section id="mechanics">
+          <h2>4. 机制设计</h2>
+          <h3>4.1 叠加:增量求和,不是覆盖</h3>
+          <ul>
+            <li><b>增量通道</b>(旋转 / 位移 / FOV / 臂长):多个效果同帧<b>求和</b>——大招俯角 + 命中踢共存,踢叠在俯角之上,各自衰减各自归零。这是对旧系统 last-wins 的根本性替换。</li>
+            <li><b>覆盖通道</b>(跟随柔和度 Lag,数值相加无意义):高优先带胜出。</li>
+            <li><b>优先带(Band)</b>:受击/命中 → 移动 → 技能 → 大招 → 系统。带用于冲突裁决与分带预算,不用于互斥。</li>
+            <li><b>防叠爆</b>:受击带旋转合计软钳 4°,全局旋转合计软钳 20°,FOV 合计 ±15。"软"指越接近上限压缩越强(而非硬截平)——团战最激烈时新的命中仍有递减反馈,不出现"越打越没反应"。</li>
+          </ul>
+          <h3>4.2 节奏:包络 × 形状 × 强度</h3>
+          <ul>
+            <li>每个效果自带包络(混入 → 保持 → 混出),<b>必然归零</b>;持续时间可设"跟随技能生命周期"。</li>
+            <li><b>形状与强度分离</b>:形状曲线(内联可画,纵轴允许过冲与反向回弹)描述"这个效果长什么样";使用处的强度标量描述"多重"。重狙与冲锋枪共用同一形状、只差强度——保证全局镜头语言一致。</li>
+            <li><b>重触发策略</b>:同一效果连续触发时可选 重播 / 高强度胜出 / 忽略 / 续时。冲击类默认"高强度胜出",防止轻击的反馈吞掉随后重击的反馈。</li>
+          </ul>
+          <h3>4.3 清理:残留在结构上不可能</h3>
+          <p>这是对旧系统最重要的设计承诺,不依赖配置、不依赖任何路径"记得清理":</p>
+          <ul>
+            <li>技能结束 / 被打断 / 预测回滚 → 该技能的全部动效自动淡出;</li>
+            <li>持续时间到期 → 包络自然收尾;蒙太奇窗口结束 → 窗口效果自动释放(打断时由引擎保证送达);</li>
+            <li>死亡 / 切换观战 → 全清(含震屏立停);</li>
+            <li>兜底看门狗:归属技能实例已消亡的无限时长效果,下一帧强制剔除并报错——<b>清理永不依赖"健康的归属者"</b>(本项目 Lissandra 蒙太奇孤儿事件的结构化教训)。</li>
+          </ul>
+          <div class="note">竞品实证:Deadlock 存在一整类"大招被打断后镜头永久卡在拉远状态"的 bug(Haze / Mina / 滑索加速等),根因都是"进/出成对事件、出事件被打断吞掉"。本设计的效果<b>没有"出事件"</b>,只有到期与死亡,两者都不依赖打断路径的良好行为——对这类事故结构性免疫。</div>
+        </section>
+
+        <!-- 5 -->
+        <section id="config">
+          <h2>5. 配置粒度设计</h2>
+          <p>配置分两级,复杂度沉在资产、日常路径保持极简:</p>
+          <table>
+            <thead><tr><th style="width:24%">层级</th><th>承载什么</th><th style="width:26%">谁维护</th></tr></thead>
+            <tbody>
+              <tr><td><b>CME 资产</b>(共享库)</td><td>效果的"形状":各通道幅度、包络、形状曲线、优先带、重触发策略</td><td>预设库维护者(少数人)</td></tr>
+              <tr><td><b>使用位点</b>(技能 / 蒙太奇窗口)</td><td>引用哪个资产 + 强度标量(可挂多个叠加)</td><td>配技能的每个人</td></tr>
+            </tbody>
+          </table>
+          <h3>预设三形态(一条黄金路径 + 两个后门)</h3>
+          <table>
+            <thead><tr><th style="width:22%">形态</th><th>定位</th><th style="width:32%">解决什么</th></tr></thead>
+            <tbody>
+              <tr><td><b>招牌预设</b></td><td>配比调好的多通道成品(命中踢、大招俯角拉远等约 10 个)</td><td>九成需求:选一个、填强度。镜头语言全局一致的保证</td></tr>
+              <tr><td><b>单通道原语 + 堆叠</b></td><td>只动一个通道的原料,使用位点挂多个各调强度</td><td>调配比 / 各通道不同节奏,<b>不必新建资产</b></td></tr>
+              <tr><td><b>稀疏变体</b></td><td>认父资产、只记录差异倍率;禁止套娃</td><td>单英雄灰度试点,试完归并回父资产</td></tr>
+            </tbody>
+          </table>
+          <div class="rule"><b>复用纪律:</b>形状是稀缺资产,强度是廉价参数。禁止在使用处自由改各通道(会让每处引用成为不可评审的孤本);新建 CME 前先确认三个后门都不适用。<b>非法配置必须可见</b>:越界值存盘即拒,可疑值报警告——"能配但没效果且不报错"列为 P0 缺陷类别。</div>
+        </section>
+
+        <!-- 6 -->
+        <section id="scenes">
+          <h2>6. 场景与案例</h2>
+          <p>按战斗场景枚举镜头效果的设计意图与现状。标注:<span class="ok">✅已可配</span> / <span class="no">不做</span>(属已砍的状态镜头层) / <span class="later">缓议</span>(依赖未做的触发)。竞品指 Deadlock / 漫威争锋,公开资料核实。</p>
+          <table>
+            <thead><tr><th style="width:17%">场景</th><th style="width:37%">设计意图</th><th style="width:30%">竞品参照</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td colspan="4" style="background:#f2f4f6;font-weight:700;">移动</td></tr>
+              <tr><td>滑铲 / 冲刺</td><td>速度感靠 FOV 微扩(+5~8)与轻微拉远,不动朝向</td><td>Deadlock:滑铲=相对FOV+5°,冲刺=亚秒punch</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>大跳落地</td><td>落点下沉+回弹曲线+轻震,重量感在落地帧</td><td>争锋 Hulk:仅平滑追踪防晕</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>飞行</td><td><b>刻意无为</b>——飞行是瞄准平台,只放开俯仰范围</td><td>两家一致不动镜头</td><td><span class="ok">✅</span></td></tr>
+              <tr><td colspan="4" style="background:#f2f4f6;font-weight:700;">瞄准射击</td></tr>
+              <tr><td>开火顿挫</td><td>ViewKick 0.3~0.8° 快出快回,纯视觉、弹道不动</td><td>CS/Valorant 视觉后座分离原则</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>开镜 / 倍镜 / 炮台</td><td>换一套持续机位并联动灵敏度——状态镜头范畴</td><td>争锋黑寡妇倍镜、惩罚者炮台</td><td><span class="no">不做</span></td></tr>
+              <tr><td colspan="4" style="background:#f2f4f6;font-weight:700;">技能</td></tr>
+              <tr><td>大招俯角+拉远</td><td>Orbit −12° + 拉远,压迫感与战场全貌;期间开枪弹道不受影响</td><td>竞品无旋转通道——本系统的差异化能力</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>360° 引导 / 原地爆发</td><td>拉远+角色偏侧读全场;被打断自动淡出</td><td>Haze 大招(其打断残留 bug 我们结构免疫)</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>蓄力 / 重击突进</td><td>蓄力推近(混入=蓄力时长);突进短暂拉远供双方读距离</td><td>战神式重击 / Deadlock 重踢</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>Holding 拉远</td><td>进入 holding 拉远看场,释放/取消自动收回;可选"松手即收"</td><td>—</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>升空俯瞰(垫高看战场)</td><td>Orbit 俯角+拉高拉远,本体仍在原地操作</td><td>—</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>变身换机位 / 操控无人机</td><td>前者=换持续基准(状态镜头);后者=换操控对象(接管型玩法,非镜头层)</td><td>争锋 Hulk 切档案 / Deadlock 猫头鹰</td><td><span class="no">不做</span> / <span class="later">缓议</span></td></tr>
+              <tr><td colspan="4" style="background:#f2f4f6;font-weight:700;">命中与受击</td></tr>
+              <tr><td>命中踢</td><td>ViewKick 1.5° 冲出-回弹,0.18s;高强度胜出防轻吞重</td><td>争锋 hitmarker+轻震</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>方向性受击(震向远离攻击者)</td><td>需要命中方向回传,连同弹道命中触发一起立项</td><td>方向性震屏=威胁方向信息</td><td><span class="later">缓议</span></td></tr>
+              <tr><td>击杀确认</td><td>推荐不动镜头(高频事件动镜头=团战噪音)</td><td>两家均不动</td><td><span class="ok">✅</span></td></tr>
+              <tr><td colspan="4" style="background:#f2f4f6;font-weight:700;">控制与受害者端</td></tr>
+              <tr><td>被击飞 / 被钩 / 眩晕冰冻</td><td><b>身体可被劫持,视角旋转永远留给玩家</b>;仅加大跟随滞后+短震;状态可视化走后处理</td><td>两家铁律一致;Jeff 吞人为唯一例外且吐出即还</td><td><span class="ok">✅</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 7 -->
+        <section id="scope">
+          <h2>7. 范围决策(已定,附触发再议条件)</h2>
+          <table>
+            <thead><tr><th style="width:26%">决策</th><th>理由</th><th style="width:28%">再议触发</th></tr></thead>
+            <tbody>
+              <tr><td><b>不做状态镜头层</b>(开镜/俯瞰模式/变身档案)</td><td>"技能期间改、结束回去"由动效层覆盖;产品无 ADS;升空俯瞰用动效即可;死亡观战现状够用</td><td>出现操控型接管技能、或需要 per-hero 机位继承时</td></tr>
+              <tr><td><b>缓议:弹道命中回传</b>(含方向性受击踢)</td><td>脱手技能"命中那一刻给施法者反馈"缺触发位点,现无此类核心技能</td><td>有投掷/远程脱手技能立项时</td></tr>
+              <tr><td><b>缓议:观战端动效重放</b></td><td>动效为本地触发,观战镜头无演绎(体验缺失非 bug,清理已干净)</td><td>观战/OB 体验变重要时</td></tr>
+              <tr><td><b>缓议:trauma 震屏预算 / Camera Bench 图形面板 / per-hero 距离缩放</b></td><td>现阶段无对应痛点,预建即过度设计</td><td>震屏内容增多 / 调参嫌命令烦 / 出现体型悬殊英雄</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 8 -->
+        <section id="acceptance">
+          <h2>8. 验收标准(策划口径,逐条可打勾)</h2>
+          <table>
+            <thead><tr><th style="width:8%">#</th><th>验收项</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>大招压俯角+拉远期间开枪,子弹打准星位置;强震屏下连续射击弹道不漂</td></tr>
+              <tr><td>2</td><td>技能被打断 / 角色死亡,镜头在混出时长内回位,无任何残留(含震屏立停)</td></tr>
+              <tr><td>3</td><td>大招俯角与命中踢同帧共存互不覆盖;结果可从调试面板逐项解释</td></tr>
+              <tr><td>4</td><td>删除任意/全部镜头动效配置,游戏正常可玩(基础镜头永远兜底)</td></tr>
+              <tr><td>5</td><td>贴墙释放拉远类效果,镜头不穿墙</td></tr>
+              <tr><td>6</td><td>非法配置存盘被拒(混合时间为零 / 旋转超预算等);无 NaN、无瞬移</td></tr>
+              <tr><td>7</td><td>演绎在操作权归还前混出完毕;配晚了有警告</td></tr>
+              <tr><td>8</td><td>PIE 中修改资产字段/曲线,下一帧生效</td></tr>
+              <tr><td>9</td><td>团战级叠加无晕动感(软钳生效,反馈递减不消失)</td></tr>
+              <tr><td>10</td><td>单英雄灰度可走通(变体试点→归并→删除,不影响其他英雄);配比微调不需新建资产</td></tr>
+            </tbody>
+          </table>
+          <p>以上 1–9 已在当前实现验证通过(编译 + PIE + Steel 大招真英雄链路);10 的机制已具备、待首次实际使用。</p>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

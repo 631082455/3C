@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3C Combat Design — 文档站</title>
+<style>
+  :root { --ink:#1a1a1a; --sub:#666; --line:#e5e5e5; --accent:#2563eb; --bg:#fafafa; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif; color:var(--ink); background:var(--bg); line-height:1.7; }
+  .wrap { max-width:860px; margin:0 auto; padding:48px 24px 80px; }
+  header { border-bottom:2px solid var(--ink); padding-bottom:20px; margin-bottom:36px; }
+  header h1 { font-size:28px; letter-spacing:.5px; }
+  header p { color:var(--sub); margin-top:6px; font-size:14px; }
+  h2 { font-size:15px; text-transform:uppercase; letter-spacing:2px; color:var(--sub); margin:36px 0 14px; }
+  ul { list-style:none; }
+  li { border-bottom:1px solid var(--line); }
+  li a { display:flex; justify-content:space-between; align-items:baseline; gap:16px; padding:12px 4px; text-decoration:none; color:var(--ink); }
+  li a:hover { background:#fff; color:var(--accent); }
+  .tag { font-size:12px; color:var(--sub); white-space:nowrap; }
+  .hub a { font-weight:600; font-size:17px; }
+  footer { margin-top:56px; font-size:13px; color:var(--sub); border-top:1px solid var(--line); padding-top:16px; }
+  footer a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>3C Combat Design</h1>
+    <p>战斗 3C 设计工作流 · 文档站 &nbsp;|&nbsp; 方法论源文件见 <a href="https://github.com/631082455/3C">GitHub 仓库</a></p>
+  </header>
+
+  <h2>总览</h2>
+  <ul class="hub">
+    <li><a href="docs/核心战斗手感/核心战斗手感需求总览.html">核心战斗手感 · 需求总览（合并阅读页）<span class="tag">Hub</span></a></li>
+  </ul>
+
+  <h2>Skill / 施法</h2>
+  <ul>
+    <li><a href="docs/核心战斗手感/Skill - 技能释放关系系统（打断、并行、互斥、缓存）.html">技能释放关系系统（打断、并行、互斥、缓存）<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Skill - 单体施法选取 V2.1.html">单体施法选取 V2.1<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Skill - 单体施法选取 V2.html">单体施法选取 V2<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Skill - 范围施法落点 V1.1 (Deadlock派).html">范围施法落点 V1.1<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Skill - 范围施法落点 V1.2 - 主程对齐稿.html">范围施法落点 V1.2 · 对齐稿<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Skill - 范围施法落点.html">范围施法落点 V1<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Skill - 战场交互物机制拓展.html">战场交互物机制拓展<span class="tag">HTML</span></a></li>
+  </ul>
+
+  <h2>Camera / 镜头</h2>
+  <ul>
+    <li><a href="docs/核心战斗手感/Camera - 战斗镜头动效层设计稿.html">战斗镜头动效层 · 设计稿<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Camera - 战斗镜头动效层实现稿（程序对齐）.html">战斗镜头动效层 · 实现稿<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Camera - 镜头动效配置手册.html">镜头动效配置手册<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Camera - 镜头系统迭代.html">镜头系统迭代<span class="tag">HTML</span></a></li>
+  </ul>
+
+  <h2>Animation / Projectile / Effect</h2>
+  <ul>
+    <li><a href="docs/核心战斗手感/Animation - 上半身动作融合部分盆骨表现.html">上半身动作融合 · 盆骨表现<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Projectile - 实体弹道发射点.html">实体弹道发射点<span class="tag">HTML</span></a></li>
+    <li><a href="docs/核心战斗手感/Effect - 命中特效系统 V1.html">命中特效系统 V1<span class="tag">HTML</span></a></li>
+  </ul>
+
+  <h2>方法论（Markdown，GitHub 渲染）</h2>
+  <ul>
+    <li><a href="https://github.com/631082455/3C/blob/main/SKILL.md">SKILL.md · 六阶段工作流<span class="tag">MD</span></a></li>
+    <li><a href="https://github.com/631082455/3C/blob/main/references/meta-rules.md">元规则 M1–M14<span class="tag">MD</span></a></li>
+    <li><a href="https://github.com/631082455/3C/blob/main/references/anti-patterns.md">反模式 AP1–AP14<span class="tag">MD</span></a></li>
+    <li><a href="https://github.com/631082455/3C/blob/main/output/examples/blink-dash-3c.md">样板稿 · 位移技能 3C 方案<span class="tag">MD</span></a></li>
+  </ul>
+
+  <footer>
+    维护：<a href="https://github.com/631082455">631082455</a> · 本站由 GitHub Pages 托管，push 后约 1 分钟自动更新
+  </footer>
+</div>
+</body>
+</html>

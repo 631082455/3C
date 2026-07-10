@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>技能释放关系语义系统（阻挡、打断、并行、缓存）</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #fff;
+      --ink: #22272e;
+      --muted: #66727e;
+      --line: #d9dee5;
+      --soft: #f0f3f6;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --bad: #9c3d30;
+      --bad-soft: #ffebe8;
+      --code: #172530;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    .page {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 32px auto 48px;
+    }
+    header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul, ol { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .meta span {
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 226px minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 24px;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    nav .title {
+      padding: 4px 8px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+    nav a {
+      display: block;
+      padding: 10px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    nav a:hover {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    main {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    section {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 20px;
+    }
+    section:last-child { border-bottom: none; }
+
+    .decision {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+    .note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #ecd6ad;
+      border-radius: var(--radius);
+      background: var(--warn-soft);
+      color: #604219;
+    }
+    .risk {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #efc2bc;
+      border-radius: var(--radius);
+      background: var(--bad-soft);
+      color: #6a2d25;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 16px;
+    }
+    .box {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .box.blue {
+      border-color: #c8dced;
+      background: var(--blue-soft);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 13px;
+      font-weight: 740;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    .priority, .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+    .p0 { color: #fff; background: #1f6f62; }
+    .p1 { color: #273f5c; background: #dceaff; }
+    .p2 { color: #604219; background: #fff1d1; }
+    .later { color: #69727b; background: #eceff2; }
+    .block { color: #7a2d24; background: #ffded9; }
+    .cancel { color: #6f3f08; background: #ffe9bf; }
+    .parallel { color: #1e604f; background: #dff2ec; }
+    .cache { color: #274d7d; background: #dfecff; }
+    .protect { color: #584180; background: #eee6ff; }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #e8f1f7;
+      overflow: auto;
+      font: 13px/1.65 var(--mono);
+    }
+    .diagram {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    svg { display: block; width: 100%; height: auto; }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      section { padding: 24px 20px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Planning Requirement</div>
+      <h1>技能释放关系语义系统（阻挡、打断、并行、缓存）</h1>
+      <p>面向技能策划和战斗程序的需求稿。目标是统一技能相遇时的语义：新技能是被拦下、打断旧技能、与旧技能并行；如果被拦下，再由全局输入缓存策略决定是否保留这次输入。</p>
+      <div class="meta">
+        <span>需求方：战斗 / 技能策划</span>
+        <span>实现方：战斗程序</span>
+        <span>项目背景：GAS + HeroAbility 自定义层</span>
+        <span>重点：PVP 输入手感与规则可预期</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#background">1. 背景与目标</a>
+        <a href="#scope">2. 本版范围</a>
+        <a href="#terms">3. 术语与规则</a>
+        <a href="#scenes">4. 使用场景</a>
+        <a href="#config">5. 配置需求</a>
+        <a href="#twinblast">6. Twinblast 配置示例</a>
+        <a href="#feedback">7. 表现与交互</a>
+        <a href="#migration">8. 兼容迁移</a>
+        <a href="#acceptance">9. 优先级验收</a>
+        <a href="#tech-notes">10. 程序备注</a>
+      </nav>
+
+      <main>
+        <section id="background">
+          <h2>1. 背景与目标</h2>
+          <p>当前项目已经有 GAS 的标签阻挡、取消能力，也有 <code>HeroAbility</code> 层的输入、动画、RootMotion、镜头等自定义逻辑。随着角色技能增多，如果继续靠单个技能特判处理“谁能打断谁、谁能并行、谁互斥”，策划会很难预测最终表现，程序也会很难维护。</p>
+
+          <div class="decision">
+            <strong>本版目标：</strong>
+            <ul>
+              <li>统一技能相遇时的策划语义，避免“互斥”“打断”“阻挡”混用。</li>
+              <li>策划能配置技能默认关系，也能为少数关键窗口配置例外。</li>
+              <li>输入缓存作为全局输入策略管理，技能卡只声明少量例外。</li>
+              <li>程序能按固定顺序判定，不允许单个技能绕过公共规则。</li>
+              <li>逻辑允许并行时，必须同步检查动画、移动、镜头等表现层是否成立。</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="scope">
+          <h2>2. 本版范围</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>类型</th>
+                <th>内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>本版支持</td>
+                <td>阻挡、打断、并行、全局输入缓存策略、不可打断窗口；默认关系；少量窗口和缓存例外；表现层并行验收。</td>
+              </tr>
+              <tr>
+                <td>本版不做</td>
+                <td>全技能全窗口的 N × N × M 完整矩阵；技能对技能缓存矩阵；所有角色历史技能一次性重配；完整编辑器工具链；AI 自动平衡技能关系。</td>
+              </tr>
+              <tr>
+                <td>首批样例</td>
+                <td>普通攻击与技能的双向关系；技能期间是否阻挡开火；开火期间是否阻挡技能；持续开火类技能与 Dash 并行；强技能起手不可打断；Holding / 蓄力技能的取消与缓存例外。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            本版先解决“语义和配置口径”，不是要求一次性重构底层实现。能映射到现有 GAS 字段的先映射，不能映射的放入窗口规则或程序备注。
+          </div>
+
+          <div class="risk">
+            <strong>配置方向必须明确：</strong>
+            “技能期间不能开火”和“开火期间不能放技能”是两个方向。前者应让开火技能在启动时被技能 Tag 阻挡；后者才是让技能在启动时被开火 Tag 阻挡。
+          </div>
+        </section>
+
+        <section id="terms">
+          <h2>3. 术语与规则</h2>
+          <p>策划可以使用“互斥”这个词讨论需求，但正式配置和验收时必须拆成具体结果：是新技能被阻挡，还是新技能启动并打断旧技能。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>术语</th>
+                <th>类型</th>
+                <th>策划定义</th>
+                <th>验收口径</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="pill block">阻挡</span></td>
+                <td>结果</td>
+                <td>技能 A 正在释放时，技能 B 输入进来，但 B 不能启动。</td>
+                <td>A 继续，B 不启动；是否缓存由全局输入策略决定。</td>
+              </tr>
+              <tr>
+                <td><span class="pill cancel">打断</span></td>
+                <td>结果</td>
+                <td>B 可以启动，并结束当前正在释放的 A。</td>
+                <td>B 成功激活，A 被取消或结束。</td>
+              </tr>
+              <tr>
+                <td><span class="pill parallel">并行</span></td>
+                <td>结果</td>
+                <td>B 可以启动，A 继续存在。</td>
+                <td>A 和 B 同时有效，表现层也不能冲突。</td>
+              </tr>
+              <tr>
+                <td><span class="pill cache">缓存</span></td>
+                <td>全局输入策略</td>
+                <td>B 因阻挡不能启动时，系统短时间保留这次输入。</td>
+                <td>阻挡原因解除后重新尝试激活 B；技能只配置例外，不配置完整关系矩阵。</td>
+              </tr>
+              <tr>
+                <td><span class="pill protect">不可打断</span></td>
+                <td>窗口属性</td>
+                <td>A 当前窗口不接受普通打断。</td>
+                <td>普通打断规则不能结束 A；B 是否被阻挡由关系判定，缓存由全局策略判定。</td>
+              </tr>
+              <tr>
+                <td>互斥</td>
+                <td>策划讨论词</td>
+                <td>A 和 B 不能稳定共存。</td>
+                <td>正式配置时必须落为“阻挡 B”或“B 打断 A”。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">判定顺序</h3>
+          <div class="diagram">
+            <svg viewBox="0 0 980 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能语义判定流程图">
+              <rect width="980" height="240" fill="#fff"/>
+              <g fill="#e2f1ee" stroke="#78aaa1" stroke-width="2">
+                <rect x="24" y="84" width="130" height="58" rx="8"/>
+                <rect x="188" y="84" width="130" height="58" rx="8"/>
+                <rect x="352" y="84" width="130" height="58" rx="8"/>
+                <rect x="516" y="84" width="130" height="58" rx="8"/>
+                <rect x="680" y="84" width="130" height="58" rx="8"/>
+                <rect x="844" y="84" width="112" height="58" rx="8"/>
+              </g>
+              <g fill="#25313a" font-family="Segoe UI, Microsoft YaHei" font-size="16" text-anchor="middle">
+                <text x="89" y="108">输入技能 B</text>
+                <text x="89" y="130">尝试释放</text>
+                <text x="253" y="108">基础条件</text>
+                <text x="253" y="130">冷却/消耗/状态</text>
+                <text x="417" y="108">读取技能 A</text>
+                <text x="417" y="130">当前窗口</text>
+                <text x="581" y="108">关系判定</text>
+                <text x="581" y="130">阻挡/打断/并行</text>
+                <text x="745" y="108">全局缓存</text>
+                <text x="745" y="130">仅阻挡时进入</text>
+                <text x="900" y="108">执行表现</text>
+                <text x="900" y="130">并行需验证</text>
+              </g>
+              <g stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow)">
+                <path d="M154 113 H188"/>
+                <path d="M318 113 H352"/>
+                <path d="M482 113 H516"/>
+                <path d="M646 113 H680"/>
+                <path d="M810 113 H844"/>
+              </g>
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+        </section>
+
+        <section id="scenes">
+          <h2>4. 使用场景</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>需求</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>普攻输入打断弱技能</td>
+                <td>普通攻击作为基础高频输入时，可以打断部分弱技能或技能收招段。</td>
+                <td>需要避免普攻无脑打断强技能关键窗口。</td>
+              </tr>
+              <tr>
+                <td>Dash 插入持续开火</td>
+                <td>持续开火 Active 期允许 Dash 并行，保留移动射击手感。</td>
+                <td>逻辑并行后，动画、Overlay、武器状态必须稳定。</td>
+              </tr>
+              <tr>
+                <td>强技能起手保护</td>
+                <td>强技能 Startup 可配置不可打断，防止被轻技能低成本压制。</td>
+                <td>不可打断不是全程霸体，窗口需要明确。</td>
+              </tr>
+              <tr>
+                <td>蓄力 / Holding 技能被取消</td>
+                <td>部分技能输入进来时可以取消 Holding；部分情况下应阻挡或缓存。</td>
+                <td>需要和现有 HoldingAbility 逻辑兼容。</td>
+              </tr>
+              <tr>
+                <td>RootMotion 技能中输入新技能</td>
+                <td>新技能是否能启动，需要考虑移动控制权和动画完整性。</td>
+                <td>不能只看 GAS 关系，必须有表现层验收。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">技能窗口示意</h3>
+          <div class="diagram">
+            <svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能窗口时间轴">
+              <rect width="900" height="210" fill="#fff"/>
+              <line x1="70" y1="100" x2="820" y2="100" stroke="#66727e" stroke-width="3"/>
+              <g fill="#256f65">
+                <circle cx="90" cy="100" r="6"/>
+                <circle cx="260" cy="100" r="6"/>
+                <circle cx="520" cy="100" r="6"/>
+                <circle cx="730" cy="100" r="6"/>
+              </g>
+              <g fill="#25313a" font-family="Segoe UI, Microsoft YaHei" font-size="15" text-anchor="middle">
+                <text x="90" y="64">0.00s</text>
+                <text x="90" y="130">输入 / 起手</text>
+                <text x="260" y="64">Startup</text>
+                <text x="260" y="130">可被打断或保护</text>
+                <text x="520" y="64">Active</text>
+                <text x="520" y="130">命中 / 持续效果</text>
+                <text x="730" y="64">Recovery</text>
+                <text x="730" y="130">收招 / 可取消</text>
+              </g>
+              <rect x="204" y="150" width="150" height="32" rx="16" fill="#eee6ff"/>
+              <text x="279" y="171" text-anchor="middle" fill="#584180" font-family="Segoe UI, Microsoft YaHei" font-size="14">可配置不可打断</text>
+              <rect x="455" y="150" width="130" height="32" rx="16" fill="#dff2ec"/>
+              <text x="520" y="171" text-anchor="middle" fill="#1e604f" font-family="Segoe UI, Microsoft YaHei" font-size="14">可配置并行</text>
+            </svg>
+          </div>
+        </section>
+
+        <section id="config">
+          <h2>5. 配置需求</h2>
+          <p>推荐使用“全局策略 + 技能卡 + 窗口规则 + 表现协议”的配置方式。这里先说明各层各管什么，具体怎么填看后面的“策划最终配置口径”。</p>
+
+          <div class="decision">
+            <strong>静态 GAS 字段的配置方向：</strong>
+            <ul>
+              <li><code>ActivationBlockedTags</code> 配在“来袭技能 B”上，含义是：B 启动时，如果角色身上已有 A 的 Tag，则 B 被阻挡。</li>
+              <li><code>CancelAbilitiesWithTag</code> 也配在“来袭技能 B”上，含义是：B 启动成功后，取消身上带 A Tag 的旧技能。</li>
+              <li>因此“技能期间不能开火”应配置在开火技能上：<code>Attack.ActivationBlockedTags += 技能Tag</code>。</li>
+            </ul>
+          </div>
+
+          <div class="diagram">
+            <svg viewBox="0 0 980 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GAS 标签关系配置方向示意">
+              <rect width="980" height="300" fill="#fff"/>
+              <defs>
+                <marker id="arrow-config" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+              <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle">
+                <rect x="48" y="66" width="210" height="72" rx="8" fill="#eee6ff" stroke="#a492c9" stroke-width="2"/>
+                <text x="153" y="96" font-size="18" fill="#2f2a37" font-weight="700">当前技能 A</text>
+                <text x="153" y="121" font-size="14" fill="#584180">正在 Active，身上有 ATag</text>
+
+                <rect x="388" y="66" width="210" height="72" rx="8" fill="#e5f0f8" stroke="#8bb4d1" stroke-width="2"/>
+                <text x="493" y="96" font-size="18" fill="#2f2a37" font-weight="700">来袭技能 B</text>
+                <text x="493" y="121" font-size="14" fill="#22577a">玩家此刻输入，尝试启动</text>
+
+                <rect x="722" y="42" width="210" height="56" rx="8" fill="#ffded9" stroke="#d69a91" stroke-width="2"/>
+                <text x="827" y="66" font-size="14" fill="#7a2d24">B.ActivationBlockedTags</text>
+                <text x="827" y="84" font-size="14" fill="#7a2d24">包含 ATag</text>
+                <rect x="722" y="122" width="210" height="56" rx="8" fill="#ffe9bf" stroke="#e3bc75" stroke-width="2"/>
+                <text x="827" y="146" font-size="14" fill="#6f3f08">B.CancelAbilitiesWithTag</text>
+                <text x="827" y="164" font-size="14" fill="#6f3f08">包含 ATag</text>
+                <rect x="722" y="202" width="210" height="56" rx="8" fill="#dff2ec" stroke="#8dbfb1" stroke-width="2"/>
+                <text x="827" y="235" font-size="15" fill="#1e604f">两者都没有命中</text>
+
+                <text x="322" y="104" font-size="14" fill="#66727e">输入关系看 B 的配置</text>
+                <text x="660" y="58" font-size="13" fill="#7a2d24">结果：阻挡 B</text>
+                <text x="660" y="138" font-size="13" fill="#6f3f08">结果：B 打断 A</text>
+                <text x="660" y="218" font-size="13" fill="#1e604f">结果：可能并行</text>
+              </g>
+              <g stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow-config)">
+                <path d="M258 102 H388"/>
+                <path d="M598 102 C650 102 666 70 722 70"/>
+                <path d="M598 102 C650 102 666 150 722 150"/>
+                <path d="M598 102 C650 102 666 230 722 230"/>
+              </g>
+              <g font-family="Segoe UI, Microsoft YaHei" font-size="14" fill="#604219">
+                <rect x="48" y="214" width="550" height="48" rx="8" fill="#fff4dd" stroke="#ecd6ad"/>
+                <text x="70" y="244">示例：要让 Dash / Bomb 期间不能开火，配置点是 GA_Attack.ActivationBlockedTags += Dash / Bomb。</text>
+              </g>
+            </svg>
+          </div>
+
+          <h3 style="margin-top:22px;">配置分层</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>配置层</th>
+                <th>负责内容</th>
+                <th>不负责内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>全局策略</td>
+                <td>统一默认值，例如缓存时长、输入槽规则、判定顺序。</td>
+                <td>不按技能对技能维护特殊表。</td>
+              </tr>
+              <tr>
+                <td>技能卡</td>
+                <td>每个技能自己的默认关系：谁阻挡我、我打断谁、我和谁并行。</td>
+                <td>不写模糊的“互斥”，不假定并行表现一定成立。</td>
+              </tr>
+              <tr>
+                <td>窗口规则</td>
+                <td>Startup / Active / Recovery 中少量不同于默认关系的例外。</td>
+                <td>不替代整段 Ability 的默认关系。</td>
+              </tr>
+              <tr>
+                <td>缓存例外</td>
+                <td>默认走全局策略；只有特殊技能或窗口声明能缓存、不能缓存、改写时长。</td>
+                <td>不作为阻挡、打断、并行之外的第四种关系。</td>
+              </tr>
+              <tr>
+                <td>表现协议</td>
+                <td>并行成立后的动画、移动、镜头、武器和特效验收。</td>
+                <td>不反过来决定逻辑关系；表现不稳时回退到阻挡或打断。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">Montage 式窗口关系图</h3>
+          <p>技能关系的细颗粒度不是“技能 A 和技能 B 是否互斥”这么简单，而是“技能 A 当前处在哪个时间窗口时，来袭技能 B 应该得到什么结果”。</p>
+
+          <div class="diagram">
+            <svg viewBox="0 0 980 390" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能窗口与来袭输入关系矩阵">
+              <rect width="980" height="390" fill="#fff"/>
+              <defs>
+                <marker id="arrow-window" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+              <g font-family="Segoe UI, Microsoft YaHei">
+                <text x="48" y="42" font-size="20" fill="#22272e" font-weight="760">当前技能 A：FastFire 时间轴</text>
+                <rect x="168" y="72" width="190" height="68" rx="8" fill="#eee6ff" stroke="#a492c9" stroke-width="2"/>
+                <rect x="358" y="72" width="310" height="68" rx="0" fill="#dff2ec" stroke="#8dbfb1" stroke-width="2"/>
+                <rect x="668" y="72" width="190" height="68" rx="8" fill="#fff4dd" stroke="#ecd6ad" stroke-width="2"/>
+                <text x="263" y="100" font-size="17" fill="#584180" text-anchor="middle" font-weight="700">Startup</text>
+                <text x="263" y="124" font-size="13" fill="#584180" text-anchor="middle">起手，可保护/可被打断</text>
+                <text x="513" y="100" font-size="17" fill="#1e604f" text-anchor="middle" font-weight="700">Active</text>
+                <text x="513" y="124" font-size="13" fill="#1e604f" text-anchor="middle">持续开火，可能允许位移并行</text>
+                <text x="763" y="100" font-size="17" fill="#604219" text-anchor="middle" font-weight="700">Recovery</text>
+                <text x="763" y="124" font-size="13" fill="#604219" text-anchor="middle">收招，可接续/可缓存</text>
+
+                <line x1="110" y1="106" x2="168" y2="106" stroke="#66727e" stroke-width="2" marker-end="url(#arrow-window)"/>
+                <text x="48" y="110" font-size="14" fill="#66727e">时间推进</text>
+
+                <g text-anchor="middle" font-size="13">
+                  <rect x="92" y="178" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
+                  <text x="140" y="203" fill="#22577a">输入 Attack</text>
+                  <rect x="92" y="238" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
+                  <text x="140" y="263" fill="#22577a">输入 Dash</text>
+                  <rect x="92" y="298" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
+                  <text x="140" y="323" fill="#22577a">输入 Bomb</text>
+                </g>
+
+                <g font-size="13" text-anchor="middle">
+                  <rect x="212" y="178" width="130" height="40" rx="6" fill="#ffded9"/>
+                  <text x="277" y="203" fill="#7a2d24">阻挡 Attack</text>
+                  <rect x="442" y="178" width="150" height="40" rx="6" fill="#ffded9"/>
+                  <text x="517" y="203" fill="#7a2d24">阻挡或并行，需定</text>
+                  <rect x="704" y="178" width="130" height="40" rx="6" fill="#ffe9bf"/>
+                  <text x="769" y="203" fill="#6f3f08">允许/打断收招</text>
+
+                  <rect x="212" y="238" width="130" height="40" rx="6" fill="#ffe9bf"/>
+                  <text x="277" y="263" fill="#6f3f08">打断或阻挡</text>
+                  <rect x="442" y="238" width="150" height="40" rx="6" fill="#dff2ec"/>
+                  <text x="517" y="263" fill="#1e604f">并行 Dash + 开火</text>
+                  <rect x="704" y="238" width="130" height="40" rx="6" fill="#ffe9bf"/>
+                  <text x="769" y="263" fill="#6f3f08">Dash 打断收招</text>
+
+                  <rect x="212" y="298" width="130" height="40" rx="6" fill="#ffded9"/>
+                  <text x="277" y="323" fill="#7a2d24">阻挡 Bomb</text>
+                  <rect x="442" y="298" width="150" height="40" rx="6" fill="#ffded9"/>
+                  <text x="517" y="323" fill="#7a2d24">阻挡 Bomb</text>
+                  <rect x="704" y="298" width="130" height="40" rx="6" fill="#dfecff"/>
+                  <text x="769" y="323" fill="#274d7d">接续/缓存例外</text>
+                </g>
+
+                <g stroke="#66727e" stroke-width="1.5" fill="none" marker-end="url(#arrow-window)">
+                  <path d="M188 198 H212"/>
+                  <path d="M188 258 H212"/>
+                  <path d="M188 318 H212"/>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <div class="note">
+            静态 GAS 字段只能表达“整段 Ability Active 期间”的默认关系。如果同一个来袭输入在 Startup、Active、Recovery 的结果不同，就需要窗口 Tag、AnimNotifyState 或统一求值器支持窗口级覆盖。
+          </div>
+
+          <h3 style="margin-top:22px;">全局缓存策略</h3>
+          <p>缓存不是第四种技能关系，也不需要做成“技能 A 对技能 B 是否缓存”的完整矩阵。关系求值只回答阻挡、打断、并行；当结果是阻挡时，系统再按全局输入缓存策略处理这次输入。技能卡只声明少量例外。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>策略项</th>
+                <th>建议口径</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>触发前提</td>
+                <td>来袭技能被阻挡，且输入来源属于可缓存输入。</td>
+              </tr>
+              <tr>
+                <td>默认窗口</td>
+                <td>系统层统一短窗口，例如 100-180ms；首版建议先定一个全局值。</td>
+              </tr>
+              <tr>
+                <td>缓存槽</td>
+                <td>默认每个输入通道只保留最后一次有效输入，避免旧输入连锁触发。</td>
+              </tr>
+              <tr>
+                <td>重试时机</td>
+                <td>阻挡 Tag 或窗口解除后，在统一输入刷新点重新尝试激活。</td>
+              </tr>
+              <tr>
+                <td>重试校验</td>
+                <td>必须重新检查冷却、消耗、目标、距离、状态和服务器权限。</td>
+              </tr>
+              <tr>
+                <td>例外来源</td>
+                <td>技能卡或窗口规则只声明：能缓存、不能缓存，或覆盖缓存时长。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="risk">
+            <strong>不要做成关系矩阵：</strong>
+            “Dash 被 Bomb 阻挡时能缓存、Attack 被 Bomb 阻挡时不能缓存”这类需求，落点应是 Dash / Attack 自己的缓存例外，或 Bomb 某个窗口的缓存例外，而不是给每一对技能新增一个缓存关系。
+          </div>
+
+          <h3 style="margin-top:22px;">策划最终配置口径</h3>
+          <p>策划最终不是直接写“互斥”或“并行感觉可以”，而是按“来袭技能 B 怎么处理当前技能 A”的方向，给每个技能填三类静态关系；缓存另按全局策略处理，只在技能或窗口上记录少量例外。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>策划要填的内容</th>
+                <th>问题口径</th>
+                <th>程序落点</th>
+                <th>例子</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>阻挡我启动的技能</td>
+                <td>我这个技能 B 输入时，如果 A 正在释放，我是否不能启动？</td>
+                <td><code>B.ActivationBlockedTags += ATag</code></td>
+                <td>技能期间不能开火：在 <code>Attack</code> 的阻挡列表加入该技能 Tag。</td>
+              </tr>
+              <tr>
+                <td>我会打断的技能</td>
+                <td>我这个技能 B 成功启动后，是否要结束当前 A？</td>
+                <td><code>B.CancelAbilitiesWithTag += ATag</code></td>
+                <td>Dash 打断当前开火：在 <code>Dash</code> 的打断列表加入 <code>Attack</code> Tag。</td>
+              </tr>
+              <tr>
+                <td>我允许并行的技能</td>
+                <td>我这个技能 B 和当前 A 是否允许同时 active？</td>
+                <td>不互相配置 Block / Cancel，并登记表现层验收。</td>
+                <td>FastFire Active + Dash 并行：逻辑允许后，还要验 Overlay、武器和移动。</td>
+              </tr>
+              <tr>
+                <td>缓存例外声明</td>
+                <td>我这个技能是否需要覆盖全局缓存默认策略？</td>
+                <td>技能卡缓存例外 / 窗口缓存例外。</td>
+                <td>全局能缓存 120ms；Dash 可声明能缓存；Attack 可声明不能缓存；特殊窗口可改写缓存时长。</td>
+              </tr>
+              <tr>
+                <td>窗口例外</td>
+                <td>A 在 Startup / Active / Recovery 时，对 B 是否和默认关系不同？</td>
+                <td>窗口 Tag / AnimNotifyState / 统一求值器。</td>
+                <td>RadicalFire Startup 阻挡 Attack，Recovery 可允许 Attack 接续。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="decision">
+            <strong>推荐填写顺序：</strong>
+            <ol>
+              <li>先按整段 Ability 填默认关系：谁阻挡我、我打断谁、我和谁并行。</li>
+              <li>再只挑关键手感补窗口例外：Startup 保护、Active 并行、Recovery 可接续。</li>
+              <li>最后配置缓存全局默认值，并补技能或窗口例外：能缓存、不能缓存、改写时长。</li>
+              <li>所有“并行”关系单独进入《技能并行表现层协议》验收，不在主关系表里假定成立。</li>
+            </ol>
+          </div>
+
+          <div class="risk">
+            <strong>最小交付标准：</strong>
+            每个技能至少要能回答三类关系和一类例外：谁会阻挡我启动；我启动后会打断谁；我和谁允许并行；我是否有缓存例外。缓存没有例外时走全局默认，答不出来的关系默认不要开放并行，也不要写成模糊的“互斥”。
+          </div>
+
+          <h3 style="margin-top:22px;">技能卡模板</h3>
+          <pre>技能名：
+主标签：
+
+默认关系：
+  阻挡：
+  打断：
+  并行：
+
+缓存例外（默认走全局策略）：
+  技能级：无例外 / 能缓存 / 不能缓存 / 改写时长
+  窗口级：无例外 / 能缓存 / 不能缓存 / 改写时长
+
+窗口规则：
+  Startup：
+  Active：
+  Recovery：
+  不可打断窗口：
+
+表现验证：
+  动画：
+  移动：
+  镜头：
+  武器 / 特效状态：
+
+  备注：
+    历史特判：
+    程序支持需求：</pre>
+        </section>
+
+        <section id="twinblast">
+          <h2>6. Twinblast 配置示例</h2>
+          <p>以下表格用于防止把“技能期间不能开火”和“开火期间不能放技能”配反。每一行都以“当前技能 A + 来袭技能 B”的口径描述。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>当前状态 A</th>
+                <th>来袭输入 B</th>
+                <th>期望结果</th>
+                <th>配置落点</th>
+                <th>代价 / 注意</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Dash / Bomb / RadicalFire 正在释放</td>
+                <td>Attack</td>
+                <td><span class="pill block">阻挡 Attack</span></td>
+                <td><code>GA_TwinblastAttack.ActivationBlockedTags += Dash / Bomb / RadicalFire</code></td>
+                <td>最省事，语义稳定；但默认是整段技能期间禁开火。</td>
+              </tr>
+              <tr>
+                <td>Bomb Startup</td>
+                <td>Attack</td>
+                <td><span class="pill block">阻挡 Attack</span> 或 <span class="pill protect">不可打断保护</span></td>
+                <td>静态字段可先全程阻挡；只保护 Startup 时需要窗口 Tag。</td>
+                <td>如果 Recovery 想允许开火，不能只靠静态 <code>ActivationBlockedTags</code>。</td>
+              </tr>
+              <tr>
+                <td>Attack 正在释放</td>
+                <td>Dash / Bomb / RadicalFire</td>
+                <td><span class="pill block">阻挡技能</span> 或 <span class="pill cancel">技能打断 Attack</span></td>
+                <td>阻挡技能配在来袭技能上；技能打断开火则配在来袭技能的 <code>CancelAbilitiesWithTag</code>。</td>
+                <td>这是另一个方向，不等同于“技能期间不能开火”。</td>
+              </tr>
+              <tr>
+                <td>FastFire Active</td>
+                <td>Dash</td>
+                <td><span class="pill parallel">并行</span></td>
+                <td>双方不要互相 Block / Cancel，并额外验 Overlay、移动、武器状态。</td>
+                <td>逻辑允许不代表表现成立；未验收前不要正式开放。</td>
+              </tr>
+              <tr>
+                <td>RadicalFire Startup</td>
+                <td>Attack / 轻技能</td>
+                <td><span class="pill block">阻挡来袭</span> 或 <span class="pill protect">不可打断</span></td>
+                <td>强保护建议走窗口级规则；静态字段只能先做全程保护近似。</td>
+                <td>保护大招起手，避免低成本输入压掉强技能。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="risk">
+            <strong>Twinblast 当前最容易配反的点：</strong>
+            在技能蓝图里写 <code>ActivationBlockedTags = Attack</code>，表达的是“开火期间不能启动这个技能”；要表达“这个技能期间不能开火”，配置点必须回到 <code>GA_TwinblastAttack</code>。
+          </div>
+        </section>
+
+        <section id="feedback">
+          <h2>7. 表现与交互要求</h2>
+          <p>技能语义不是只影响能不能激活，也会影响输入响应、动画连续性、移动控制权和镜头稳定性。</p>
+
+          <div class="grid">
+            <div class="box blue">
+              <h3>输入手感</h3>
+              <ul>
+                <li>缓存不是逐对技能关系，而是所有阻挡结果共享的输入策略。</li>
+                <li>位移、反制、普攻等高频输入需要确认全局默认和少量例外。</li>
+                <li>缓存命中时必须重新校验冷却、消耗、目标、距离、状态。</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>表现层并行</h3>
+              <ul>
+                <li>逻辑并行不等于动作一定正确。</li>
+                <li>正式配置为并行的组合，需要验证动画、Overlay、RootMotion、Camera。</li>
+                <li>表现层不稳定时，应回退为阻挡或打断，不让程序临场兜底。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="note">
+            PVP 手感优先级建议：先保证输入响应一致，再保证强技能起手保护，最后再开放并行和高级穿插。
+          </div>
+        </section>
+
+        <section id="migration">
+          <h2>8. 兼容与迁移</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>当前项目能力</th>
+                <th>迁移要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>ActivationBlockedTags</code></td>
+                <td>继续用于静态“阻挡新技能启动”的关系；配置方向必须理解为“我启动时被哪些已有 Tag 阻挡”。</td>
+              </tr>
+              <tr>
+                <td><code>CancelAbilitiesWithTag</code></td>
+                <td>继续用于“新技能启动后打断旧技能”的关系。</td>
+              </tr>
+              <tr>
+                <td><code>HeroAbility</code> 层输入与特判</td>
+                <td>需要把历史特判列入技能卡，逐步迁移到统一语义。</td>
+              </tr>
+              <tr>
+                <td>输入缓存 / 输入队列</td>
+                <td>沉到全局输入策略；技能卡只保留能缓存、不能缓存、改写时长等例外。</td>
+              </tr>
+              <tr>
+                <td>Montage / Overlay / Movement / Camera 模块</td>
+                <td>所有“并行”组合必须经过表现层验收，不能只看 GAS 是否允许。</td>
+              </tr>
+              <tr>
+                <td>Holding / 蓄力 / 持续技能</td>
+                <td>先记录现有取消逻辑，再决定哪些关系进入窗口规则。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="acceptance">
+          <h2>9. 优先级与验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>需求</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="priority p0">P0</span></td>
+                <td>统一术语和判定顺序。</td>
+                <td>任意两个技能相遇时，能明确回答关系结果是阻挡、打断或并行；阻挡后的输入缓存由全局策略处理。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p0">P0</span></td>
+                <td>静态关系接入现有 GAS 字段。</td>
+                <td>阻挡和打断能通过现有配置稳定生效，不依赖新增特判。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p1">P1</span></td>
+                <td>关键窗口支持不可打断和并行例外。</td>
+                <td>强技能 Startup 可保护；持续开火 Active 可与 Dash 并行。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p1">P1</span></td>
+                <td>输入缓存统一策略。</td>
+                <td>短窗口内输入不丢失，过期输入不会乱触发；缓存例外不需要维护技能对技能矩阵。</td>
+              </tr>
+              <tr>
+                <td><span class="priority p2">P2</span></td>
+                <td>表现层并行标准。</td>
+                <td>正式并行组合不出现动作瞬断、根运动冲突、镜头突跳、武器状态错乱。</td>
+              </tr>
+              <tr>
+                <td><span class="priority later">暂不做</span></td>
+                <td>全技能全窗口矩阵、技能对技能缓存矩阵和完整编辑器工具。</td>
+                <td>后续版本再评估。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="tech-notes">
+          <h2>10. 程序备注</h2>
+          <p>以下内容是实现参考，不是策划正文配置口径。</p>
+
+          <div class="grid">
+            <div class="box">
+              <h3>建议求值抽象</h3>
+              <pre>ActiveAbility
+ActiveWindow
+IncomingAbility
+IncomingInputContext
+  -> BlockIncoming
+  -> CancelActive
+  -> AllowParallel
+  -> ApplyGlobalInputCache</pre>
+            </div>
+            <div class="box">
+              <h3>实现注意</h3>
+              <ul>
+                <li>基础条件校验、窗口属性、技能关系、全局缓存策略需要固定顺序。</li>
+                <li>不可打断是窗口属性，不是关系结果。</li>
+                <li>互斥需要落为阻挡或打断，不能作为运行时模糊结果。</li>
+                <li>并行需要拆成逻辑层允许和表现层验收两件事。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="risk">
+            <strong>禁止做法：</strong>
+            某个技能绕过统一判定流程，先播动画、先生成投射物、先停旧技能，再回头判断语义。这样会让输入、表现和服务器结果出现不一致。
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

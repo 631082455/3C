@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill - 范围施法落点需求</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --paper: #ffffff;
+      --ink: #22272e;
+      --muted: #65717f;
+      --line: #d9dee5;
+      --soft: #eef2f5;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --bad: #8d3b3b;
+      --bad-soft: #fbe9e7;
+      --code: #172530;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    .page {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 32px auto 48px;
+    }
+    header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .meta span {
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 24px;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    nav .title {
+      padding: 4px 8px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+    nav a {
+      display: block;
+      padding: 10px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    nav a:hover {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    main {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    section {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 20px;
+    }
+    section:last-child { border-bottom: none; }
+
+    .rule {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+    .note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #ecd6ad;
+      border-radius: var(--radius);
+      background: var(--warn-soft);
+      color: #604219;
+    }
+    .risk {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #e8c1bc;
+      border-radius: var(--radius);
+      background: var(--bad-soft);
+      color: #6b302c;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 16px;
+    }
+    .box {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .box.blue {
+      border-color: #c8dced;
+      background: var(--blue-soft);
+    }
+    .scene-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .scene {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+      overflow: hidden;
+    }
+    .scene-body {
+      padding: 12px 14px 14px;
+    }
+    .scene h3 {
+      font-size: 15px;
+    }
+    .scene p {
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 13px;
+      font-weight: 740;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #e8f1f7;
+      overflow: auto;
+      font: 13px/1.65 var(--mono);
+    }
+    .diagram {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      section { padding: 24px 20px; }
+      .grid { grid-template-columns: 1fr; }
+      .scene-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Planning Requirement / Combat 3C</div>
+      <h1>Skill - 范围施法落点需求</h1>
+      <p>面向第三人称 MOBA / Hero Shooter 的地面范围、召唤、陷阱和投射落点技能。目标是让预览、释放和服务器判定使用同一套落点规则：玩家给出意图，系统只做同语义修正，不替玩家选另一个位置。</p>
+      <div class="meta">
+        <span>需求方：战斗 / 3C 策划</span>
+        <span>实现方：战斗程序 / UI / 网络</span>
+        <span>适用：Ground AOE / Deployable / Projectile Landing</span>
+        <span>版本：V1 精简需求稿</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#goal">1. 背景与目标</a>
+        <a href="#scope">2. 本版范围</a>
+        <a href="#terms">3. 术语</a>
+        <a href="#pipeline">4. 落点流程</a>
+        <a href="#validation">5. 合法性规则</a>
+        <a href="#resolve">6. 宽容与修正</a>
+        <a href="#profiles">7. 技能配置</a>
+        <a href="#preview">8. 预览与反馈</a>
+        <a href="#network">9. 网络与权威</a>
+        <a href="#cases">10. 边界案例</a>
+        <a href="#acceptance">11. 验收</a>
+        <a href="#tech-notes">12. 程序备注</a>
+      </nav>
+
+      <main>
+        <section id="goal">
+          <h2>1. 背景与目标</h2>
+          <p>范围施法落点如果每个技能各写一套规则，最容易出现三类问题：预览能放但释放失败、释放位置和预览位置不一致、边缘或高低差场景被吸到玩家没想选的位置。这里统一落点决议口径，让策划配置、客户端预览、服务器复检和 QA 验收说同一种语言。</p>
+          <div class="rule">
+            <h3>一句话规则</h3>
+            <p>系统可以把玩家的原始落点修正到“同一语义位置”的合法点；不能把楼上修到楼下、墙前修到墙后、目标地面修成另一个平台，也不能在失败时悄悄消耗技能。</p>
+          </div>
+          <div class="grid">
+            <div class="box">
+              <h3>需要解决</h3>
+              <ul>
+                <li>地面范围圈、召唤物、陷阱、投射落点使用统一判定流程。</li>
+                <li>预览表现和正式生效位置一致，修正后的最终落点必须可见。</li>
+                <li>非法原因可枚举，失败时能给 UI、网络和 QA 明确结果。</li>
+              </ul>
+            </div>
+            <div class="box blue">
+              <h3>交付结果</h3>
+              <ul>
+                <li><code>PlacementProfile</code>：技能落点配置。</li>
+                <li><code>PlacementResolver</code>：客户端和服务端共用的决议函数。</li>
+                <li><code>ResolvePolicy</code> 与 <code>FailureReason</code>：修正规则和失败原因。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="scene-grid">
+            <div class="scene">
+              <svg viewBox="0 0 360 220" role="img" aria-label="桥面边缘放置示意">
+                <defs>
+                  <linearGradient id="bridgeBg" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0" stop-color="#172530"/>
+                    <stop offset="1" stop-color="#283947"/>
+                  </linearGradient>
+                </defs>
+                <rect width="360" height="220" fill="url(#bridgeBg)"/>
+                <polygon points="20,112 252,78 340,116 94,165" fill="#435362"/>
+                <polygon points="94,165 340,116 340,139 96,188" fill="#2b343d"/>
+                <circle cx="245" cy="110" r="34" fill="rgba(143,223,166,.25)" stroke="#8fdfa6" stroke-width="3"/>
+                <circle cx="245" cy="110" r="6" fill="#8fdfa6"/>
+                <circle cx="303" cy="147" r="24" fill="rgba(255,152,135,.16)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <path d="M65 141 L226 113" stroke="#79c6ff" stroke-width="2" stroke-dasharray="7 5"/>
+                <circle cx="66" cy="141" r="9" fill="#79c6ff"/>
+                <text x="20" y="28" fill="#edf3f7" font-size="14" font-weight="700">桥面边缘</text>
+                <text x="218" y="73" fill="#8fdfa6" font-size="12">同层贴边</text>
+                <text x="266" y="185" fill="#ff9887" font-size="12">掉层失败</text>
+              </svg>
+              <div class="scene-body">
+                <h3>边缘部署</h3>
+                <p>同一桥面内可以贴边修正；桥下是另一个语义位置，不能自动掉层。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 220" role="img" aria-label="抛物线落点一致示意">
+                <rect width="360" height="220" fill="#182431"/>
+                <rect x="0" y="158" width="360" height="62" fill="#2c3b42"/>
+                <path d="M48 158 C120 58, 222 58, 300 158" fill="none" stroke="#79c6ff" stroke-width="4"/>
+                <circle cx="300" cy="158" r="30" fill="rgba(143,223,166,.22)" stroke="#8fdfa6" stroke-width="3"/>
+                <circle cx="300" cy="158" r="6" fill="#8fdfa6"/>
+                <circle cx="244" cy="158" r="24" fill="rgba(255,152,135,.14)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <text x="20" y="28" fill="#edf3f7" font-size="14" font-weight="700">抛投终点</text>
+                <text x="264" y="126" fill="#8fdfa6" font-size="12">预览 = 真实落点</text>
+                <text x="196" y="194" fill="#ff9887" font-size="12">错位不可接受</text>
+              </svg>
+              <div class="scene-body">
+                <h3>抛物线落点</h3>
+                <p>Reticle、范围圈和服务器命中点必须是一回事，不能只让轨迹看起来对。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 220" role="img" aria-label="预览承诺示意">
+                <rect width="360" height="220" fill="#f8fbfc"/>
+                <rect x="48" y="56" width="90" height="90" rx="8" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <rect x="136" y="56" width="90" height="90" rx="8" fill="#fff4dd" stroke="#ecd6ad"/>
+                <rect x="224" y="56" width="90" height="90" rx="8" fill="#fbe9e7" stroke="#e8c1bc"/>
+                <circle cx="93" cy="101" r="24" fill="rgba(37,111,101,.18)" stroke="#256f65" stroke-width="3"/>
+                <circle cx="181" cy="101" r="24" fill="rgba(214,157,55,.16)" stroke="#d69d37" stroke-width="3"/>
+                <circle cx="269" cy="101" r="24" fill="rgba(141,59,59,.14)" stroke="#8d3b3b" stroke-width="3" stroke-dasharray="6 5"/>
+                <text x="93" y="169" fill="#256f65" font-size="13" text-anchor="middle">合法</text>
+                <text x="181" y="169" fill="#8a5b18" font-size="13" text-anchor="middle">已修正</text>
+                <text x="269" y="169" fill="#8d3b3b" font-size="13" text-anchor="middle">非法</text>
+              </svg>
+              <div class="scene-body">
+                <h3>预览承诺</h3>
+                <p>玩家松手前看到的状态要可信：合法就释放，修正就显示修正点，非法就明确失败。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scope">
+          <h2>2. 本版范围</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>范围</th>
+                <th>本版要求</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>地面范围技能</td>
+                <td>必须接入统一落点流程。</td>
+                <td>圆形、扇形、矩形等范围先得到 <code>FinalPlacement</code>，再进入伤害或区域系统。</td>
+              </tr>
+              <tr>
+                <td>召唤 / 陷阱 / 放置物</td>
+                <td>必须校验占地、阻挡、导航和高度。</td>
+                <td>不能只判断中心点合法，必须判断实际 <code>Footprint</code>。</td>
+              </tr>
+              <tr>
+                <td>投射落点 / 抛物线终点</td>
+                <td>预览终点和服务器终点需要共享落点口径。</td>
+                <td>飞行过程的命中仍由投射物系统负责，本稿只定义“落到哪里”。</td>
+              </tr>
+              <tr>
+                <td>墙面 / 天花板 / 任意 3D 放置</td>
+                <td>不进入 V1。</td>
+                <td>需要单独的表面朝向、附着、遮挡和动画规则，避免拖慢地面技能落地。</td>
+              </tr>
+              <tr>
+                <td>自动替玩家选目标</td>
+                <td>不进入本系统。</td>
+                <td>锁敌、辅助瞄准、目标选择归目标选择系统；落点系统只处理空间位置是否合法。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">V1 先把“地面落点可信”做稳。特殊技能可以先不接入，但接入后必须遵守同一套预览、释放和服务器复检口径。</div>
+        </section>
+
+        <section id="terms">
+          <h2>3. 术语</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>术语</th>
+                <th>含义</th>
+                <th>验收口径</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>AimRay</code></td>
+                <td>玩家当前瞄准方向，通常来自镜头或准星。</td>
+                <td>客户端预览和服务端复检应能得到同类输入。</td>
+              </tr>
+              <tr>
+                <td><code>IntentPoint</code></td>
+                <td>由瞄准射线或最大距离投影得到的原始意图点。</td>
+                <td>用于表达玩家想点哪里，不一定合法。</td>
+              </tr>
+              <tr>
+                <td><code>SupportSurface</code></td>
+                <td>承载落点的地面或平台。</td>
+                <td>同一支撑面内可以修正，跨支撑面默认失败。</td>
+              </tr>
+              <tr>
+                <td><code>Footprint</code></td>
+                <td>技能实际占地形状，可能是点、圆、盒、胶囊或自定义形状。</td>
+                <td>放置物和范围技能必须检查完整占地。</td>
+              </tr>
+              <tr>
+                <td><code>PlacementProfile</code></td>
+                <td>技能落点配置，包括形状、距离、表面、修正策略和失败反馈。</td>
+                <td>策划配置入口，不在技能蓝图里散写找点逻辑。</td>
+              </tr>
+              <tr>
+                <td><code>FinalPlacement</code></td>
+                <td>最终用于释放、生成、伤害范围、VFX 和网络同步的位置。</td>
+                <td>正式表现必须以它为准。</td>
+              </tr>
+              <tr>
+                <td><code>FailureReason</code></td>
+                <td>落点失败原因。</td>
+                <td>UI、日志、QA 用同一份枚举，不用猜失败原因。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="pipeline">
+          <h2>4. 落点流程</h2>
+          <p>所有接入技能按同一条流水线求值。客户端预览可以高频调用，服务器释放时必须用同一套配置重新求值。</p>
+          <div class="diagram">
+            <svg viewBox="0 0 980 310" role="img" aria-label="落点决议流程图">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="310" fill="#ffffff"/>
+              <text x="40" y="42" fill="#65717f" font-size="16" font-weight="700">Placement Resolver</text>
+              <g fill="#f8fbfc" stroke="#cfd8df" stroke-width="1.5">
+                <rect x="42" y="82" width="120" height="72" rx="8"/>
+                <rect x="202" y="82" width="120" height="72" rx="8"/>
+                <rect x="362" y="82" width="120" height="72" rx="8"/>
+                <rect x="522" y="82" width="120" height="72" rx="8"/>
+                <rect x="682" y="82" width="120" height="72" rx="8"/>
+                <rect x="842" y="82" width="96" height="72" rx="8"/>
+              </g>
+              <g fill="#202830" font-size="15" text-anchor="middle" font-weight="700">
+                <text x="102" y="113">Input</text>
+                <text x="262" y="113">IntentPoint</text>
+                <text x="422" y="113">Surface</text>
+                <text x="582" y="113">Footprint</text>
+                <text x="742" y="113">Resolve</text>
+                <text x="890" y="113">Result</text>
+              </g>
+              <g fill="#65717f" font-size="12" text-anchor="middle">
+                <text x="102" y="136">AimRay / Profile</text>
+                <text x="262" y="136">原始意图点</text>
+                <text x="422" y="136">候选支撑面</text>
+                <text x="582" y="136">占地合法性</text>
+                <text x="742" y="136">修正或失败</text>
+                <text x="890" y="136">Final / Reason</text>
+              </g>
+              <g stroke="#6b7580" stroke-width="2" marker-end="url(#arrow)">
+                <line x1="162" y1="118" x2="194" y2="118"/>
+                <line x1="322" y1="118" x2="354" y2="118"/>
+                <line x1="482" y1="118" x2="514" y2="118"/>
+                <line x1="642" y1="118" x2="674" y2="118"/>
+                <line x1="802" y1="118" x2="834" y2="118"/>
+              </g>
+              <path d="M102 168 C102 238, 742 238, 742 168" fill="none" stroke="#256f65" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#arrow)"/>
+              <text x="422" y="255" fill="#256f65" font-size="14" text-anchor="middle">拖拽预览可持续复用上一次输入，但释放时仍重新决议</text>
+            </svg>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>步骤</th>
+                <th>输入</th>
+                <th>输出</th>
+                <th>要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1. 构建上下文</td>
+                <td>施法者、瞄准、技能配置、当前移动状态</td>
+                <td><code>PlacementInput</code></td>
+                <td>预览和释放使用同一类输入结构。</td>
+              </tr>
+              <tr>
+                <td>2. 求原始意图点</td>
+                <td><code>AimRay</code>、最大距离、准星命中</td>
+                <td><code>IntentPoint</code></td>
+                <td>只表达玩家想点哪里，不在这一步做吸附。</td>
+              </tr>
+              <tr>
+                <td>3. 找候选面</td>
+                <td><code>IntentPoint</code> 附近的地形 / Nav / 碰撞</td>
+                <td><code>SupportSurface</code></td>
+                <td>默认优先同一支撑面，不跨平台找点。</td>
+              </tr>
+              <tr>
+                <td>4. 校验占地</td>
+                <td>候选面、技能形状、阻挡信息</td>
+                <td>合法 / 非法原因</td>
+                <td>范围和放置物都按完整 <code>Footprint</code> 判断。</td>
+              </tr>
+              <tr>
+                <td>5. 执行修正策略</td>
+                <td>非法原因、容差配置、候选点</td>
+                <td><code>FinalPlacement</code> 或 <code>FailureReason</code></td>
+                <td>修正结果必须能反馈给玩家。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="validation">
+          <h2>5. 合法性规则</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>规则</th>
+                <th>默认要求</th>
+                <th>失败原因</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>距离</td>
+                <td>落点必须在技能最大距离内；超出距离时可沿同一方向夹取到最大距离。</td>
+                <td><code>OutOfRange</code></td>
+              </tr>
+              <tr>
+                <td>支撑面</td>
+                <td>落点必须在允许的地面类型上，默认不允许墙面、天花板、空中点。</td>
+                <td><code>InvalidSurface</code></td>
+              </tr>
+              <tr>
+                <td>高度</td>
+                <td>同一支撑面内允许小高度差；跨楼层、跨平台、穿过断崖默认失败。</td>
+                <td><code>HeightMismatch</code></td>
+              </tr>
+              <tr>
+                <td>占地</td>
+                <td><code>Footprint</code> 内不能与不可穿越物、角色胶囊或禁止区域冲突。</td>
+                <td><code>FootprintBlocked</code></td>
+              </tr>
+              <tr>
+                <td>导航</td>
+                <td>需要落地实体的技能必须落在可导航或技能指定的可站立区域。</td>
+                <td><code>NavInvalid</code></td>
+              </tr>
+              <tr>
+                <td>坡度</td>
+                <td>超过技能配置的坡度上限时失败，避免放置物倾斜或穿地。</td>
+                <td><code>SlopeTooSteep</code></td>
+              </tr>
+              <tr>
+                <td>视线 / 遮挡</td>
+                <td>是否需要直视由技能配置决定。需要直视的技能不能隔墙放置。</td>
+                <td><code>LineOfSightBlocked</code></td>
+              </tr>
+              <tr>
+                <td>动态状态</td>
+                <td>施法者死亡、被控制、技能进入 CD、资源不足时，落点结果无效。</td>
+                <td><code>CasterStateInvalid</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <pre>FailureReason:
+  None
+  OutOfRange
+  InvalidSurface
+  HeightMismatch
+  FootprintBlocked
+  NavInvalid
+  SlopeTooSteep
+  LineOfSightBlocked
+  CasterStateInvalid
+  Unknown</pre>
+        </section>
+
+        <section id="resolve">
+          <h2>6. 宽容与修正</h2>
+          <p>宽容只解决“差一点”的手感问题，不改变玩家的目标语义。所有修正都需要落在同一支撑面或同一可理解区域内。</p>
+          <div class="diagram">
+            <svg viewBox="0 0 980 330" role="img" aria-label="同层修正和跨层失败示意">
+              <defs>
+                <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="330" fill="#ffffff"/>
+              <text x="70" y="48" fill="#256f65" font-size="18" font-weight="700">允许：同一支撑面内贴边</text>
+              <rect x="70" y="95" width="340" height="42" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+              <rect x="70" y="137" width="280" height="72" rx="4" fill="#d7e6dc" stroke="#9bcfc5"/>
+              <circle cx="370" cy="115" r="18" fill="#fff4dd" stroke="#d69d37" stroke-width="2"/>
+              <circle cx="333" cy="115" r="18" fill="#e5f0f8" stroke="#22577a" stroke-width="2"/>
+              <line x1="365" y1="115" x2="341" y2="115" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow2)"/>
+              <text x="352" y="250" fill="#65717f" font-size="14" text-anchor="middle">原始点略出边缘，可夹到同面最近合法点</text>
+
+              <text x="570" y="48" fill="#8d3b3b" font-size="18" font-weight="700">禁止：跨层改意图</text>
+              <rect x="570" y="88" width="330" height="42" rx="6" fill="#fbe9e7" stroke="#e1aaa3"/>
+              <rect x="630" y="205" width="270" height="42" rx="6" fill="#fbe9e7" stroke="#e1aaa3"/>
+              <circle cx="745" cy="109" r="18" fill="#fff4dd" stroke="#d69d37" stroke-width="2"/>
+              <circle cx="745" cy="226" r="18" fill="#fbe9e7" stroke="#8d3b3b" stroke-width="2"/>
+              <path d="M745 132 C745 160, 745 180, 745 203" stroke="#8d3b3b" stroke-width="2" stroke-dasharray="6 6" fill="none"/>
+              <text x="735" y="280" fill="#65717f" font-size="14" text-anchor="middle">楼上点不能自动改成楼下点</text>
+            </svg>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>策略</th>
+                <th>行为</th>
+                <th>适用场景</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>Reject</code></td>
+                <td>非法即失败，不修正。</td>
+                <td>精准放置、强策略技能、会造成不公平误放的技能。</td>
+              </tr>
+              <tr>
+                <td><code>ClampToRange</code></td>
+                <td>超出距离时沿瞄准方向夹到最大距离。</td>
+                <td>普通地面范围技能。</td>
+              </tr>
+              <tr>
+                <td><code>SnapSameSurface</code></td>
+                <td>在同一支撑面内找最近合法点，距离不超过配置容差。</td>
+                <td>召唤、陷阱、地面圈在边缘附近的手感优化。</td>
+              </tr>
+              <tr>
+                <td><code>UseLastValidPreviewOnly</code></td>
+                <td>拖拽预览时短暂保留上一个合法点，释放时仍重新判定。</td>
+                <td>鼠标或摇杆抖动导致的预览闪烁。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="risk">
+            禁止行为：跨层吸附、穿墙吸附、绕过遮挡吸附、把失败改成自动自施法、释放失败仍消耗资源或进入 CD。
+          </div>
+        </section>
+
+        <section id="profiles">
+          <h2>7. 技能配置</h2>
+          <h3>7.1 PlacementProfile</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>说明</th>
+                <th>示例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>PlacementMode</code></td>
+                <td>技能落点类型。</td>
+                <td><code>GroundAOE</code> / <code>Deployable</code> / <code>ProjectileLanding</code></td>
+              </tr>
+              <tr>
+                <td><code>MaxRange</code></td>
+                <td>最大施法距离。</td>
+                <td>1200 cm</td>
+              </tr>
+              <tr>
+                <td><code>SurfaceMask</code></td>
+                <td>允许承载的表面类型。</td>
+                <td>地面、可站立平台、技能专用区域</td>
+              </tr>
+              <tr>
+                <td><code>FootprintShape</code></td>
+                <td>实际占地形状。</td>
+                <td>点、圆、盒、胶囊</td>
+              </tr>
+              <tr>
+                <td><code>RequireNav</code></td>
+                <td>是否要求可导航。</td>
+                <td>召唤物默认开启，纯范围圈可按技能关闭。</td>
+              </tr>
+              <tr>
+                <td><code>RequireLineOfSight</code></td>
+                <td>是否需要施法者到落点无遮挡。</td>
+                <td>隔墙不能放的技能开启。</td>
+              </tr>
+              <tr>
+                <td><code>HeightPolicy</code></td>
+                <td>高低差规则。</td>
+                <td>同层允许、小台阶允许、跨层失败。</td>
+              </tr>
+              <tr>
+                <td><code>ResolvePolicy</code></td>
+                <td>非法或略微越界时的处理。</td>
+                <td><code>Reject</code> / <code>ClampToRange</code> / <code>SnapSameSurface</code></td>
+              </tr>
+              <tr>
+                <td><code>PreviewStyle</code></td>
+                <td>预览表现规则。</td>
+                <td>颜色、边缘、失败提示、吸附标记。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:22px;">7.2 技能类型默认值</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>类型</th>
+                <th>默认规则</th>
+                <th>程序接入点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>地面范围圈</td>
+                <td>允许距离夹取；需要完整范围可显示；是否需要 Nav 由技能决定。</td>
+                <td><code>SkillAreaPreviewDataAsset</code> / <code>SkillAreaSystem</code></td>
+              </tr>
+              <tr>
+                <td>召唤物</td>
+                <td>必须校验完整占地、导航和阻挡；默认允许同层小范围贴边。</td>
+                <td><code>SkillModuleSpawnMobaUnit</code></td>
+              </tr>
+              <tr>
+                <td>陷阱 / 放置物</td>
+                <td>必须校验占地；是否允许和角色、机关、其他陷阱重叠由技能配置。</td>
+                <td>放置物 Spawn 模块</td>
+              </tr>
+              <tr>
+                <td>投射落点</td>
+                <td>预览终点、抛物线落点和服务器落点使用同一 <code>FinalPlacement</code>。</td>
+                <td><code>SkillModuleLaunchProjectile</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <pre>PlacementProfile:
+  PlacementMode: GroundAOE | Deployable | ProjectileLanding
+  FootprintShape: Point | Circle | Box | Capsule
+  ResolvePolicy: Reject | ClampToRange | SnapSameSurface
+  RequireNav: true / false
+  RequireLineOfSight: true / false
+  MaxSameSurfaceSnapDistance: number
+  MaxHeightDelta: number</pre>
+        </section>
+
+        <section id="preview">
+          <h2>8. 预览与反馈</h2>
+          <p>玩家看到的位置必须接近最终结果。发生修正时，预览显示修正后的落点；发生失败时，预览进入非法状态，释放不应产生隐藏的成功或隐藏的消耗。</p>
+          <div class="scene-grid">
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="合法预览示意">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <rect x="42" y="84" width="236" height="58" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="160" cy="112" r="42" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
+                <circle cx="160" cy="112" r="5" fill="#256f65"/>
+                <text x="160" y="45" fill="#256f65" font-size="16" font-weight="700" text-anchor="middle">合法预览</text>
+                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">范围圈、中心点、实际生效位置一致</text>
+              </svg>
+              <div class="scene-body">
+                <h3>合法</h3>
+                <p>正常颜色显示完整 footprint，释放时直接使用当前 <code>FinalPlacement</code>。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="非法预览示意">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <polygon points="54,146 266,86 266,126 54,186" fill="#fbe9e7" stroke="#e8c1bc"/>
+                <circle cx="176" cy="121" r="42" fill="rgba(141,59,59,.12)" stroke="#8d3b3b" stroke-width="3" stroke-dasharray="7 5"/>
+                <line x1="146" y1="91" x2="206" y2="151" stroke="#8d3b3b" stroke-width="4"/>
+                <line x1="206" y1="91" x2="146" y2="151" stroke="#8d3b3b" stroke-width="4"/>
+                <text x="160" y="45" fill="#8d3b3b" font-size="16" font-weight="700" text-anchor="middle">非法 · 坡度过陡</text>
+                <text x="160" y="190" fill="#65717f" font-size="12" text-anchor="middle">失败原因要能给 UI / QA 读取</text>
+              </svg>
+              <div class="scene-body">
+                <h3>非法</h3>
+                <p>非法状态要明确，不释放、不消耗；例外必须由技能单独配置。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="吸附后占地示意">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <rect x="54" y="78" width="180" height="56" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="241" cy="106" r="35" fill="rgba(214,157,55,.12)" stroke="#d69d37" stroke-width="3" stroke-dasharray="6 5"/>
+                <circle cx="214" cy="106" r="35" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
+                <path d="M239 106 L219 106" stroke="#6b7580" stroke-width="2" marker-end="url(#snapArrow)"/>
+                <defs>
+                  <marker id="snapArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                  </marker>
+                </defs>
+                <text x="160" y="45" fill="#8a5b18" font-size="16" font-weight="700" text-anchor="middle">同层吸附</text>
+                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">显示修正后的真实 footprint</text>
+              </svg>
+              <div class="scene-body">
+                <h3>已修正</h3>
+                <p>吸附不能只移动中心点，还要显示修正后的完整占地范围。</p>
+              </div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>显示</th>
+                <th>释放结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>合法</td>
+                <td>使用正常范围圈、召唤轮廓或落点标记。</td>
+                <td>释放到当前 <code>FinalPlacement</code>。</td>
+              </tr>
+              <tr>
+                <td>已修正</td>
+                <td>显示修正后的最终落点；必要时用细线或边缘提示原始意图和最终点有偏移。</td>
+                <td>释放到修正后的 <code>FinalPlacement</code>。</td>
+              </tr>
+              <tr>
+                <td>非法</td>
+                <td>范围圈变为非法色，召唤轮廓隐藏或变红，失败原因可供 UI 文案读取。</td>
+                <td>默认不释放、不消耗、不进入 CD。</td>
+              </tr>
+              <tr>
+                <td>预览抖动</td>
+                <td>拖拽时可短暂保留上一个合法点，避免边缘闪烁。</td>
+                <td>释放瞬间仍按服务器规则复检。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">预览可以更平滑，但不能骗人。玩家松手时看到的是哪里，正式结果就应该尽量落在哪里；如果服务器拒绝，需要返回明确原因。</div>
+        </section>
+
+        <section id="network">
+          <h2>9. 网络与权威</h2>
+          <p>客户端负责高频预览和输入提交，服务器负责最终落点权威。客户端提交的坐标可以作为预测参考，但不能直接作为最终结果。</p>
+          <div class="diagram">
+            <svg viewBox="0 0 980 250" role="img" aria-label="客户端服务器落点同步流程">
+              <defs>
+                <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="250" fill="#ffffff"/>
+              <rect x="70" y="70" width="230" height="82" rx="8" fill="#e5f0f8" stroke="#9bbfd9"/>
+              <rect x="380" y="70" width="220" height="82" rx="8" fill="#f8fbfc" stroke="#cfd8df"/>
+              <rect x="680" y="70" width="230" height="82" rx="8" fill="#e2f1ee" stroke="#9bcfc5"/>
+              <text x="185" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Client Preview</text>
+              <text x="490" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Cast Request</text>
+              <text x="795" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Server Resolve</text>
+              <text x="185" y="128" fill="#65717f" font-size="13" text-anchor="middle">本地预测 FinalPlacement</text>
+              <text x="490" y="128" fill="#65717f" font-size="13" text-anchor="middle">AimRay / ProfileId / Context</text>
+              <text x="795" y="128" fill="#65717f" font-size="13" text-anchor="middle">权威 FinalPlacement / FailureReason</text>
+              <line x1="300" y1="111" x2="372" y2="111" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow3)"/>
+              <line x1="600" y1="111" x2="672" y2="111" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow3)"/>
+              <path d="M795 156 C795 210, 185 210, 185 156" fill="none" stroke="#256f65" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#arrow3)"/>
+              <text x="490" y="224" fill="#256f65" font-size="14" text-anchor="middle">服务器结果回传，客户端校正表现和失败反馈</text>
+            </svg>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>数据</th>
+                <th>要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>客户端提交</td>
+                <td><code>AimRay</code>、施法者状态、<code>PlacementProfileId</code>、可选预测落点。</td>
+              </tr>
+              <tr>
+                <td>服务器复检</td>
+                <td>用同一 <code>PlacementProfile</code> 调用 <code>PlacementResolver</code>，输出权威结果。</td>
+              </tr>
+              <tr>
+                <td>成功同步</td>
+                <td>实体生成、范围判定、VFX、音效和日志都使用服务器 <code>FinalPlacement</code>。</td>
+              </tr>
+              <tr>
+                <td>失败同步</td>
+                <td>返回 <code>FailureReason</code>，客户端播放失败反馈，不消耗或按技能规则回滚。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="cases">
+          <h2>10. 边界案例</h2>
+          <p>边界案例用来验收“系统是否尊重玩家意图”。这些场景不要求每个技能都能成功，但要求成功、修正、失败的口径稳定。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>案例</th>
+                <th>默认结果</th>
+                <th>验收重点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>最大距离外一点点</td>
+                <td>可沿瞄准方向夹取到最大距离。</td>
+                <td>预览圈显示在夹取后位置，不在原始非法点闪烁。</td>
+              </tr>
+              <tr>
+                <td>同平台边缘轻微越界</td>
+                <td>可在容差内向平台内侧收缩。</td>
+                <td>完整 footprint 合法，而不是只有中心点合法。</td>
+              </tr>
+              <tr>
+                <td>桥面瞄到边缘，桥下也可放</td>
+                <td>桥面非法就失败，不自动落到桥下。</td>
+                <td>不能把同屏可见的另一个合法点当成玩家意图。</td>
+              </tr>
+              <tr>
+                <td>楼梯 / 斜坡</td>
+                <td>坡度和高度差在配置内则成功，否则失败。</td>
+                <td>召唤物不倾斜穿地，范围圈不漂浮。</td>
+              </tr>
+              <tr>
+                <td>墙角 / 门框旁放置</td>
+                <td>地面技能只认地面；墙面技能需独立 Profile。</td>
+                <td>不要从一个面偷偷转到另一个面。</td>
+              </tr>
+              <tr>
+                <td>抛物线落点被遮挡</td>
+                <td>按弹道解得到真实终点；如果和预览不一致，需要修正预览或失败。</td>
+                <td>reticle、落点圈、真实命中点一致。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="scene-grid">
+            <div class="scene">
+              <svg viewBox="0 0 360 240" role="img" aria-label="坡面边缘内缩示意">
+                <rect width="360" height="240" fill="#182431"/>
+                <polygon points="34,160 304,88 330,130 60,206" fill="#42525d"/>
+                <polygon points="44,166 282,102 295,123 56,190" fill="#5f7569"/>
+                <circle cx="256" cy="124" r="34" fill="rgba(143,223,166,.22)" stroke="#8fdfa6" stroke-width="3"/>
+                <path d="M286 111 L320 101" stroke="#ff9887" stroke-width="5"/>
+                <circle cx="306" cy="105" r="24" fill="rgba(255,152,135,.14)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <text x="22" y="30" fill="#edf3f7" font-size="14" font-weight="700">坡面边缘</text>
+                <text x="226" y="84" fill="#8fdfa6" font-size="12">内缩后合法</text>
+                <text x="278" y="164" fill="#ff9887" font-size="12">超阈值失败</text>
+              </svg>
+              <div class="scene-body">
+                <h3>有限内缩</h3>
+                <p>轻微越界可以收回，同面内缩距离超过阈值后必须失败。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 240" role="img" aria-label="墙角转面失败示意">
+                <rect width="360" height="240" fill="#172530"/>
+                <polygon points="80,64 202,100 202,206 80,170" fill="#46576a"/>
+                <polygon points="202,100 306,62 306,168 202,206" fill="#344252"/>
+                <circle cx="150" cy="136" r="34" fill="rgba(121,198,255,.2)" stroke="#79c6ff" stroke-width="3"/>
+                <circle cx="247" cy="132" r="30" fill="rgba(255,152,135,.14)" stroke="#ff9887" stroke-width="3" stroke-dasharray="6 5"/>
+                <path d="M112 188 L148 140" stroke="#79c6ff" stroke-width="2" stroke-dasharray="6 5"/>
+                <text x="22" y="30" fill="#edf3f7" font-size="14" font-weight="700">墙角转面</text>
+                <text x="92" y="210" fill="#79c6ff" font-size="12">预览承诺面</text>
+                <text x="222" y="210" fill="#ff9887" font-size="12">不能偷偷换面</text>
+              </svg>
+              <div class="scene-body">
+                <h3>面语义一致</h3>
+                <p>V1 不做墙面放置，但这个案例可以提醒后续扩展时不要提交瞬间换面。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 360 240" role="img" aria-label="动态阻挡示意">
+                <rect width="360" height="240" fill="#f8fbfc"/>
+                <rect x="54" y="110" width="252" height="58" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="152" cy="139" r="34" fill="rgba(37,111,101,.13)" stroke="#256f65" stroke-width="3"/>
+                <rect x="182" y="112" width="42" height="54" rx="10" fill="#fbe9e7" stroke="#8d3b3b" stroke-width="2"/>
+                <path d="M182 139 L224 139" stroke="#8d3b3b" stroke-width="3"/>
+                <text x="160" y="45" fill="#202830" font-size="15" font-weight="700" text-anchor="middle">动态阻挡</text>
+                <text x="160" y="198" fill="#65717f" font-size="12" text-anchor="middle">预览合法，释放瞬间被挡，需要服务器返回原因</text>
+              </svg>
+              <div class="scene-body">
+                <h3>状态变化</h3>
+                <p>角色、召唤物或机关进入占地区时，服务端复检可以失败并回传原因。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="acceptance">
+          <h2>11. 验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>验收项</th>
+                <th>标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P0</td>
+                <td>预览和正式结果一致</td>
+                <td>平地、边缘、斜坡、高低差场景中，释放结果与玩家松手时看到的最终落点一致。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>失败不隐藏消耗</td>
+                <td>非法落点默认不生成实体、不造成伤害、不进入 CD、不消耗资源；例外必须由技能单独配置。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>不跨层吸附</td>
+                <td>楼上、楼下、断崖、平台边缘不会互相吸附；跨层尝试返回 <code>HeightMismatch</code>。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>占地校验有效</td>
+                <td>召唤物和陷阱不会生成在墙里、角色体内、不可导航区或禁止区域。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>边缘手感稳定</td>
+                <td>同一支撑面内的小距离越界可以贴边，拖拽预览不频繁闪烁。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>失败原因可读</td>
+                <td>日志、UI、QA 能看到明确 <code>FailureReason</code>，不出现只有“失败”没有原因的结果。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>网络校正可接受</td>
+                <td>延迟下客户端预测和服务器结果偏差可控；差异较大时能做失败或校正反馈。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">建议 QA 场景：平地、楼梯、平台边缘、上下层平台、窄门、墙角、斜坡、动态阻挡、最大距离边界。</div>
+        </section>
+
+        <section id="tech-notes">
+          <h2>12. 程序备注</h2>
+          <p>当前项目已有技能模块、预览数据和范围系统，落点规则建议作为中间层接入。不要让每个技能自己重复写射线、Nav、碰撞和吸附规则。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>模块</th>
+                <th>接入要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>HeroAbility</code></td>
+                <td>组织施法输入和服务器请求，读取技能对应的 <code>PlacementProfileId</code>。</td>
+              </tr>
+              <tr>
+                <td><code>SkillModulePreviewData</code></td>
+                <td>预览阶段调用 <code>PlacementResolver</code>，不在表现层重复找点。</td>
+              </tr>
+              <tr>
+                <td><code>SkillAreaPreviewDataAsset</code></td>
+                <td>只负责范围表现参数；落点合法性由 <code>PlacementProfile</code> 决定。</td>
+              </tr>
+              <tr>
+                <td><code>SkillAreaSystem</code></td>
+                <td>使用已经决议出的 <code>FinalPlacement</code> 创建范围，不再二次改落点。</td>
+              </tr>
+              <tr>
+                <td><code>SkillModuleSpawnMobaUnit</code></td>
+                <td>服务端复检后再 Spawn，生成位置以服务器 <code>FinalPlacement</code> 为准。</td>
+              </tr>
+              <tr>
+                <td><code>SkillModuleLaunchProjectile</code></td>
+                <td>抛物线和落点指示读取同一结果；飞行命中由投射物逻辑继续处理。</td>
+              </tr>
+            </tbody>
+          </table>
+          <h3 style="margin-top:22px;">建议改造顺序</h3>
+          <ol>
+            <li>先建立 <code>PlacementProfile</code>、<code>PlacementResolver</code>、<code>ResolvePolicy</code>、<code>FailureReason</code>。</li>
+            <li>优先接入地面范围圈和召唤物，这两类最容易暴露预览与正式结果不一致。</li>
+            <li>把客户端预览和服务器释放改成调用同一套 resolver。</li>
+            <li>再接入投射落点和抛物线终点，统一终点显示和服务器落点。</li>
+          </ol>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

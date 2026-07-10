@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Motion Matching 上下半身动作混合修正需求</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #fff;
+      --ink: #22272e;
+      --muted: #65717d;
+      --line: #d9dee5;
+      --soft: #f0f3f6;
+      --accent: #237466;
+      --accent-soft: #e3f2ee;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --bad: #9c3d30;
+      --bad-soft: #ffebe8;
+      --code: #19313d;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    .page {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 32px auto 48px;
+    }
+    header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .meta span {
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 24px;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    nav .title {
+      padding: 4px 8px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+    nav a {
+      display: block;
+      padding: 10px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    nav a:hover {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    main {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    section {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 20px;
+    }
+    section:last-child { border-bottom: none; }
+
+    .decision {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+    .note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #ecd6ad;
+      border-radius: var(--radius);
+      background: var(--warn-soft);
+      color: #604219;
+    }
+    .risk {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #efc2bc;
+      border-radius: var(--radius);
+      background: var(--bad-soft);
+      color: #6a2d25;
+    }
+
+    .media-demo {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .media-demo h3 {
+      margin-bottom: 6px;
+    }
+    .media-demo p {
+      max-width: 860px;
+    }
+    .media-frame {
+      display: flex;
+      justify-content: center;
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    .media-frame img {
+      display: block;
+      width: min(100%, 720px);
+      height: auto;
+      border-radius: 6px;
+    }
+    .caption {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 13px;
+      font-weight: 740;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    .split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 16px;
+    }
+    .box {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    pre {
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #e9f2f8;
+      overflow: auto;
+      font: 13px/1.65 var(--mono);
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      section { padding: 24px 20px; }
+      .split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Planning Requirement</div>
+      <h1>Motion Matching 上下半身动作混合修正需求</h1>
+      <p>用于规范移动中释放上半身动作时的表现目标、配置方式和技术边界，重点避免修正姿态污染 Motion Matching 的移动预测与姿态搜索。</p>
+      <div class="meta">
+        <span>文档类型：战斗技术策划需求</span>
+        <span>最后核对：2026-05-06</span>
+        <span>适用对象：战斗策划 / 动画 / 程序 / QA</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#goal">1. 目标</a>
+        <a href="#behavior">2. 策划功能描述</a>
+        <a href="#config">3. 配置需求</a>
+        <a href="#technical">4. 技术方案</a>
+        <a href="#mm-boundary">5. MM 边界</a>
+        <a href="#acceptance">6. 验收标准</a>
+      </nav>
+
+      <main>
+        <section id="goal">
+          <h2>1. 目标</h2>
+          <p>角色在移动、转向、瞄准、普攻、蓄力或释放上半身技能时，下半身应继续保持 Motion Matching 的移动稳定性，上半身则表达技能意图。</p>
+          <div class="decision">
+            <h3>一句话目标</h3>
+            <p>玩家看到的是“移动稳定 + 技能动作清晰”，系统内部仍然让 Motion Matching 使用原始可靠的移动数据做选帧。</p>
+          </div>
+          <figure class="media-demo">
+            <h3>效果示意</h3>
+            <p>用于观察上半身动作叠加后，骨盆和下半身是否仍保持移动稳定。重点看移动节奏、骨盆偏移、腿部滑步和技能姿态之间的关系。</p>
+            <div class="media-frame">
+              <img src="./v2-04de6115bf27d7f9995823a12fdf88b7_b.gif" alt="上半身动作融合时的骨盆表现效果示意" />
+            </div>
+            <figcaption class="caption">示意图：移动中叠加上半身动作时的骨盆与下半身表现</figcaption>
+          </figure>
+        </section>
+
+        <section id="behavior">
+          <h2>2. 策划功能描述</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>期望表现</th>
+                <th>不接受表现</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>移动中普攻</td>
+                <td>角色保持当前步态和移动方向，上半身完成开火、挥击、瞄准等表现。</td>
+                <td>骨盆被攻击动作带偏，腿部滑步，跑动节奏突然中断。</td>
+              </tr>
+              <tr>
+                <td>移动中释放技能</td>
+                <td>技能动作可以明显影响胸腔、肩膀、手臂和武器，但下半身继续表达移动。</td>
+                <td>上半身动作污染大腿或脚，导致身体撕裂、异常扭转。</td>
+              </tr>
+              <tr>
+                <td>蓄力 / 持续施法</td>
+                <td>上半身保持施法姿态，下半身根据输入继续移动、减速或停步。</td>
+                <td>持续动作循环时骨盆抖动，BlendIn / BlendOut 时姿态弹跳。</td>
+              </tr>
+              <tr>
+                <td>技能结束</td>
+                <td>平滑回到普通移动或上半身待机状态。</td>
+                <td>技能结束瞬间上身或骨盆明显弹回。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">
+            <strong>优先级：</strong>战斗可读性 &gt; 移动稳定性 &gt; 技能表现强度 &gt; 原始动画还原度。
+          </div>
+        </section>
+
+        <section id="config">
+          <h2>3. 配置需求</h2>
+          <p>技能或动作资产需要能声明自己的混合语义，避免所有技能共用同一套上半身规则。</p>
+          <div class="split">
+            <div class="box">
+              <h3>动作类型</h3>
+              <ul>
+                <li>全身动作</li>
+                <li>上半身动作</li>
+                <li>上半身强表现动作</li>
+                <li>瞄准 / 持续施法动作</li>
+                <li>禁止移动中播放的动作</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>关键参数</h3>
+              <ul>
+                <li>混合权重</li>
+                <li>BlendIn / BlendOut 时间</li>
+                <li>起始骨骼，如 <code>spine_01</code></li>
+                <li>是否允许影响 pelvis</li>
+                <li>是否启用移动中视觉修正</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="technical">
+          <h2>4. 技术方案</h2>
+          <p>本方案不改变 Motion Matching 的移动选帧逻辑，而是在上半身混合之后，对最终显示姿态做一层受控修正。</p>
+          <pre>Locomotion Motion Matching
+  -> PoseSearchHistoryCollector
+  -> AimOffset / Overlay / UpperBody Slot
+  -> Layered Blend Per Bone
+  -> UpperBody Visual Correction
+  -> IK / Final Output</pre>
+          <table>
+            <thead>
+              <tr>
+                <th>步骤</th>
+                <th>处理内容</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>缓存移动姿态</td>
+                <td>在上半身混合前保留 Motion Matching 输出的 locomotion pose。</td>
+                <td>作为下半身稳定基准。</td>
+              </tr>
+              <tr>
+                <td>播放上半身动作</td>
+                <td>继续使用现有 <code>UpperBody</code> Slot、Overlay、Layered Bone Blend。</td>
+                <td>优先复用当前动画蓝图管线。</td>
+              </tr>
+              <tr>
+                <td>视觉修正</td>
+                <td>对 pelvis / thigh 的异常偏移做小幅还原，必要时把差异分摊到 spine 链。</td>
+                <td>目标是减少扭腰、滑步和撕裂感。</td>
+              </tr>
+              <tr>
+                <td>IK 收尾</td>
+                <td>在修正后再进行脚部、手部或武器对齐处理。</td>
+                <td>保证最终接地和持武表现稳定。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="mm-boundary">
+          <h2>5. Motion Matching 边界</h2>
+          <div class="risk">
+            <strong>关键风险：</strong>如果修正后的 pelvis、thigh、foot 进入 PoseHistory 或 Motion Matching Query，下一帧可能会影响选帧，造成步态跳变、匹配漂移或移动预测不稳定。
+          </div>
+          <div class="split">
+            <div class="box">
+              <h3>禁止影响</h3>
+              <ul>
+                <li>Capsule 位移</li>
+                <li>CharacterMovement 速度与加速度</li>
+                <li>RootMotionSource</li>
+                <li>RootYawOffset 决策</li>
+                <li>Motion Matching Query</li>
+                <li>PoseSearchHistory / PoseHistory</li>
+                <li>Trajectory 预测输入</li>
+              </ul>
+            </div>
+            <div class="box">
+              <h3>允许影响</h3>
+              <ul>
+                <li>最终输出给 SkeletalMesh 的视觉姿态</li>
+                <li>上半身与下半身混合后的显示结果</li>
+                <li>Spine / Chest / Clavicle / Arm 等技能表现骨骼</li>
+                <li>仅用于视觉稳定的小幅 pelvis 修正</li>
+              </ul>
+            </div>
+          </div>
+          <div class="decision">
+            <h3>落地原则</h3>
+            <p>Motion Matching 看到原始 locomotion pose，玩家看到修正后的最终 pose。修正结果不回写、不参与下一帧搜索、不改变真实移动。</p>
+          </div>
+        </section>
+
+        <section id="acceptance">
+          <h2>6. 验收标准</h2>
+          <ul>
+            <li>至少选择一名普通人形英雄和一名体型或武器差异较大的英雄验证。</li>
+            <li>覆盖原地、前进、后退、横移、转向、连续普攻、技能打断、技能 BlendOut 等场景。</li>
+            <li>移动中释放上半身动作时，无明显骨盆异常、腿部错位、滑步或身体撕裂感。</li>
+            <li>技能方向、武器朝向和命中表现保持一致。</li>
+            <li>开启修正前后，Motion Matching 选帧稳定性无明显变差。</li>
+            <li>Debug 模式下可以确认修正节点位于 PoseHistory 采集之后，且不改变移动预测输入。</li>
+          </ul>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

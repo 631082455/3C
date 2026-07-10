@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>战场交互物机制扩展与 Muriel Bomb 对标</title>
+  <style>
+    :root {
+      --bg: #0b1218;
+      --bg2: #111a22;
+      --panel: rgba(20, 30, 39, 0.94);
+      --panel2: rgba(28, 41, 54, 0.96);
+      --line: rgba(229, 239, 245, 0.1);
+      --ink: #ebf2f6;
+      --muted: #a6b5c0;
+      --accent: #7cd6c3;
+      --gold: #efb96f;
+      --blue: #80b8ff;
+      --rose: #ff9d8a;
+      --green: #8fd79e;
+      --shadow: 0 22px 54px rgba(0, 0, 0, 0.34);
+      --radius: 22px;
+      --sans: "Segoe UI Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --serif: "Sitka Display", "Noto Serif SC", "Source Han Serif SC", serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(124, 214, 195, 0.12), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(239, 185, 111, 0.12), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(128, 184, 255, 0.08), transparent 26%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+      font: 15px/1.8 var(--sans);
+    }
+
+    h1, h2, h3 { margin: 0; line-height: 1.12; }
+    h1 {
+      margin-top: 16px;
+      font-family: var(--serif);
+      font-size: clamp(34px, 4.8vw, 56px);
+      letter-spacing: -0.04em;
+    }
+    h2 {
+      font-family: var(--serif);
+      font-size: 29px;
+      letter-spacing: -0.03em;
+    }
+    h3 {
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+    p { margin: 0; color: var(--muted); }
+    ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); }
+    li + li { margin-top: 6px; }
+
+    .page { width: min(1360px, calc(100vw - 28px)); margin: 18px auto 44px; }
+    .hero, .sidebar, .section, .panel, .callout {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .hero {
+      padding: 38px 40px 32px;
+      background:
+        radial-gradient(circle at 14% 16%, rgba(124, 214, 195, 0.16), transparent 24%),
+        radial-gradient(circle at 86% 10%, rgba(239, 185, 111, 0.14), transparent 22%),
+        linear-gradient(135deg, rgba(24, 38, 49, 0.98), rgba(14, 22, 29, 0.96));
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(235, 242, 246, 0.08);
+      color: #b7c7d3;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .lead { max-width: 980px; margin-top: 14px; font-size: 17px; }
+    .chips, .case-grid, .mini-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .chips { margin-top: 20px; }
+    .chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(235, 242, 246, 0.06);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .chip strong { color: var(--ink); }
+    .layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .sidebar {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 16px 0;
+    }
+    .sidebar-title {
+      margin: 0 18px 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .sidebar a {
+      display: block;
+      padding: 11px 18px;
+      color: var(--muted);
+      border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+    .sidebar a:hover {
+      color: var(--ink);
+      background: rgba(235, 242, 246, 0.05);
+      border-left-color: var(--accent);
+    }
+    .num {
+      display: inline-block;
+      width: 34px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .section {
+      margin-bottom: 24px;
+      padding: 30px;
+      background: linear-gradient(180deg, var(--panel2), var(--panel));
+      scroll-margin-top: 20px;
+    }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .tone {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .overview-tone { background: #7e97ac; }
+    .case-tone { background: var(--gold); color: #2b1e10; }
+    .system-tone { background: var(--accent); color: #0f2722; }
+    .apply-tone { background: var(--blue); color: #0d1c2c; }
+    .panel {
+      flex: 1 1 280px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(34, 49, 61, 0.98), rgba(23, 35, 45, 0.96));
+    }
+    .label {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .label.gold { background: rgba(239, 185, 111, 0.16); color: #ffd28e; }
+    .label.blue { background: rgba(128, 184, 255, 0.16); color: #d8e9ff; }
+    .label.green { background: rgba(143, 215, 158, 0.16); color: #d7ffe0; }
+    .label.rose { background: rgba(255, 157, 138, 0.16); color: #ffd4cb; }
+    .label.mint { background: rgba(124, 214, 195, 0.16); color: #c7fff4; }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      margin-top: 16px;
+      background: rgba(15, 24, 31, 0.36);
+    }
+    .table th, .table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+    .table th {
+      background: rgba(235, 242, 246, 0.05);
+      color: var(--ink);
+      font-size: 13px;
+    }
+    .table tr:last-child td { border-bottom: none; }
+    .mono {
+      font-family: var(--mono);
+      font-size: 0.95em;
+      color: #d8e9ff;
+    }
+    .callout {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+    }
+    .callout.good { border-left-color: var(--green); }
+    .callout.warn { border-left-color: var(--gold); }
+    .diagram {
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(11, 18, 24, 0.4);
+    }
+    .panel.case-card { flex: 1 1 320px; }
+    .panel.case-card.wide { flex-basis: calc(50% - 6px); }
+    .panel.case-card.full { flex-basis: 100%; }
+    .media-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+      margin-bottom: 12px;
+    }
+    .media-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .media-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .media-grid img {
+      display: block;
+      width: 100%;
+      height: 176px;
+      object-fit: cover;
+      object-position: center;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+    }
+    .media-grid.single img {
+      height: auto;
+      max-height: 320px;
+      object-fit: contain;
+      background: rgba(8, 14, 20, 0.5);
+    }
+    .media-grid.deadlock-2plus1 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .media-grid.deadlock-2plus1 img {
+      height: 250px;
+      object-fit: contain;
+      background: rgba(8, 14, 20, 0.6);
+    }
+    .media-grid.deadlock-2plus1 img:last-child {
+      grid-column: 1 / -1;
+      height: 280px;
+    }
+
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .panel.case-card.wide,
+      .panel.case-card.full { flex-basis: 320px; }
+      .media-grid.two,
+      .media-grid.three,
+      .media-grid.deadlock-2plus1 { grid-template-columns: 1fr; }
+      .media-grid img { height: auto; max-height: 320px; object-fit: contain; }
+      .media-grid.deadlock-2plus1 img:last-child { grid-column: auto; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <span class="eyebrow">机制文档</span>
+      <h1>战场交互物机制扩展与 Muriel Bomb 对标</h1>
+      <p class="lead">
+        这份文档不再把 <span class="mono">Touch Pickup</span>、<span class="mono">Step Trigger</span>、
+        <span class="mono">Carry</span> 放在同一层级，而是先收成主干三类：
+        <strong>怎么触发、怎么结束、敌方怎么处理</strong>。
+        如果对象会进入携带态，再额外挂一个 <strong>特殊状态扩展</strong>。
+      </p>
+      <div class="chips">
+        <span class="chip"><strong>当前入口：</strong>Muriel Bomb</span>
+        <span class="chip"><strong>当前语义：</strong><span class="mono">接触触发 + 消耗 + 上 Buff</span></span>
+        <span class="chip"><strong>目标：</strong>为后续拾取物、部署物、携带物共用中层</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-title">文档导航</div>
+        <a href="#overview"><span class="num">01</span>总览</a>
+        <a href="#cases"><span class="num">02</span>外部案例</a>
+        <a href="#derive"><span class="num">03</span>机制推导</a>
+        <a href="#muriel"><span class="num">04</span>Muriel Bomb</a>
+      </aside>
+
+      <main>
+        <section class="section" id="overview">
+          <div class="section-head">
+            <div>
+              <span class="tone overview-tone">总览</span>
+              <h2>先统一分类，再谈具体技能</h2>
+            </div>
+          </div>
+
+          <div class="diagram">
+            <svg viewBox="0 0 1200 360" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <rect width="1200" height="360" fill="transparent"/>
+              <text x="40" y="44" fill="#ebf2f6" font-size="28" font-family="Segoe UI Variable, Microsoft YaHei, sans-serif" font-weight="700">交互物先看三类主干，再看特殊状态</text>
+              <rect x="40" y="82" width="340" height="158" rx="18" fill="rgba(128,184,255,0.12)" stroke="rgba(128,184,255,0.4)"/>
+              <rect x="430" y="82" width="340" height="158" rx="18" fill="rgba(143,215,158,0.12)" stroke="rgba(143,215,158,0.4)"/>
+              <rect x="820" y="82" width="340" height="158" rx="18" fill="rgba(255,157,138,0.12)" stroke="rgba(255,157,138,0.4)"/>
+              <rect x="40" y="266" width="1120" height="62" rx="18" fill="rgba(239,185,111,0.12)" stroke="rgba(239,185,111,0.42)"/>
+              <text x="62" y="118" fill="#d8e9ff" font-size="22" font-weight="700">触发方式</text>
+              <text x="62" y="150" fill="#a6b5c0" font-size="16">生成 / 接触 / 交互</text>
+              <text x="62" y="174" fill="#d8e9ff" opacity="0.82" font-size="14">生成 = 创建即生效；接触 = overlap 触发</text>
+              <text x="62" y="198" fill="#d8e9ff" opacity="0.82" font-size="14">交互 = 进入范围后按键触发，可做成长按读条</text>
+              <text x="452" y="118" fill="#d7ffe0" font-size="22" font-weight="700">结束方式</text>
+              <text x="452" y="150" fill="#a6b5c0" font-size="16">触发后立即结束 / 生命周期结束</text>
+              <text x="452" y="174" fill="#a6b5c0" font-size="16">释放者主动召回 / 系统层面结算</text>
+              <text x="452" y="198" fill="#d7ffe0" opacity="0.82" font-size="14">决定对象何时退出场上或转入下一状态</text>
+              <text x="842" y="118" fill="#ffd4cb" font-size="22" font-weight="700">敌方处理方式</text>
+              <text x="842" y="150" fill="#a6b5c0" font-size="16">不可处理 / 接触或交互拆除</text>
+              <text x="842" y="174" fill="#a6b5c0" font-size="16">可被攻击，血量归零后销毁</text>
+              <text x="842" y="198" fill="#ffd4cb" opacity="0.82" font-size="14">决定敌方是否能拆除、否决、摧毁</text>
+              <text x="62" y="302" fill="#ffe0b2" font-size="20" font-weight="700">特殊状态扩展（携带）</text>
+              <text x="268" y="302" fill="#a6b5c0" font-size="15">是否可进入携带态 / 携带后能否主动丢弃 / 死亡是否掉落</text>
+            </svg>
+          </div>
+        </section>
+
+        <section class="section" id="cases">
+          <div class="section-head">
+            <div>
+              <span class="tone case-tone">案例</span>
+              <h2>从具体技能条目倒推机制</h2>
+            </div>
+          </div>
+
+          <p>
+            这里不做泛泛的“某游戏也有交互物”罗列，只抓那些真正能反推程序规则的技能条目。
+            每个案例都只保留：技能最简单的作用、它怎么触发、会变成什么、玩家还能怎么处理它。
+          </p>
+
+          <div class="case-grid" style="margin-top:18px;">
+            <div class="panel case-card">
+              <span class="label gold">Overwatch</span>
+              <h3>Illari - 治疗炮台</h3>
+              <div class="media-grid single">
+                <img src="assets/interaction-benchmark/illari-healing-pylon.png" alt="Illari 治疗炮台示意图" />
+              </div>
+              <ul>
+                <li><strong>技能简述：</strong>放一个治疗炮台，自动给范围内队友回血。</li>
+                <li>对象落地后持续存在，自动对范围内友军治疗。</li>
+                <li>敌方可破坏，主人可重新部署。</li>
+                <li>推导：部署物不能只会“存在”，还要有血量、回收、重放、被反制。</li>
+              </ul>
+            </div>
+
+            <div class="panel case-card wide">
+              <span class="label blue">Overwatch</span>
+              <h3>Lifeweaver / Symmetra 交互装置</h3>
+              <div class="media-grid two">
+                <img src="assets/interaction-benchmark/lifeweaver-petal-platform-01.png" alt="Lifeweaver 花瓣平台示意图" />
+                <img src="assets/interaction-benchmark/lifeweaver-petal-platform-02.png" alt="Lifeweaver 花瓣平台高处承载示意图" />
+              </div>
+              <ul>
+                <li><strong>技能简述：</strong>一个是接触后原地激活的平台，一个是点一下就传送的装置。</li>
+                <li>花瓣平台：接触平台后原地激活。</li>
+                <li>传送门：<span class="mono">OnInteract → Teleport</span>。</li>
+                <li>推导：接触触发和交互触发都可能依赖 overlap，但结果语义完全不同。</li>
+              </ul>
+            </div>
+
+            <div class="panel case-card">
+              <span class="label mint">Marvel Rivals</span>
+              <h3>Rocket - B.R.B.</h3>
+              <div class="media-grid single">
+                <img src="assets/interaction-benchmark/rocket-brb.png" alt="Rocket B.R.B. 支援装置示意图" />
+              </div>
+              <ul>
+                <li><strong>技能简述：</strong>放一个支援装置，它会持续提供团队价值，并且可回收。</li>
+                <li>装置持续存在，并与周期产出或支援效果绑定。</li>
+                <li>可主动回收，体现“回收返还”也是正式玩法。</li>
+                <li>推导：对象存在、产出子对象、回收返还，应是中层能力。</li>
+              </ul>
+            </div>
+
+            <div class="panel case-card">
+              <span class="label green">League of Legends</span>
+              <h3>LoL 典型交互物</h3>
+              <div class="media-grid single">
+                <img src="assets/interaction-benchmark/lol-trigger-example.png" alt="英雄联盟交互区域示意图" />
+              </div>
+              <ul>
+                <li><strong>技能简述：</strong>这里混合了点一下生效、碰到就吃，以及“被攻击处理”的反制语义。</li>
+                <li>灯笼：<span class="mono">OnInteract → Teleport</span>。</li>
+                <li>音符：<span class="mono">OnTouch → Consume</span>。</li>
+                <li>桶子 / 种子：不是顶层触发方式，而是对象可被攻击处理，并允许敌方否决。</li>
+                <li>推导：生成、接触、交互是触发入口；攻击更适合放在“敌方处理方式”里。</li>
+              </ul>
+            </div>
+
+            <div class="panel case-card full">
+              <span class="label rose">Deadlock</span>
+              <h3>Deadlock：魂瓮 / 炮台</h3>
+              <div class="media-grid deadlock-2plus1">
+                <img src="assets/interaction-benchmark/deadlock-urn-pickup.png" alt="Deadlock 魂瓮拾取进度示意图" />
+                <img src="assets/interaction-benchmark/deadlock-urn-carry.png" alt="Deadlock 魂瓮携带状态示意图" />
+                <img src="assets/interaction-benchmark/deadlock-urn-turnin.png" alt="Deadlock 魂瓮交付示意图" />
+              </div>
+              <ul>
+                <li><strong>技能简述：</strong>一个是典型携带目标物，一个是典型可放置炮台。</li>
+                <li>Spirit Urn 暴露的是 Carry 态边界：死亡、传送、断线、能力封锁。</li>
+                <li>Turret 暴露的是落点、贴墙、放置失败与回收问题。</li>
+                <li>推导：状态机、失败兜底、特殊位移兼容都不能后补。</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="derive">
+          <div class="section-head">
+            <div>
+              <span class="tone system-tone">机制</span>
+              <h2>相关程序机制</h2>
+            </div>
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>机制层</th>
+                <th>建议内容</th>
+                <th>为什么必须有</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>对象基类</strong></td>
+                <td><span class="mono">SkillWorldInteractActor</span>：飞行、落地、静止、滑行、墙停、回收。</td>
+                <td>没有统一宿主，后续所有技能都会把生命周期写回单技能蓝图。</td>
+              </tr>
+              <tr>
+                <td><strong>触发方式</strong></td>
+                <td><span class="mono">OnSpawn / OnTouch / OnInteract</span></td>
+                <td>定义怎么触发；<span class="mono">OnTouch</span> 表示进入对象或区域即触发，<span class="mono">OnInteract</span> 可做成立即确认或读条完成。</td>
+              </tr>
+              <tr>
+                <td><strong>结束方式</strong></td>
+                <td><span class="mono">DestroyOnUse / ExpireOnLifetime / Recall / CompleteAtDestination</span></td>
+                <td>定义对象怎么退出场上、被召回，或在系统层面完成结算。</td>
+              </tr>
+              <tr>
+                <td><strong>敌方处理方式</strong></td>
+                <td><span class="mono">None / EnemyTouchOrInteractRemove / Attackable</span></td>
+                <td>定义敌方能不能通过接触、交互或攻击来拆除、否决或摧毁对象。</td>
+              </tr>
+              <tr>
+                <td><strong>特殊状态扩展</strong></td>
+                <td><span class="mono">EnterCarryState / DropOnDeath / AllowDiscard</span></td>
+                <td>只有对象会进入携带态时再挂这层，不要塞回基础分类里。</td>
+              </tr>
+              <tr>
+                <td><strong>权限过滤</strong></td>
+                <td><span class="mono">InteractionFilter</span>：阵营、单位类型、自拾、OwnerIgnoreWindow、ArmDelay。</td>
+                <td>Bomb、灯笼、桶子、种子，本质都先过过滤层。</td>
+              </tr>
+              <tr>
+                <td><strong>状态机</strong></td>
+                <td><span class="mono">Spawned → Traveling → Armed → Eligible → Claimed → End</span></td>
+                <td>没有正式状态机，异常最后都会碎成蓝图 if/else。</td>
+              </tr>
+              <tr>
+                <td><strong>效果包</strong></td>
+                <td><span class="mono">InteractionEffectPackage</span>：给拾取者、给周围友军、给敌方、给场景。</td>
+                <td>Bomb 这种“拾取者 + 周围友军”已经不是单目标效果。</td>
+              </tr>
+              <tr>
+                <td><strong>失败兜底</strong></td>
+                <td>AFK、地图外、异常附着、长时间无人交互重置。</td>
+                <td>否则对象会卡场，严重时直接锁玩法。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout warn">
+            <strong>关于 Carry：</strong>
+            文档里的 <span class="mono">Carry</span> 不是“核心位”含义，而是
+            <span class="mono">EnterCarryState</span>：对象被拾取后，角色进入“携带态”，并由该状态继续约束技能、死亡、掉落与重置规则。
+          </div>
+        </section>
+
+        <section class="section" id="muriel">
+          <div class="section-head">
+            <div>
+              <span class="tone apply-tone">Muriel Bomb</span>
+              <h2>Muriel Bomb 现在该怎样归类</h2>
+            </div>
+          </div>
+
+          <p>
+            按你们当前的 Bomb 规则，最合理的第一步不是直接做成完整 objective，
+            而是先作为一个语义清楚的样例落地：<span class="mono">接触触发 + Consume + ApplyBuff</span>。
+          </p>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>维度</th>
+                <th>Bomb 当前推荐定义</th>
+                <th>未来可扩什么</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>对象基类</strong></td>
+                <td><span class="mono">SkillWorldInteractActor</span>：飞行、地面滑行、墙停、停留 6s、超时回收。</td>
+                <td>以后所有拾取物、部署物、携带物都复用这层。</td>
+              </tr>
+              <tr>
+                <td><strong>触发方式</strong></td>
+                <td><span class="mono">OnTouch</span>，并带 <span class="mono">OwnerIgnoreWindow</span> 和 <span class="mono">ArmDelay</span>。</td>
+                <td>以后可扩到 <span class="mono">OnInteract</span>，比如按键确认或读条交互。</td>
+              </tr>
+              <tr>
+                <td><strong>拾取后效果</strong></td>
+                <td><span class="mono">Consume + ApplyBuff</span>：给拾取者和周围友军结算。</td>
+                <td>以后可扩到 <span class="mono">EnterCarryState</span> 或 <span class="mono">SpawnChild</span>。</td>
+              </tr>
+              <tr>
+                <td><strong>结束方式</strong></td>
+                <td>触发后立即结束；若无人拾取则超时回收。</td>
+                <td>以后也可扩到系统层面结算，或被主人主动召回。</td>
+              </tr>
+              <tr>
+                <td><strong>敌方处理方式</strong></td>
+                <td>当前敌军不可拾取；掉出地图、异常静止、重复触发、AFK/断线都要 Reset。</td>
+                <td>以后可扩到敌方拆除、敌方攻击摧毁或敌方否决。</td>
+              </tr>
+              <tr>
+                <td><strong>特殊状态扩展</strong></td>
+                <td>当前不进入携带态，也不需要主动丢弃或死亡掉落。</td>
+                <td>如果以后做魂瓮式玩法，再挂 <span class="mono">EnterCarryState / DropOnDeath</span>。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mini-grid" style="margin-top:18px;">
+            <div class="panel">
+              <h3>Bomb 最值得先补的 P0</h3>
+              <ul>
+                <li><strong>对象基类</strong>：飞行、停留、拾取、回收不要再堆在单技能蓝图里。</li>
+                <li><strong>InteractionFilter</strong>：阵营、自拾、OwnerIgnoreWindow、ArmDelay 配置化。</li>
+                <li><strong>InteractionEffectPackage</strong>：拾取者和周围友军效果统一打包。</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h3>Bomb 值得预留的 P1</h3>
+              <ul>
+                <li><strong>Recall / Reclaim</strong>：可回收、可返还部分冷却。</li>
+                <li><strong>Enemy Counterplay</strong>：以后可扩到摧毁、否决、打断。</li>
+                <li><strong>Spawner Variant</strong>：以后做周期产出包时不用重来。</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h3>不要继续堆在单技能蓝图里的东西</h3>
+              <ul>
+                <li>Owner 特例。</li>
+                <li>拾取异常重试。</li>
+                <li>墙停 / 滑行 / 超时回收边界。</li>
+                <li>范围 Buff 广播。</li>
+                <li>对象销毁 / 回收的 Cue 分支。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="diagram">
+            <svg viewBox="0 0 1200 330" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <rect width="1200" height="330" fill="transparent"/>
+              <text x="40" y="44" fill="#ebf2f6" font-size="28" font-family="Segoe UI Variable, Microsoft YaHei, sans-serif" font-weight="700">Muriel Bomb 的程序拆层</text>
+              <rect x="56" y="88" width="240" height="174" rx="18" fill="rgba(128,184,255,0.14)" stroke="rgba(128,184,255,0.42)"/>
+              <rect x="334" y="88" width="240" height="174" rx="18" fill="rgba(124,214,195,0.14)" stroke="rgba(124,214,195,0.42)"/>
+              <rect x="612" y="88" width="240" height="174" rx="18" fill="rgba(239,185,111,0.14)" stroke="rgba(239,185,111,0.42)"/>
+              <rect x="890" y="88" width="240" height="174" rx="18" fill="rgba(255,157,138,0.14)" stroke="rgba(255,157,138,0.42)"/>
+              <text x="82" y="122" fill="#d8e9ff" font-size="22" font-weight="700">技能层</text>
+              <text x="82" y="152" fill="#a6b5c0" font-size="16">只负责发射、Montage、Cue</text>
+              <text x="82" y="176" fill="#a6b5c0" font-size="16">生成交互物与初始配置</text>
+              <text x="360" y="122" fill="#c7fff4" font-size="22" font-weight="700">交互物 Actor</text>
+              <text x="360" y="152" fill="#a6b5c0" font-size="16">飞行、碰撞、地面行为</text>
+              <text x="360" y="176" fill="#a6b5c0" font-size="16">寿命、网络、状态机</text>
+              <text x="638" y="122" fill="#ffe0b2" font-size="22" font-weight="700">触发与结算</text>
+              <text x="638" y="152" fill="#a6b5c0" font-size="16">谁能触发、触发后做什么</text>
+              <text x="638" y="176" fill="#a6b5c0" font-size="16">Owner Ignore、失败重试</text>
+              <text x="916" y="122" fill="#ffd4cb" font-size="22" font-weight="700">效果包</text>
+              <text x="916" y="152" fill="#a6b5c0" font-size="16">给拾取者 Buff</text>
+              <text x="916" y="176" fill="#a6b5c0" font-size="16">给周围友军 Buff、净化</text>
+              <line x1="296" y1="174" x2="334" y2="174" stroke="rgba(235,242,246,0.35)" stroke-width="3"/>
+              <line x1="574" y1="174" x2="612" y2="174" stroke="rgba(235,242,246,0.35)" stroke-width="3"/>
+              <line x1="852" y1="174" x2="890" y2="174" stroke="rgba(235,242,246,0.35)" stroke-width="3"/>
+              <text x="56" y="302" fill="#a6b5c0" font-size="15">Bomb 现在只是 <tspan fill="#ebf2f6" font-weight="700">接触触发 + 消耗 + 上 Buff</tspan> 的样例，但底层应一次性长成触发/结束/敌方处理规则 + 效果包的交互物框架。</text>
+            </svg>
+          </div>
+
+          <div class="callout warn">
+            <strong>建议的程序结论：</strong>
+            最值钱的工作不是继续给 Bomb 加特例，而是先把
+            <span class="mono">SkillWorldInteractActor + 触发/结束/敌方处理规则 + InteractionEffectPackage</span>
+            做成正式中层。
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

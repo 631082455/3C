@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill - 单体施法选取 V2.1</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --paper: #ffffff;
+      --ink: #22272e;
+      --muted: #66727e;
+      --line: #d9dee5;
+      --soft: #eef2f5;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --bad: #8d3b3b;
+      --bad-soft: #fbe9e7;
+      --good: #2c6e3f;
+      --good-soft: #e3f4e7;
+      --code: #172530;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    .page {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 32px auto 48px;
+    }
+    header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, h4 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; margin-top: 18px; }
+    h4 { font-size: 15px; font-weight: 720; margin-top: 14px; color: var(--muted); }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+      overflow-wrap: anywhere;
+    }
+    s, del { color: #a07a7a; opacity: 0.7; }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .meta span {
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+    .meta span.tag-new { background: var(--good-soft); border-color: #bcdcc4; color: var(--good); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 24px;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    nav .title {
+      padding: 4px 8px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+    nav a {
+      display: block;
+      padding: 8px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13.5px;
+    }
+    nav a:hover {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    main {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    section {
+      padding: 26px 30px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 20px;
+    }
+    section:last-child { border-bottom: none; }
+
+    .rule {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+    .note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #ecd6ad;
+      border-radius: var(--radius);
+      background: var(--warn-soft);
+      color: #604219;
+    }
+    .risk {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #e8c1bc;
+      border-radius: var(--radius);
+      background: var(--bad-soft);
+      color: #6b302c;
+    }
+    .changed {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #bcdcc4;
+      border-radius: var(--radius);
+      background: var(--good-soft);
+      color: var(--good);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 16px;
+    }
+    .box {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .box.blue {
+      border-color: #c8dced;
+      background: var(--blue-soft);
+    }
+    .box.good {
+      border-color: #bcdcc4;
+      background: var(--good-soft);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 11px 13px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 12.5px;
+      font-weight: 740;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #e8f1f7;
+      overflow: auto;
+      font: 13px/1.65 var(--mono);
+    }
+    .diagram {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+      padding: 12px;
+    }
+    .diagram .cap {
+      font-size: 12.5px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .adr-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 11.5px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      section { padding: 22px 18px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Planning Requirement · 已实施 (M1–M5 完成)</div>
+      <h1>Skill - 单体施法选取 V2.1</h1>
+      <p>面向第三人称 MOBA / Hero Shooter 的单体目标技能。系统按候选评分**实时**驱动 Soft/Armed Target;
+      Holding 期间随评分跟手跳转(β 模式);Release 时取当时胜出者结算。</p>
+      <div class="meta">
+        <span>需求方:战斗 / 3C 策划</span>
+        <span>实现方:战斗程序 / UI / 网络</span>
+        <span class="tag-new">V2.1 - β 翻案版</span>
+        <span class="tag-new">已落地 M1–M5</span>
+      </div>
+      <div class="changed">
+        <strong>V2 → V2.1 关键变化</strong>:V2 grilling 后 <strong>α 模式被推翻为 β 模式</strong>
+        (Armed 不再"按下即锁死",随候选评分跟手跳转)。多条"禁止行为"被软化或删除;ResolvePolicy 从 5 个缩成 2 个;
+        服务器验证策略明确为 300ms 时间窗容忍(不做 full lag-comp)。关联决策记录:
+        <span class="adr-pill">ADR-0001</span>不默认 fallback 自施法
+        <span class="adr-pill">ADR-0002</span>β 模式
+        <span class="adr-pill">ADR-0003</span>服务器 300ms 容忍
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#goal">1. 背景与目标</a>
+        <a href="#scope">2. 本版范围</a>
+        <a href="#terms">3. 术语</a>
+        <a href="#rules">4. 行为规则</a>
+        <a href="#flow">5. 运行流程</a>
+        <a href="#config">6. 配置需求</a>
+        <a href="#resolve">7. ResolvePolicy</a>
+        <a href="#ui-network">8. UI 与网络</a>
+        <a href="#example">9. 技能示例</a>
+        <a href="#acceptance">10. 验收</a>
+        <a href="#tech-notes">11. 程序备注</a>
+        <a href="#impl-status">12. 实现状态</a>
+      </nav>
+
+      <main>
+        <section id="goal">
+          <h2>1. 背景与目标</h2>
+          <p>单体目标技能既要顺手,也要可控。系统在前段持续维护 Soft Target、给 UI 提示、减少空放;
+          Holding 期间允许 Armed Target 随评分跟手跳转,降低"我准星动了但系统没跟上"的不一致感。</p>
+          <div class="rule">
+            <h3>核心规则(V2.1 修订)</h3>
+            <p>系统按候选评分<strong>实时</strong>维护 Soft/Armed Target;原目标失效时按评分规则自然让位给次佳候选。
+            <strong>不能自动切成自施法</strong>(`AllowSelfFallback` 必须技能级显式 opt-in)。</p>
+          </div>
+        </section>
+
+        <section id="scope">
+          <h2>2. 本版范围</h2>
+          <div class="grid">
+            <div class="box good">
+              <h3>本版要做(已完成)</h3>
+              <ul>
+                <li>候选实时维护:空闲(且有驱动源时)+ Holding 期间持续 20Hz 评分跑候选选取</li>
+                <li>β 模式:Holding 期间 Armed 随候选评分跟手跳转</li>
+                <li>评分稳定:LockRetainRadius / LockProtectTime / SwitchCooldown / Grace 加分</li>
+                <li>技能级配置:`TargetSelectionProfile` + `ResolvePolicy` 表达差异</li>
+                <li>UI 三态(Soft / Armed / SelfCast)+ 屏幕空间 widget</li>
+                <li>服务器 300ms 时间窗容忍验证(ADR-0003)</li>
+                <li>Alt+技能键 全局自施法(立即施放,跳过 Hold 蓄力)</li>
+                <li>右键全局取消 Holding(无消耗 / 无 CD)</li>
+                <li>Editor 校验:每英雄至多一个驱动源</li>
+              </ul>
+            </div>
+            <div class="box blue">
+              <h3>本版不做</h3>
+              <ul>
+                <li>不引入连续光束 / channeling 类技能(本版仅覆盖按住-蓄力-确认范式)</li>
+                <li>不引入目标循环按键(`Tab` 切换) — 纯瞄准驱动</li>
+                <li>不覆盖范围技能、地面点选、锁敌相机、辅助瞄准完整方案</li>
+                <li>不做 full lag compensation rewind(ADR-0003)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="terms">
+          <h2>3. 术语</h2>
+          <table>
+            <thead>
+              <tr><th>术语</th><th>定义</th><th>使用边界</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>候选目标</td>
+                <td>通过硬过滤的可参与评分 Actor</td>
+                <td>进入评分前必须先过硬过滤</td>
+              </tr>
+              <tr>
+                <td>硬过滤</td>
+                <td>阵营、死亡、世界距离、ScreenCone、LOS、技能目标类型、可选中性</td>
+                <td>不满足直接出局,不参与评分</td>
+              </tr>
+              <tr>
+                <td><strong>Soft Target</strong></td>
+                <td>空闲(非 Holding)阶段的当前评分胜出者</td>
+                <td>UI 弱(灰白 L 括号);<strong>仅在有驱动源 + 技能可用时</strong>显示</td>
+              </tr>
+              <tr>
+                <td><strong>Armed Target</strong></td>
+                <td>Holding 阶段的当前评分胜出者(<strong>随评分跟手,不锁死</strong>)</td>
+                <td>UI 强(队伍色 L 括号);Release 时打它;评分胜出者切换 → 跟手跳转</td>
+              </tr>
+              <tr>
+                <td>驱动源 (Drive Source)</td>
+                <td>英雄装备的单体技能中,被标记为 `bDrivesIdleSoftTarget=true` 的那一个</td>
+                <td>每英雄至多一个 (Editor 校验);决定空闲时是否显示 Soft Target</td>
+              </tr>
+              <tr>
+                <td>Grace 加分</td>
+                <td>候选短暂失效(出 LOS / 出范围 / 出 ScreenCone)时,在评分中保留较高加分一段时间</td>
+                <td>防单帧抖动;<strong>不</strong>用于"保留原 Armed";死亡 / 阵营反转 / NotTargetable 不享受</td>
+              </tr>
+              <tr>
+                <td>LockRetainRadius</td>
+                <td>已锁定目标维持的评分加成半径(屏幕空间)</td>
+                <td>防边界抖动</td>
+              </tr>
+              <tr>
+                <td>LockProtectTime / SwitchCooldown</td>
+                <td>评分胜出者改变后的强制冷却</td>
+                <td>防 A/B 抖动</td>
+              </tr>
+              <tr>
+                <td>ResolvePolicy</td>
+                <td>Release 时候选池空的收口规则</td>
+                <td>仅 2 个:`NoCastOnEmpty` / `AllowSelfFallback`</td>
+              </tr>
+              <tr>
+                <td>SelfCast</td>
+                <td>Alt+技能键 触发的显式自施法,或 `AllowSelfFallback` 触发的回落自施法</td>
+                <td>UI:自蓝 L 括号挂自己</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="rules">
+          <h2>4. 行为规则</h2>
+          <table>
+            <thead>
+              <tr><th>阶段</th><th>系统行为</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>空闲 + 有驱动源 + 技能可用</td>
+                <td>20Hz 持续候选采集 + 评分;Soft Target = 评分胜出者;widget 挂在 Soft Target</td>
+              </tr>
+              <tr>
+                <td>空闲 + 无驱动源</td>
+                <td><strong>完全不算 Soft</strong>;屏幕 0 框</td>
+              </tr>
+              <tr>
+                <td>空闲 + 驱动源 CD / 沉默 / 无蓝 / 未学</td>
+                <td><strong>不显示 Soft 框</strong>(HUD 技能图标已表达不可用);Invalid 无独立 UI</td>
+              </tr>
+              <tr>
+                <td>点按快放</td>
+                <td>按下瞬间取当前候选胜出者 = Armed,立即 Resolve;不进入 Holding</td>
+              </tr>
+              <tr>
+                <td>按下进 Holding</td>
+                <td>用该技能 Profile 接管候选采集;Armed = 当前评分胜出者;UI 升级为队色 L 括号</td>
+              </tr>
+              <tr>
+                <td>Holding 中目标失效 / 评分变化</td>
+                <td><strong>Armed 自然跟手跳转到次佳候选</strong>(死亡 / 失 LOS / 失范围 / 评分被甩超 LockRetainRadius)</td>
+              </tr>
+              <tr>
+                <td>Holding 中玩家主动甩枪</td>
+                <td>等同于上一条;评分变化驱动,<strong>无</strong>"玩家意图检测"特殊分支</td>
+              </tr>
+              <tr>
+                <td>Holding 中候选池完全为空</td>
+                <td>Armed 暂时无,框不显示;Release 走 ResolvePolicy</td>
+              </tr>
+              <tr>
+                <td>Release(松开技能键)</td>
+                <td>取<strong>当时</strong>的 Armed Target(或候选池空 → ResolvePolicy)。Client 打包成 EventData 走现有 RPC</td>
+              </tr>
+              <tr>
+                <td>Cancel(右键)</td>
+                <td>Holding 中止;<strong>无消耗 / 无 CD / 无动画 / 无 UI 反馈</strong>;框消失</td>
+              </tr>
+              <tr>
+                <td>Alt+技能键(SelfCast)</td>
+                <td>跳过 Soft/Armed 评分;<strong>立即施放</strong>在自己身上(跳过 Hold 蓄力等待);走 SelfCast UI</td>
+              </tr>
+              <tr>
+                <td>Alt+技能键 但该技能 `AllowedTargetTeam` 不含 Self</td>
+                <td><strong>静默吞掉</strong>;不响应、不报错、不给 HUD 提示</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="rule">
+            <h3>红线(收窄后)</h3>
+            <ul>
+              <li>系统<strong>不得</strong>自动切成自施法(必须 `AllowSelfFallback` 显式 opt-in,且 UI 必须显示"将自施法")</li>
+              <li>玩家<strong>显式输入</strong>(Alt+键、右键取消)优先级永远高于评分自动决策</li>
+              <li>服务器<strong>不</strong>擅自替换 client 上报的 ArmedTarget(只验证 / 拒绝)</li>
+            </ul>
+          </div>
+          <div class="risk">
+            <h3>V2 → V2.1 已删除的旧禁止行为(被 β 翻案)</h3>
+            <ul>
+              <li><s>目标短暂丢失时偷偷换成另一个目标</s> — β 下就是该跟手跳</li>
+              <li><s>Grace 结束后自动跳到下一个目标</s> — β 下次佳自然上位</li>
+              <li><s>用"最近友军/最近敌人"替代已锁存目标</s> — β 下是正常机制</li>
+              <li><s>目标失效时自动发明新目标</s> — β 下次佳就是"新目标"</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="flow">
+          <h2>5. 运行流程</h2>
+          <p>整套流程在 `UTargetSelectionComponent`(挂 `AMatchPlayerController`)上以 <strong>20Hz</strong> 跑;
+          玩家按下技能时该技能的 Profile <strong>替换</strong>驱动源 Profile,Release/Cancel 后恢复。</p>
+
+          <div class="diagram" aria-label="单体目标选取主流程图">
+            <svg viewBox="0 0 1180 280" role="img">
+              <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                </marker>
+                <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#8d3b3b"></path>
+                </marker>
+              </defs>
+              <!-- 顶部主流程 -->
+              <rect x="20" y="40" width="135" height="70" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="87" y="71" text-anchor="middle" font-size="16" fill="#22272e">采集候选</text>
+              <text x="87" y="92" text-anchor="middle" font-size="12" fill="#66727e">世界 actor</text>
+
+              <rect x="180" y="40" width="135" height="70" rx="8" fill="#eef2f5" stroke="#d9dee5"></rect>
+              <text x="247" y="71" text-anchor="middle" font-size="16" fill="#22272e">硬过滤</text>
+              <text x="247" y="92" text-anchor="middle" font-size="12" fill="#66727e">队 / 死 / 距离 / LOS</text>
+
+              <rect x="340" y="40" width="135" height="70" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="407" y="71" text-anchor="middle" font-size="16" fill="#22272e">分桶评分</text>
+              <text x="407" y="92" text-anchor="middle" font-size="12" fill="#66727e">屏幕中心 + 朝向 + 距</text>
+
+              <rect x="500" y="40" width="135" height="70" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
+              <text x="567" y="71" text-anchor="middle" font-size="16" fill="#22272e">Soft Target</text>
+              <text x="567" y="92" text-anchor="middle" font-size="12" fill="#66727e">空闲 + 有驱动源</text>
+
+              <rect x="660" y="40" width="135" height="70" rx="8" fill="#e3f4e7" stroke="#bcdcc4"></rect>
+              <text x="727" y="71" text-anchor="middle" font-size="16" fill="#22272e">Armed Target</text>
+              <text x="727" y="92" text-anchor="middle" font-size="12" fill="#66727e">Holding · β 跟手</text>
+
+              <rect x="820" y="40" width="135" height="70" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="887" y="71" text-anchor="middle" font-size="16" fill="#22272e">Release</text>
+              <text x="887" y="92" text-anchor="middle" font-size="12" fill="#66727e">打当时 Armed</text>
+
+              <rect x="980" y="40" width="180" height="70" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="1070" y="71" text-anchor="middle" font-size="16" fill="#22272e">服务器验证</text>
+              <text x="1070" y="92" text-anchor="middle" font-size="12" fill="#66727e">300ms 容忍窗</text>
+
+              <line x1="155" y1="75" x2="180" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="315" y1="75" x2="340" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="475" y1="75" x2="500" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="635" y1="75" x2="660" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="795" y1="75" x2="820" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="955" y1="75" x2="980" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+
+              <!-- 底部注解 -->
+              <rect x="180" y="170" width="370" height="70" rx="8" fill="#fbfcfd" stroke="#d9dee5"></rect>
+              <text x="365" y="200" text-anchor="middle" font-size="15" fill="#22272e">评分稳定机制</text>
+              <text x="365" y="222" text-anchor="middle" font-size="12" fill="#66727e">LockRetain / LockProtect / SwitchCooldown / Grace 加分</text>
+
+              <rect x="660" y="170" width="370" height="70" rx="8" fill="#fbe9e7" stroke="#e8c1bc"></rect>
+              <text x="845" y="200" text-anchor="middle" font-size="15" fill="#22272e">不可逾越红线</text>
+              <text x="845" y="222" text-anchor="middle" font-size="12" fill="#6b302c">候选池空 → 不擅自自施法 / 服务器不擅自换目标</text>
+
+              <line x1="565" y1="110" x2="365" y2="170" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="887" y1="110" x2="845" y2="170" stroke="#8d3b3b" stroke-width="2" marker-end="url(#arrowRed)"></line>
+            </svg>
+            <div class="cap">图 5.1 · 整体流程:候选 → 硬过滤 → 评分 → Soft/Armed → Release → 服务器验证</div>
+          </div>
+
+          <h3>5.1 状态机</h3>
+          <div class="diagram" aria-label="目标选取状态机">
+            <svg viewBox="0 0 700 240" role="img">
+              <defs>
+                <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                </marker>
+              </defs>
+              <!-- 三个状态节点 -->
+              <circle cx="120" cy="120" r="65" fill="#e5f0f8" stroke="#b8cfdf" stroke-width="2"></circle>
+              <text x="120" y="115" text-anchor="middle" font-size="18" fill="#22272e">Idle</text>
+              <text x="120" y="138" text-anchor="middle" font-size="12" fill="#66727e">Soft Target</text>
+
+              <circle cx="400" cy="120" r="65" fill="#e3f4e7" stroke="#bcdcc4" stroke-width="2"></circle>
+              <text x="400" y="115" text-anchor="middle" font-size="18" fill="#22272e">Holding</text>
+              <text x="400" y="138" text-anchor="middle" font-size="12" fill="#66727e">Armed (β 跟手)</text>
+
+              <circle cx="600" cy="120" r="55" fill="#e2f1ee" stroke="#badbd4" stroke-width="2"></circle>
+              <text x="600" y="115" text-anchor="middle" font-size="16" fill="#22272e">SelfCast</text>
+              <text x="600" y="135" text-anchor="middle" font-size="12" fill="#66727e">Alt+键</text>
+
+              <!-- Idle → Holding -->
+              <path d="M185 100 Q280 60 335 100" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="260" y="65" text-anchor="middle" font-size="11" fill="#22272e">按下技能键</text>
+
+              <!-- Holding → Idle (Release/Cancel) -->
+              <path d="M335 145 Q280 185 185 145" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="260" y="200" text-anchor="middle" font-size="11" fill="#22272e">Release / 右键取消</text>
+
+              <!-- Idle → SelfCast (Alt+键) -->
+              <path d="M120 55 Q 360 -5 600 55" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="360" y="25" text-anchor="middle" font-size="11" fill="#22272e">Alt+技能键</text>
+
+              <!-- SelfCast → Idle (立即) -->
+              <path d="M600 175 Q 360 235 120 175" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="360" y="225" text-anchor="middle" font-size="11" fill="#22272e">立即施放后回 Idle</text>
+            </svg>
+            <div class="cap">图 5.2 · 状态机:Idle / Holding / SelfCast,显式输入驱动迁移</div>
+          </div>
+        </section>
+
+        <section id="config">
+          <h2>6. 配置需求</h2>
+
+          <h3>6.1 TargetSelectionProfile</h3>
+          <table>
+            <thead>
+              <tr><th>字段</th><th>用途</th><th>备注</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>AllowedTeams</td><td>友 / 敌 / 自身 / 中立 (位标志)</td><td>不满足硬过滤</td></tr>
+              <tr><td>AllowedUnitTypeTags</td><td>允许的单位类型 GameplayTag(`TAG_UNIT_HERO` 等)</td><td>容器,可多选</td></tr>
+              <tr><td>RangeCm</td><td>世界距离上限 (cm)</td><td>硬过滤</td></tr>
+              <tr><td>ScreenConeRadius</td><td>屏幕半径百分比 (0-1)</td><td><strong>2D 屏幕空间(NDC),非 3D 锥角</strong></td></tr>
+              <tr><td>LineOfSightRule</td><td>None / Required / RequiredWithGrace</td><td>默认 RequiredWithGrace</td></tr>
+              <tr><td>ScreenCenterWeight / FacingWeight / WorldDistanceWeight</td><td>三个评分权重</td><td>实际数值需 playtest 调</td></tr>
+              <tr><td>LockRetainRadius / LockProtectTime / LostGraceTime / SwitchCooldown</td><td>节流 / 粘滞</td><td>默认 0.15 / 0.20s / 0.20s / 0.12s</td></tr>
+              <tr><td>ResolvePolicy</td><td>`NoCastOnEmpty` / `AllowSelfFallback`</td><td>仅这 2 个</td></tr>
+              <tr><td>TargetIndicatorWidgetClass</td><td>挂在 target 上的 UMG widget</td><td>空 = 不显示;指任意 UserWidget 即可</td></tr>
+              <tr><td>TargetIndicatorOffset</td><td>widget 在 target 包围盒上的偏移 (XYZ)</td><td>默认 (0,0,20)</td></tr>
+            </tbody>
+          </table>
+
+          <h3>6.2 技能卡新增字段 (`UHeroAbilityDataAsset`)</h3>
+          <table>
+            <thead>
+              <tr><th>字段</th><th>类型</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>TargetSelectionProfile</td><td>`TObjectPtr&lt;UTargetSelectionProfileDataAsset&gt;`</td><td>引用 Profile;空 = 该技能不走单体管线</td></tr>
+              <tr><td>bDrivesIdleSoftTarget</td><td>bool</td><td>是否驱动空闲 Soft UI(每英雄至多一个 true,Editor 校验)</td></tr>
+            </tbody>
+          </table>
+
+          <h3>6.3 全局输入字段 (`UGameInputDataAsset`)</h3>
+          <table>
+            <thead>
+              <tr><th>字段</th><th>说明</th><th>当前配置</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>CancelHoldingInputAction</td><td>Holding 中按下取消</td><td>IA_CancelHolding(默认绑右键)</td></tr>
+              <tr><td>SelfCastModifierInputAction</td><td>跟踪 modifier 按下状态</td><td>IA_SelfCastModifier(默认绑 Alt)</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="resolve">
+          <h2>7. ResolvePolicy</h2>
+          <p>β 模式下"目标失效"实际只剩<strong>候选池完全为空</strong>这一种情况。原 V2 doc 5 个 policy 缩成 2 个。</p>
+          <table>
+            <thead>
+              <tr><th>策略</th><th>行为</th><th>适用</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>NoCastOnEmpty</strong> (默认)</td>
+                <td>候选池空 → 啥也不发生:无消耗 / 无 CD / 无施法动画 / 无 SkillModule / 无 UI / 无音效</td>
+                <td>等价于"按键失效,系统当你没按过"。所有非"防御性资源型"技能用这个</td>
+              </tr>
+              <tr>
+                <td><strong>AllowSelfFallback</strong> (opt-in)</td>
+                <td>候选池空 → cast 在自己身上,走 SelfCast UI;正常消耗 / 进 CD / 播动画 / 触发 SkillModule</td>
+                <td>防御性资源型友军技能(治疗 / 护盾)的明确设计意图</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note">
+            <strong>V2 → V2.1 已删除的 policy</strong>:
+            <ul>
+              <li><s>FailOnInvalid</s> → 合并到 `NoCastOnEmpty`(消耗 / CD / 动画 / 反馈全去掉)</li>
+              <li><s>CancelCast</s> → 跟 `NoCastOnEmpty` 等价</li>
+              <li><s>RevalidateSameTarget</s> → β 下"原 Armed"概念不持续</li>
+              <li><s>ExplicitSelfCastOnly</s> → Alt+键全局机制,不需要 policy 字段</li>
+            </ul>
+            决策背景见 <span class="adr-pill">ADR-0001</span> 不默认 fallback 自施法。
+          </div>
+        </section>
+
+        <section id="ui-network">
+          <h2>8. UI 与网络</h2>
+
+          <h3>8.1 UI 三态 + L 括号</h3>
+          <p><strong>统一形态</strong>:四角 L 形括号,贴 target 在屏幕上的投影包围盒(远小近大)。
+          <strong>同一时刻只有一个 widget 显示</strong>(挂在当前 Soft/Armed/SelfCast 对应的 actor 身上)。</p>
+
+          <div class="diagram" aria-label="UI 三态配色">
+            <svg viewBox="0 0 700 260" role="img">
+              <!-- Soft -->
+              <text x="120" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">Soft</text>
+              <text x="120" y="48" text-anchor="middle" font-size="11" fill="#66727e">空闲 + 驱动源</text>
+              <rect x="60" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
+              <!-- L 角 (灰白) -->
+              <polyline points="60,90 60,60 90,60" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
+              <polyline points="150,60 180,60 180,90" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
+              <polyline points="60,180 60,210 90,210" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
+              <polyline points="150,210 180,210 180,180" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
+              <text x="120" y="240" text-anchor="middle" font-size="11" fill="#66727e">灰白 #bbbbbb</text>
+
+              <!-- Armed (友) -->
+              <text x="290" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">Armed</text>
+              <text x="290" y="48" text-anchor="middle" font-size="11" fill="#66727e">Holding · 友军</text>
+              <rect x="230" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
+              <polyline points="230,90 230,60 260,60" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
+              <polyline points="320,60 350,60 350,90" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
+              <polyline points="230,180 230,210 260,210" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
+              <polyline points="320,210 350,210 350,180" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
+              <text x="290" y="240" text-anchor="middle" font-size="11" fill="#66727e">友绿 #3ca85f</text>
+
+              <!-- Armed (敌) -->
+              <text x="460" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">Armed</text>
+              <text x="460" y="48" text-anchor="middle" font-size="11" fill="#66727e">Holding · 敌方</text>
+              <rect x="400" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
+              <polyline points="400,90 400,60 430,60" fill="none" stroke="#c84747" stroke-width="4"></polyline>
+              <polyline points="490,60 520,60 520,90" fill="none" stroke="#c84747" stroke-width="4"></polyline>
+              <polyline points="400,180 400,210 430,210" fill="none" stroke="#c84747" stroke-width="4"></polyline>
+              <polyline points="490,210 520,210 520,180" fill="none" stroke="#c84747" stroke-width="4"></polyline>
+              <text x="460" y="240" text-anchor="middle" font-size="11" fill="#66727e">敌红 #c84747</text>
+
+              <!-- SelfCast -->
+              <text x="630" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">SelfCast</text>
+              <text x="630" y="48" text-anchor="middle" font-size="11" fill="#66727e">Alt+键 / Fallback</text>
+              <rect x="570" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
+              <polyline points="570,90 570,60 600,60" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
+              <polyline points="660,60 690,60 690,90" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
+              <polyline points="570,180 570,210 600,210" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
+              <polyline points="660,210 690,210 690,180" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
+              <text x="630" y="240" text-anchor="middle" font-size="11" fill="#66727e">自蓝 #3a7fc8</text>
+            </svg>
+            <div class="cap">图 8.1 · 三态色板:Soft 灰白 / Armed 队色 (友绿+敌红) / SelfCast 自蓝</div>
+          </div>
+
+          <p><strong>Invalid 不存在独立 UI 态</strong>:技能 CD / 沉默 / 无蓝 / 未学时,Soft 框直接不显示。
+          HUD 技能图标已表达不可用状态。</p>
+
+          <p><strong>β 跳转视觉信号</strong>:widget 瞬移(从 A actor 消失,在 B actor 出现)— 框的位置变化即 motion event,
+          玩家眼睛即使在战场中央也能感知。<strong>不加跳转音效</strong>,纯靠视觉。</p>
+
+          <p><strong>屏幕中心准星与本系统完全无关</strong>:准星只服务普攻/枪械,不随 Soft/Armed 状态变色或变形;
+          单体目标状态完全靠 L 括号传达,准星是独立信道。</p>
+
+          <p><strong>ScreenCone 边界</strong>:不画(若未来 playtest 反馈"新人不懂 Armed 跳"再开 V3 模式)。</p>
+
+          <p><strong>Release 失败 / 右键取消 / 技能名 label</strong>:全部<strong>无 UI 反馈</strong>(极简风格)。</p>
+
+          <h3>8.2 网络与权威 <span class="adr-pill">ADR-0003</span></h3>
+          <table>
+            <thead>
+              <tr><th>事项</th><th>要求</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>客户端</td><td>20Hz 跑候选评分,预测 Soft/Armed UI;Release/Confirm 时打包 `Armed Target` 进 `FGameplayEventData` 走现有 `ServerConfirmHoldingWithTimeStamp` RPC</td></tr>
+              <tr><td>服务器</td><td>验证 Armed Target 合法性,采用 <strong>300ms 时间窗容忍模式</strong></td></tr>
+              <tr><td>容忍项</td><td>Dead / OutOfRange / NoLOS / OutOfScreenCone(300ms 内合法过即放行)</td></tr>
+              <tr><td>不容忍项</td><td>InvalidTeam / NotTargetable / 技能 CD / 沉默 / 蓝量(永远按服务器当前判定)</td></tr>
+              <tr><td>容忍允许但执行时已失效</td><td><strong>静默 fail</strong>;客户端不显示失败反馈;玩家感知"我以为打到了"但不被打脸</td></tr>
+              <tr><td>反作弊</td><td>`ClientTime` 须做 sanity check(`abs(ClientTime - ServerTime) &lt; ping * 2`),否则拒收</td></tr>
+              <tr><td>回放 / 观战</td><td>记录最终决议目标、ResolvePolicy 触发(若有)、自施法标记</td></tr>
+            </tbody>
+          </table>
+
+          <div class="diagram" aria-label="服务器 300ms 容忍窗示意">
+            <svg viewBox="0 0 800 200" role="img">
+              <!-- 时间轴 -->
+              <line x1="50" y1="120" x2="750" y2="120" stroke="#66727e" stroke-width="2"></line>
+              <text x="400" y="155" text-anchor="middle" font-size="12" fill="#66727e">服务器时间轴</text>
+
+              <!-- 容忍窗 -->
+              <rect x="500" y="80" width="120" height="40" fill="#e3f4e7" stroke="#bcdcc4" stroke-width="2" rx="4"></rect>
+              <text x="560" y="105" text-anchor="middle" font-size="13" fill="#2c6e3f" font-weight="700">300ms 容忍窗</text>
+
+              <!-- 事件:目标死亡 -->
+              <line x1="500" y1="60" x2="500" y2="120" stroke="#8d3b3b" stroke-width="2"></line>
+              <circle cx="500" cy="60" r="6" fill="#8d3b3b"></circle>
+              <text x="500" y="48" text-anchor="middle" font-size="11" fill="#8d3b3b">目标 A 死亡</text>
+
+              <!-- 事件:client 发送 cast on A -->
+              <line x1="580" y1="180" x2="580" y2="120" stroke="#22577a" stroke-width="2"></line>
+              <circle cx="580" cy="180" r="6" fill="#22577a"></circle>
+              <text x="580" y="200" text-anchor="middle" font-size="11" fill="#22577a">client RPC: cast on A</text>
+
+              <!-- 验证结果箭头 -->
+              <path d="M580 180 Q 700 180 700 130" fill="none" stroke="#2c6e3f" stroke-width="2" marker-end="url(#arrow)"></path>
+              <text x="720" y="105" font-size="11" fill="#2c6e3f" font-weight="700">放行</text>
+              <text x="720" y="120" font-size="10" fill="#66727e">(死亡 &lt; 300ms,</text>
+              <text x="720" y="132" font-size="10" fill="#66727e">静默 fail 落地)</text>
+
+              <!-- 事件超 300ms -->
+              <line x1="700" y1="180" x2="700" y2="120" stroke="#a07a7a" stroke-width="1" opacity="0.4"></line>
+              <text x="700" y="200" text-anchor="middle" font-size="10" fill="#a07a7a">超 300ms 则拒</text>
+            </svg>
+            <div class="cap">图 8.2 · 服务器 300ms 容忍窗:client 视角的 cast 在 server 时间窗内合法即放行(实际执行仍可能 fail)</div>
+          </div>
+        </section>
+
+        <section id="example">
+          <h2>9. 技能示例:Muriel Shield</h2>
+          <table>
+            <thead><tr><th>项</th><th>配置</th></tr></thead>
+            <tbody>
+              <tr><td>AllowedTeams</td><td>Friendly (+ FriendlySummon 可选)</td></tr>
+              <tr><td>RangeCm</td><td>1200(12 米)</td></tr>
+              <tr><td>ScreenConeRadius</td><td>0.30(屏幕中心半径 30%)</td></tr>
+              <tr><td>LineOfSightRule</td><td>RequiredWithGrace</td></tr>
+              <tr><td>LostGraceTime</td><td>0.20s</td></tr>
+              <tr><td>SwitchCooldown</td><td>0.12s</td></tr>
+              <tr><td>bDrivesIdleSoftTarget</td><td>true(每英雄至多一个)</td></tr>
+              <tr><td>InputMode</td><td>Hold(按住 + LMB 确认)</td></tr>
+              <tr><td>ResolvePolicy</td><td>`AllowSelfFallback`(空旷场地自动给自己)</td></tr>
+            </tbody>
+          </table>
+          <h3>典型流程</h3>
+          <ol>
+            <li>Muriel 走动 → 屏幕中央友军身上自动出现灰白 L 括号(Soft)</li>
+            <li>按下 E → 框升级为绿色 L 括号(Armed = 该友军)</li>
+            <li>友军拐过墙 → Armed 自然跳到旁边友军 B(框瞬移到 B 身上)</li>
+            <li>松开 E + LMB 确认 → 护盾打到 B 身上</li>
+            <li>或:按 E 后右键 → Holding 取消,无消耗</li>
+            <li>或:Alt+E → 跳过 Hold,护盾立即上自己</li>
+            <li>或:Shield 进 CD / 中沉默 → Soft 框消失,直到可用为止</li>
+          </ol>
+        </section>
+
+        <section id="acceptance">
+          <h2>10. 验收</h2>
+          <table>
+            <thead>
+              <tr><th>优先级</th><th>验收项</th><th>通过标准</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>P0</td><td>β 跟手</td><td>Holding 期间 Armed 跟随当前评分胜出者跳转;原目标死/出 LOS/出范围 → 自然让位次佳</td></tr>
+              <tr><td>P0</td><td>候选池空收口</td><td>候选池完全为空时 Release → 走 ResolvePolicy(默认无反馈 / opt-in 走 SelfCast)</td></tr>
+              <tr><td>P0</td><td>自施法不擅自</td><td>没标 `AllowSelfFallback` 的技能,候选池空时 Release 绝不自动 cast 自己</td></tr>
+              <tr><td>P0</td><td>UI 三态正确</td><td>Soft(灰白) / Armed(队色) / SelfCast(自蓝);Invalid 不显示框</td></tr>
+              <tr><td>P0</td><td>不可用即隐藏</td><td>驱动源 CD / 沉默 / 无蓝 / 未学时,Soft 框立刻消失</td></tr>
+              <tr><td>P0</td><td>服务器容忍</td><td>跨服 ping 150 玩家可正常释放刚死亡 &lt; 300ms 的目标;超 300ms 失败;静默 fail</td></tr>
+              <tr><td>P0</td><td>输入优先级</td><td>Alt+键 / 右键取消优先于评分自动决策</td></tr>
+              <tr><td>P1</td><td>Profile 数据化</td><td>至少两个技能复用同一 Profile,仅改技能卡引用</td></tr>
+              <tr><td>P1</td><td>Editor 校验</td><td>同英雄 2 个 `bDrivesIdleSoftTarget=true` 报错;`AreaPreviewTargetOrSelf` 在 dropdown 中不可见</td></tr>
+              <tr><td>P1</td><td>Debug 可解释</td><td>`Targeting.DebugDraw 1` 显示候选框 + 名字,便于内部排查</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="tech-notes">
+          <h2>11. 程序备注</h2>
+          <h3>实现层次(策划视角的 5 个功能模块)</h3>
+          <ul>
+            <li><strong>M1</strong> 目标自动框选 + 显示:空闲时框跟着我看的人走</li>
+            <li><strong>M2</strong> 完整单体施法闭环:按下蓄力 + 跟手 + Release + 右键取消</li>
+            <li><strong>M3</strong> 自施法 + 防御性技能 fallback:Alt+键 + `AllowSelfFallback`</li>
+            <li><strong>M4</strong> 联机 + 高 ping 容忍:服务器 300ms 容忍窗</li>
+            <li><strong>M5</strong> Editor 规范 + production UMG widget</li>
+          </ul>
+
+          <h3>数据/状态拆分</h3>
+          <pre>UTargetSelectionProfileDataAsset
+  AllowedTargetTeam / AllowedUnitTypeTags
+  Range / ScreenCone / LineOfSightRule
+  ScoreWeights / LockRetainRadius / LockProtectTime / LostGraceTime / SwitchCooldown
+  ResolvePolicy
+  TargetIndicatorWidgetClass / TargetIndicatorOffset
+
+UTargetSelectionComponent(挂 AMatchPlayerController)
+  ActiveProfile      (空闲=驱动源,Holding=该技能 Profile)
+  CurrentTarget      (Soft / Armed)
+  State              (Idle / Holding / SelfCast)
+  IdleDriveAbility   (Discovery 找到的驱动源 ability)
+  GraceMap           (短暂失效候选的 timestamp)
+  TargetIndicatorWidget (UWidgetComponent,挂在 CurrentTarget 上)</pre>
+
+          <h3>约束</h3>
+          <table>
+            <thead><tr><th>约束</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>统一入口</td><td>目标搜索、评分、Holding 状态机、Release 决议都走 `UTargetSelectionComponent`;技能蓝图不重复实现</td></tr>
+              <tr><td>技能只给配置</td><td>通过 `TargetSelectionProfile` + 技能卡字段表达差异;不写 C++ 找目标</td></tr>
+              <tr><td>手动优先</td><td>Alt+键 / 右键取消 / 玩家显式甩枪优先级高于自动评分</td></tr>
+              <tr><td>反作弊</td><td>ClientTime sanity check;不容忍项严格 server-now 判定</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="impl-status">
+          <h2>12. 实现状态(V2.1 落地)</h2>
+          <p>整套 M1–M5 已在项目里实现并通过 PIE 验证。以下是「设计稿 → 实际代码 / 资产」的索引,
+          供后续策划 / 工程师 查阅或对其他英雄复制扩展。</p>
+
+          <h3>12.1 代码位置</h3>
+          <table>
+            <thead><tr><th>模块</th><th>类 / 文件</th></tr></thead>
+            <tbody>
+              <tr><td>Profile 数据资产</td><td>`Source/GameMoba/Targeting/TargetSelectionProfileDataAsset.h`</td></tr>
+              <tr><td>主组件(挂 PC)</td><td>`Source/GameMoba/Targeting/TargetSelectionComponent.h/.cpp`</td></tr>
+              <tr><td>服务器验证</td><td>`Source/GameMoba/Targeting/TargetingValidator.h/.cpp`(挂 `MobaUnitInterface::MobaUnitDead` 记录死亡时刻)</td></tr>
+              <tr><td>单体目标读取入口</td><td>`EApplyBuffTargetType::ArmedTarget`(SkillModule 配置时选这个)</td></tr>
+              <tr><td>输入字段</td><td>`GameInputDataAsset::CancelHoldingInputAction` + `SelfCastModifierInputAction`</td></tr>
+              <tr><td>自施法 / 取消 handler</td><td>`AMatchPlayerController::Input_CancelHolding` / `Input_SelfCastModifier`</td></tr>
+              <tr><td>Ability 钩子</td><td>`UHeroAbility::ActivateAbility/EndAbility`(BeginHolding/BeginSelfCast/EndHolding/EndSelfCast)</td></tr>
+              <tr><td>Editor 校验</td><td>`UHeroDataAsset::IsDataValid` 检查驱动源唯一性</td></tr>
+            </tbody>
+          </table>
+
+          <h3>12.2 配置入口(designer 在哪改)</h3>
+          <table>
+            <thead><tr><th>改什么</th><th>在哪</th></tr></thead>
+            <tbody>
+              <tr><td>给某技能加单体管线</td><td>`UHeroAbilityDataAsset` 上设 `TargetSelectionProfile`</td></tr>
+              <tr><td>让某技能作为英雄空闲驱动源</td><td>同上 + 勾 `bDrivesIdleSoftTarget`(每英雄至多一个)</td></tr>
+              <tr><td>让 SkillModule 实际打到 ArmedTarget</td><td>`SkillModuleApplyBuffToTarget.TargetType = ArmedTarget`</td></tr>
+              <tr><td>防御性技能开启自动给自己</td><td>Profile 的 `ResolvePolicy = AllowSelfFallback`</td></tr>
+              <tr><td>单体目标 UI widget 样式</td><td>Profile 的 `TargetIndicatorWidgetClass`</td></tr>
+              <tr><td>自施法 modifier 键位</td><td>`GameInputData_Global.SelfCastModifierInputAction`(默认 Alt)</td></tr>
+              <tr><td>取消 Holding 键位</td><td>`GameInputData_Global.CancelHoldingInputAction`(默认右键)</td></tr>
+            </tbody>
+          </table>
+
+          <h3>12.3 已知简化 / 后续 polish</h3>
+          <table>
+            <thead><tr><th>项</th><th>现状</th><th>后续</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Production widget 样式</td>
+                <td>复用 `W_MarkTargetIndicator` 同款,颜色由 widget 蓝图内部读 Component State 自定</td>
+                <td>美术做 V2.1 设计稿描述的 F2 L 括号 + 跳转动画</td>
+              </tr>
+              <tr>
+                <td>Widget DrawSize</td>
+                <td>当前硬编码 256x256(Component cpp 内)</td>
+                <td>后续应做成 Profile 字段</td>
+              </tr>
+              <tr>
+                <td>服务器 ring buffer</td>
+                <td>只追踪"最近死亡时刻"单点 timestamp</td>
+                <td>如出现其他需要回溯的失效原因,扩展 `FTargetingValidator`</td>
+              </tr>
+              <tr>
+                <td>Debug 可视化</td>
+                <td>`Targeting.DebugDraw 1` 控制台开关,wireframe box(非 Shipping 才可用)</td>
+                <td>Production 不需要</td>
+              </tr>
+              <tr>
+                <td>驱动源 discovery 时序</td>
+                <td>Tick 轮询 owner pawn 变化 + GAS abilities;abilities 未 grant 时持续 retry</td>
+                <td>可优化为 GAS 事件订阅(`OnAbilityGiven`)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>12.4 Muriel Shield 测试配置(可作其他英雄模板)</h3>
+          <table>
+            <thead><tr><th>资产</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td>`/Game/Heroes/Muriel/Shield/TSP_MurielShield`</td><td>Profile 实例(Friendly + 12m + 0.30 cone + AllowSelfFallback)</td></tr>
+              <tr><td>`/Game/Heroes/Muriel/Shield/HAD_MurielShield_V21Test`</td><td>技能 DataAsset(从原 HAD_MurielShield 复制 + V2.1 字段;`ConfirmHoldingSkillModules[1].TargetType = ArmedTarget`)</td></tr>
+              <tr><td>`/Game/Heroes/Muriel/Shield/GA_MurielShield_V21Test`</td><td>Ability 蓝图(从原 GA_MurielShield 复制,`AbilityDataAsset` 指 HAD_V21Test)</td></tr>
+              <tr><td>`/Game/Heroes/Muriel/HeroData_Muriel`</td><td>Abilities[2] 替换为 GA_MurielShield_V21Test_C</td></tr>
+              <tr><td>`/Game/Heroes/Kallari/Mark/W_SoftTargetIndicator`</td><td>单体目标指示 widget(复制自 W_MarkTargetIndicator)</td></tr>
+              <tr><td>`/Game/Input/Actions/IA_CancelHolding` + `IA_SelfCastModifier`</td><td>输入资产(右键 / Alt)</td></tr>
+              <tr><td>`/Game/GlobalSettings/GameInputData_Global`</td><td>全局输入配置,已填上述两个 IA</td></tr>
+            </tbody>
+          </table>
+
+          <h3>12.5 给其他英雄做单体技能的最少工作量</h3>
+          <ol>
+            <li>新建 Profile 资产 `TSP_&lt;HeroName&gt;_&lt;SkillName&gt;`(可直接复制 Muriel 的改差异字段)</li>
+            <li>在英雄技能的 HAD 上:`TargetSelectionProfile = TSP_...`,需要空闲驱动就 `bDrivesIdleSoftTarget = true`</li>
+            <li>在该技能的 `ConfirmHolding/InputPress/InputRelease SkillModules` 中,把 `SkillModuleApplyBuffToTarget.TargetType` 改成 `ArmedTarget`</li>
+            <li>完成。<strong>不需要碰 C++ 代码</strong></li>
+          </ol>
+
+          <div class="changed">
+            <strong>实际跑通的验证流程</strong>:Muriel 进 PIE → 走动看友军身上有 widget → 按 E 蓄力变绿 →
+            松手护盾上身 → Alt+E 立即上自己 → 右键蓄力中取消无消耗 → Shield 进 CD 期间 widget 消失。
+            服务器 300ms 容忍因为缺联机测试环境,代码已就位但未实际跨服验过。
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer style="margin-top:32px;text-align:center;color:var(--muted);font-size:12.5px;">
+      <p>版本 V2.1 · 2026/05/21 · 关联 ADR 0001 / 0002 / 0003 · 完成 M1-M5</p>
+    </footer>
+  </div>
+</body>
+</html>

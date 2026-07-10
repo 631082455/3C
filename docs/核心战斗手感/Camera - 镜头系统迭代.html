@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>镜头迭代需求（战斗与3C）</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --paper: #ffffff;
+      --ink: #22272e;
+      --muted: #66727e;
+      --line: #d9dee5;
+      --soft: #eef2f5;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --danger: #8d3b3b;
+      --code: #172530;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    .page {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 32px auto 48px;
+    }
+    header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .meta span {
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 24px;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    nav .title {
+      padding: 4px 8px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+    nav a {
+      display: block;
+      padding: 10px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    nav a:hover {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    main {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    section {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 20px;
+    }
+    section:last-child { border-bottom: none; }
+
+    .rule {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+    .note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #ecd6ad;
+      border-radius: var(--radius);
+      background: var(--warn-soft);
+      color: #604219;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 16px;
+    }
+    .box {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .box.blue {
+      border-color: #c8dced;
+      background: var(--blue-soft);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 13px;
+      font-weight: 740;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #e8f1f7;
+      overflow: auto;
+      font: 13px/1.65 var(--mono);
+    }
+    .diagram {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .pill {
+      display: inline-block;
+      margin: 0 6px 6px 0;
+      padding: 2px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      section { padding: 24px 20px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Planning Requirement</div>
+      <h1>镜头迭代需求（战斗与3C）</h1>
+      <p>面向第三人称 MOBA / 射击战斗的镜头需求。核心目标是保证移动、瞄准、技能、受击、死亡等战斗场景下的视野稳定、输入可信、表现可控，并为程序提供明确的配置口、叠加规则和验收标准。</p>
+      <div class="meta">
+        <span>需求方：3C / 战斗策划</span>
+        <span>实现方：战斗程序 / 客户端表现</span>
+        <span>项目基线：当前自定义战斗相机</span>
+        <span>重点：视野信息、输入可信、技能表现</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#position">1. 背景与目标</a>
+        <a href="#current">2. 当前理解</a>
+        <a href="#model">3. 需求模型</a>
+        <a href="#scope">4. 本版范围</a>
+        <a href="#scenes">5. 场景需求</a>
+        <a href="#terms">6. 镜头语义</a>
+        <a href="#config">7. 配置需求</a>
+        <a href="#stacking">8. 叠加规则</a>
+        <a href="#acceptance">9. 优先级验收</a>
+        <a href="#tech-notes">10. 程序备注</a>
+      </nav>
+
+      <main>
+        <section id="position">
+          <h2>1. 背景与目标</h2>
+          <p>当前战斗镜头已经能支撑基础玩法，下一步重点是把镜头需求拆成可配置、可叠加、可验收的规则：什么场景切镜头，镜头变化是否影响判定，技能镜头如何和基础镜头共存。</p>
+          <div class="rule">
+            <h3>一句话目标</h3>
+            <p>玩家能稳定看清战场，输入方向可信；技能镜头有表现力，但不抢走操作权，也不把判定结果变得不可预期。</p>
+          </div>
+          <div class="note">实现可以沿用当前主战斗相机链路；本轮先约定玩家体验、配置边界和验收口径。</div>
+        </section>
+
+        <section id="current">
+          <h2>2. 当前实现理解</h2>
+          <p>当前工程已经有可用的战斗相机骨架，问题不在“从零做相机”，而在配置表达、叠加规则、技能镜头清理和调试口径还不够产品化。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>模块</th>
+                <th>当前已经具备</th>
+                <th>需求层面的判断</th>
+                <th>迭代方向</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>主战斗镜头</td>
+                <td>有自定义 CameraManager、CameraComponent、CameraModeStack，第三人称镜头可稳定输出。</td>
+                <td>可以继续作为主骨架，先不重写。</td>
+                <td>补“角色镜头卡”和状态选择规则，让策划能知道基础参数在哪里改。</td>
+              </tr>
+              <tr>
+                <td>基础镜头参数</td>
+                <td>已有 FOV、Pitch 范围、TargetOffset、碰撞避让、蹲伏偏移等能力。</td>
+                <td>能力够用，但分散在不同资产和代码概念里。</td>
+                <td>收敛成 CameraProfile：基础距离、肩位、视野、Pitch、碰撞、Lag。</td>
+              </tr>
+              <tr>
+                <td>技能镜头</td>
+                <td>技能模块可提交 AbilityCameraData，支持 Offset、FOV、Lag、Blend、Shake。</td>
+                <td>已经能做表现，但更像“覆盖最终镜头”，规则不够显性。</td>
+                <td>定义为 AbilityCameraModifier，并补优先级、叠加策略、清除条件。</td>
+              </tr>
+              <tr>
+                <td>镜头反馈</td>
+                <td>CameraShake、死亡后处理已经接入本地表现。</td>
+                <td>适合做表现层，不能污染技能判定方向。</td>
+                <td>区分 GameplayView 和 PresentationView。</td>
+              </tr>
+              <tr>
+                <td>观战 / 回放</td>
+                <td>当前不是本版完整目标。</td>
+                <td>可以先不做，但状态边界现在要留对。</td>
+                <td>后续基于 CameraState 重建镜头，避免同步每帧最终相机。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="model">
+          <h2>3. 需求模型</h2>
+          <p>每次镜头请求都归到一个明确层级：基础镜头负责常态视野，状态镜头负责瞄准、蹲伏、死亡等持续状态，技能镜头负责短时修饰，反馈镜头负责震屏和后处理。</p>
+          <div class="diagram" aria-label="镜头需求层级图">
+            <svg viewBox="0 0 1000 360" role="img">
+              <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                </marker>
+              </defs>
+              <rect x="28" y="42" width="135" height="78" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="96" y="75" text-anchor="middle" font-size="18" fill="#22272e">角色 / 输入</text>
+              <text x="96" y="100" text-anchor="middle" font-size="13" fill="#66727e">移动、瞄准、锁敌</text>
+
+              <rect x="210" y="42" width="135" height="78" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
+              <text x="278" y="75" text-anchor="middle" font-size="18" fill="#22272e">CameraState</text>
+              <text x="278" y="100" text-anchor="middle" font-size="13" fill="#66727e">当前镜头状态</text>
+
+              <rect x="392" y="42" width="135" height="78" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="460" y="75" text-anchor="middle" font-size="18" fill="#22272e">BaseProfile</text>
+              <text x="460" y="100" text-anchor="middle" font-size="13" fill="#66727e">基础距离 / FOV</text>
+
+              <rect x="574" y="42" width="150" height="78" rx="8" fill="#f5f6f8" stroke="#d9dee5"></rect>
+              <text x="649" y="75" text-anchor="middle" font-size="18" fill="#22272e">StateRules</text>
+              <text x="649" y="100" text-anchor="middle" font-size="13" fill="#66727e">瞄准、蹲伏、死亡</text>
+
+              <rect x="770" y="42" width="180" height="78" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="860" y="75" text-anchor="middle" font-size="18" fill="#22272e">AbilityModifier</text>
+              <text x="860" y="100" text-anchor="middle" font-size="13" fill="#66727e">技能 Offset / FOV / Lag</text>
+
+              <line x1="163" y1="81" x2="210" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="345" y1="81" x2="392" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="527" y1="81" x2="574" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="724" y1="81" x2="770" y2="81" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+
+              <rect x="290" y="205" width="180" height="82" rx="8" fill="#ffffff" stroke="#d9dee5"></rect>
+              <text x="380" y="238" text-anchor="middle" font-size="18" fill="#22272e">GameplayView</text>
+              <text x="380" y="263" text-anchor="middle" font-size="13" fill="#66727e">判定可信的视角基准</text>
+
+              <rect x="530" y="205" width="200" height="82" rx="8" fill="#ffffff" stroke="#d9dee5"></rect>
+              <text x="630" y="238" text-anchor="middle" font-size="18" fill="#22272e">PresentationView</text>
+              <text x="630" y="263" text-anchor="middle" font-size="13" fill="#66727e">玩家看到的最终表现</text>
+
+              <rect x="770" y="205" width="180" height="82" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="860" y="238" text-anchor="middle" font-size="18" fill="#22272e">FeedbackLayer</text>
+              <text x="860" y="263" text-anchor="middle" font-size="13" fill="#66727e">Shake / 后处理</text>
+
+              <line x1="460" y1="120" x2="380" y2="205" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="860" y1="120" x2="630" y2="205" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="860" y1="205" x2="730" y2="246" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="470" y1="246" x2="530" y2="246" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+            </svg>
+          </div>
+          <div class="rule">
+            <h3>核心判断</h3>
+            <p>移动、瞄准、投射物、近战朝向等和判定相关的系统，优先读 GameplayView；技能镜头、震屏、死亡滤镜等表现变化，优先落在 PresentationView。两者可以相同，但不能默认混在一起。</p>
+          </div>
+        </section>
+
+        <section id="scope">
+          <h2>4. 本版范围</h2>
+          <div class="grid">
+            <div class="box">
+              <h3>本版要做</h3>
+              <ul>
+                <li>定义基础镜头、状态镜头、技能镜头、反馈镜头的分层。</li>
+                <li>补角色镜头卡、状态规则表、技能镜头卡的配置需求。</li>
+                <li>明确技能镜头的叠加、优先级、自动清理和打断清理。</li>
+                <li>明确 GameplayView / PresentationView 的判定边界。</li>
+                <li>补调试显示与配置错误提示，方便策划验收。</li>
+              </ul>
+            </div>
+            <div class="box blue">
+              <h3>本版不做</h3>
+              <ul>
+                <li>不做完整电影镜头、Sequence 演出系统。</li>
+                <li>不重写所有 CameraMode，当前主相机仍作为默认运行链路。</li>
+                <li>不展开完整观战 / 回放协议，只预留 CameraState 边界。</li>
+                <li>具体动画资产、蒙太奇资产和美术镜头曲线由对应技能或表现需求单独列出。</li>
+                <li>镜头参数以策划可读、可复查、可回滚为准。</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="scenes">
+          <h2>5. 场景需求</h2>
+          <p>镜头需求先按场景写。每个场景都要能回答：玩家应该看见什么、是否影响操作方向、策划要配什么、程序怎么验收。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>玩家感受</th>
+                <th>策划配置</th>
+                <th>程序验收</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>普通移动</td>
+                <td>角色、前方威胁和准星区域稳定可见，转向不拖泥带水。</td>
+                <td>默认 FOV、Pitch 上下限、目标偏移、肩位、碰撞避让。</td>
+                <td>连续转身、跳跃、贴墙时无明显抖动和穿墙。</td>
+              </tr>
+              <tr>
+                <td>瞄准 / 精确射击</td>
+                <td>视野更集中，准星更可信，但不遮挡角色关键动作。</td>
+                <td>瞄准 FOV、肩位偏移、进入 / 退出混合时间、灵敏度联动标记。</td>
+                <td>开镜和关镜期间，投射物方向与 GameplayView 一致。</td>
+              </tr>
+              <tr>
+                <td>锁敌 / 横移</td>
+                <td>敌人保持在可读区域，玩家仍能感知侧向空间。</td>
+                <td>锁敌目标优先级、水平偏移、目标丢失后的恢复时间。</td>
+                <td>目标切换、丢失、死亡时镜头能稳定回退。</td>
+              </tr>
+              <tr>
+                <td>突进 / 翻越 / 位移</td>
+                <td>速度感增强，但落点和朝向不能让玩家迷失。</td>
+                <td>短时 FOV、拉远 / 拉近、Lag、Blend、是否跟随位移方向。</td>
+                <td>高速位移中镜头不穿墙，技能结束后能回到正确基础状态。</td>
+              </tr>
+              <tr>
+                <td>技能释放</td>
+                <td>重招、蓄力、近战命中有镜头强调，但不打断玩家读场。</td>
+                <td>技能镜头卡：触发时点、Offset、FOV、Lag、Shake、持续时间、清除条件。</td>
+                <td>技能正常结束、被打断、角色死亡时，镜头请求都会清理。</td>
+              </tr>
+              <tr>
+                <td>命中 / 受击反馈</td>
+                <td>有冲击感，但不影响下一次瞄准和移动判断。</td>
+                <td>Shake 强度、方向、衰减，是否叠加屏幕后处理。</td>
+                <td>Shake 只影响 PresentationView，不改变核心判定方向。</td>
+              </tr>
+              <tr>
+                <td>贴墙 / 狭窄空间</td>
+                <td>镜头自动收近或避让，角色和威胁仍可读。</td>
+                <td>碰撞半径、预测避让、收近 / 放回时间。</td>
+                <td>墙角、门框、坡面连续测试无大幅跳变。</td>
+              </tr>
+              <tr>
+                <td>死亡 / 复活</td>
+                <td>死亡状态明确，复活后迅速回到可操作镜头。</td>
+                <td>死亡后处理、FOV、镜头是否锁定目标、复活恢复时间。</td>
+                <td>死亡和复活不会残留技能镜头或 Shake 状态。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="terms">
+          <h2>6. 镜头语义</h2>
+          <p>后续配置和验收统一使用下面这些词，避免“切镜头”“加镜头”“震一下”在不同人嘴里指向不同实现。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>术语</th>
+                <th>定义</th>
+                <th>策划写法</th>
+                <th>程序关注点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>基础镜头</td>
+                <td>角色没有特殊状态时的第三人称镜头。</td>
+                <td>默认距离、FOV、Pitch、肩位。</td>
+                <td>永远有回退值，不允许空状态。</td>
+              </tr>
+              <tr>
+                <td>状态镜头</td>
+                <td>由瞄准、蹲伏、锁敌、死亡等状态触发的镜头规则。</td>
+                <td>进入状态 A 时切到 Profile B，退出时回退。</td>
+                <td>需要状态优先级和互斥关系。</td>
+              </tr>
+              <tr>
+                <td>技能镜头修饰</td>
+                <td>技能期间短时改变 Offset、FOV、Lag 或 Shake。</td>
+                <td>技能某窗口内加一个 modifier。</td>
+                <td>必须有持续时间、清除条件、叠加策略。</td>
+              </tr>
+              <tr>
+                <td>反馈镜头</td>
+                <td>命中、受击、死亡等带来的 Shake、后处理、短时冲击。</td>
+                <td>本地表现反馈，不参与判定。</td>
+                <td>默认 owner-only，不能污染 GameplayView。</td>
+              </tr>
+              <tr>
+                <td>GameplayView</td>
+                <td>投射物、近战朝向、辅助瞄准等使用的可信视角基准。</td>
+                <td>需要稳定，不被震屏和演出镜头带偏。</td>
+                <td>要和 PresentationView 分离或至少明确采样时机。</td>
+              </tr>
+              <tr>
+                <td>PresentationView</td>
+                <td>玩家最终看到的画面，可以叠加表现层。</td>
+                <td>可以服务手感和冲击，但不能制造误判。</td>
+                <td>Shake、后处理、技能镜头大多落在这一层。</td>
+              </tr>
+              <tr>
+                <td>清除条件</td>
+                <td>镜头请求什么时候结束。</td>
+                <td>技能结束、窗口结束、被打断、死亡、换英雄。</td>
+                <td>需要兜底，避免 modifier 残留。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="config">
+          <h2>7. 配置需求</h2>
+          <p>镜头配置按“角色、状态、技能”三种粒度组织。角色决定默认视野，状态决定持续变化，技能决定短时修饰。</p>
+
+          <h3>7.1 角色镜头卡</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>用途</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>角色 / 相机模板</td>
+                <td>指定该角色默认使用哪套基础镜头。</td>
+                <td>英雄之间可以继承同一模板，再局部覆盖。</td>
+              </tr>
+              <tr>
+                <td>默认 FOV / Pitch</td>
+                <td>决定默认视野和上下视角限制。</td>
+                <td>需要 Clamp，非法值给 warning。</td>
+              </tr>
+              <tr>
+                <td>目标偏移 / 肩位</td>
+                <td>决定角色在屏幕中的位置。</td>
+                <td>射击角色通常需要稳定准星空间。</td>
+              </tr>
+              <tr>
+                <td>碰撞避让</td>
+                <td>处理贴墙、角落、狭窄空间。</td>
+                <td>需要测试收近和恢复是否平滑。</td>
+              </tr>
+              <tr>
+                <td>基础 Lag</td>
+                <td>控制跟随柔和度。</td>
+                <td>竞技操作优先低延迟，表现型状态再单独加。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>7.2 状态规则表</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>触发条件</th>
+                <th>镜头变化</th>
+                <th>优先级 / 退出</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Normal</td>
+                <td>无特殊状态。</td>
+                <td>使用默认 Profile。</td>
+                <td>最低优先级，所有状态退出后回到这里。</td>
+              </tr>
+              <tr>
+                <td>Aim</td>
+                <td>按住瞄准、进入精确射击。</td>
+                <td>FOV 收窄，肩位微调，降低表现 Lag。</td>
+                <td>高于 Normal，低于 Death / 强制演出。</td>
+              </tr>
+              <tr>
+                <td>LockTarget</td>
+                <td>锁定有效目标。</td>
+                <td>保持目标读场，可给水平偏移。</td>
+                <td>目标无效后按恢复时间退出。</td>
+              </tr>
+              <tr>
+                <td>Death</td>
+                <td>角色死亡或等待复活。</td>
+                <td>死亡后处理、可能切观察目标。</td>
+                <td>最高优先级，并清理技能镜头。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>7.3 技能镜头卡</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>用途</th>
+                <th>示例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>技能 ID / 窗口</td>
+                <td>说明哪个技能、哪个时段触发镜头。</td>
+                <td><code>HAD_SteelAttack</code>：出手前拉近，命中帧 Shake。</td>
+              </tr>
+              <tr>
+                <td>Offset / FOV</td>
+                <td>短时调整构图和速度感。</td>
+                <td>重击可轻微拉近并降低 FOV；位移可短时拉远。</td>
+              </tr>
+              <tr>
+                <td>Lag</td>
+                <td>控制技能期间镜头跟随柔和度。</td>
+                <td>突进可加位置 Lag，但精确射击不建议加。</td>
+              </tr>
+              <tr>
+                <td>Shake / 后处理</td>
+                <td>只表达冲击反馈。</td>
+                <td>命中帧 0.12s 轻震，强度按技能等级或距离缩放。</td>
+              </tr>
+              <tr>
+                <td>Blend / Duration</td>
+                <td>进入、退出和最长持续时间。</td>
+                <td>所有 0 值和负值都要有明确含义或报错。</td>
+              </tr>
+              <tr>
+                <td>清除条件</td>
+                <td>防止技能镜头残留。</td>
+                <td>技能结束、被打断、死亡、切换 Pawn、超时。</td>
+              </tr>
+              <tr>
+                <td>叠加策略</td>
+                <td>多个镜头请求同时存在时如何处理。</td>
+                <td>Override、Additive、Max、Min、IgnoreLowerPriority。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="stacking">
+          <h2>8. 叠加规则</h2>
+          <p>镜头最怕“看起来能配，其实互相覆盖”。本版需要把叠加顺序写死成规则，策划只在规则内填参数。</p>
+          <div class="diagram" aria-label="镜头叠加时间线">
+            <svg viewBox="0 0 1000 320" role="img">
+              <defs>
+                <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                </marker>
+              </defs>
+              <line x1="80" y1="258" x2="930" y2="258" stroke="#66727e" stroke-width="2" marker-end="url(#arrow2)"></line>
+              <text x="80" y="284" font-size="14" fill="#66727e">输入 / 状态</text>
+              <text x="880" y="284" font-size="14" fill="#66727e">最终输出</text>
+
+              <rect x="90" y="55" width="820" height="44" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
+              <text x="115" y="83" font-size="17" fill="#22272e">BaseProfile：全程存在，负责默认 FOV、Pitch、距离、碰撞</text>
+
+              <rect x="250" y="120" width="460" height="44" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
+              <text x="275" y="148" font-size="17" fill="#22272e">StateRule：瞄准 / 锁敌 / 蹲伏，按优先级切换或修饰</text>
+
+              <rect x="390" y="185" width="280" height="44" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
+              <text x="415" y="213" font-size="17" fill="#22272e">AbilityModifier：技能窗口内生效</text>
+
+              <rect x="585" y="229" width="150" height="28" rx="8" fill="#f8e5e5" stroke="#e0bcbc"></rect>
+              <text x="610" y="249" font-size="14" fill="#8d3b3b">Shake：短时反馈</text>
+
+              <line x1="125" y1="99" x2="125" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="300" y1="164" x2="300" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="430" y1="229" x2="430" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="670" y1="229" x2="670" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+              <line x1="850" y1="99" x2="850" y2="258" stroke="#d9dee5" stroke-dasharray="5 5"></line>
+            </svg>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>规则</th>
+                <th>需求说明</th>
+                <th>验收方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>基础镜头永远兜底</td>
+                <td>任何状态退出、技能结束、配置缺失，都必须回到基础镜头。</td>
+                <td>删除技能镜头配置后，角色仍能正常游戏。</td>
+              </tr>
+              <tr>
+                <td>状态镜头先于技能镜头</td>
+                <td>瞄准、锁敌等状态先确定当前镜头基准，技能只在其上做短时修饰。</td>
+                <td>瞄准中释放技能，技能结束后仍回到瞄准镜头。</td>
+              </tr>
+              <tr>
+                <td>技能镜头必须可清理</td>
+                <td>每个技能镜头请求都要有 owner、持续时间和清除条件。</td>
+                <td>技能被打断或角色死亡时，不残留 Offset / FOV / Lag。</td>
+              </tr>
+              <tr>
+                <td>同层冲突按优先级</td>
+                <td>同一层多个请求同时存在时，先比优先级，再按策略处理。</td>
+                <td>两个技能镜头重叠时，结果能从 debug 信息解释。</td>
+              </tr>
+              <tr>
+                <td>Shake 不参与判定</td>
+                <td>Shake 和后处理只影响最终表现，不改变投射物、近战朝向、移动输入。</td>
+                <td>强 Shake 下连续射击，命中方向不随画面抖动漂移。</td>
+              </tr>
+              <tr>
+                <td>非法配置要可见</td>
+                <td>Blend 为 0、FOV 越界、Duration 不合法、引用为空，都要有明确处理。</td>
+                <td>PIE 或日志能看到配置 warning，且不会出现 NaN 或瞬移。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="acceptance">
+          <h2>9. 优先级验收</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>需求</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P0</td>
+                <td>明确基础镜头、状态镜头、技能镜头、反馈镜头的边界。</td>
+                <td>策划能按角色镜头卡和技能镜头卡补配置；程序能按分层判断落点。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>补技能镜头清理规则和非法配置保护。</td>
+                <td>技能结束、打断、死亡、超时都不会残留镜头；Blend / FOV 非法值不会导致异常画面。</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>确认 Shake、后处理、死亡滤镜属于表现层。</td>
+                <td>投射物、近战方向、移动输入不受表现层扰动。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>补 CameraProfile、StateRule、AbilityModifier 三类配置资产或等价数据结构。</td>
+                <td>不改 C++ 代码即可调整普通态、瞄准态、一个技能镜头表现。</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>实现清晰的 modifier stack 和 debug 显示。</td>
+                <td>能看到当前生效的 Profile、State、Modifier、优先级、剩余时间。</td>
+              </tr>
+              <tr>
+                <td>P2</td>
+                <td>为观战 / 回放预留 CameraState。</td>
+                <td>旁观端未来能基于状态重建基础镜头，不依赖同步每帧最终 transform。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="rule">
+            <h3>最小可交付版本</h3>
+            <p>至少完成 P0：需求语义统一、技能镜头不残留、表现层不污染判定、非法配置可见。P1 再做数据驱动和堆栈化，P2 留给观战和回放。</p>
+          </div>
+        </section>
+
+        <section id="tech-notes">
+          <h2>10. 程序备注</h2>
+          <p>当前代码可承接以下实现点，后续实现时按需求分层逐步收敛。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>当前代码</th>
+                <th>可承接的需求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>AGameMatchCameraManager</code></td>
+                <td>仍作为主相机管理入口，负责输出最终 ViewTarget。</td>
+              </tr>
+              <tr>
+                <td><code>UGameMatchCameraComponent</code></td>
+                <td>承接 AbilityCameraData、死亡后处理、最终视图输出，可扩展 modifier stack。</td>
+              </tr>
+              <tr>
+                <td><code>UGameCameraModeStack</code></td>
+                <td>继续负责基础 CameraMode 的求值和混合。</td>
+              </tr>
+              <tr>
+                <td><code>UHeroCameraMode_ThirdPerson</code></td>
+                <td>承接第三人称基础镜头、碰撞避让、Pitch 曲线和基础偏移。</td>
+              </tr>
+              <tr>
+                <td><code>FSkillModuleCamera</code> / <code>UAbilityCameraData</code></td>
+                <td>短期可继续作为技能镜头入口；中期建议升级为 AbilityCameraModifier 请求。</td>
+              </tr>
+            </tbody>
+          </table>
+          <pre>建议求值顺序：
+CameraState
+-> BaseProfile
+-> StateRule
+-> AbilityModifierStack
+-> FeedbackLayer
+-> GameplayView / PresentationView</pre>
+          <div class="note">实现节奏以低风险迭代为主：先补需求语义、配置边界和清理规则，再逐步整理数据结构和调试工具。</div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TPS 实体弹道发射点与瞄准意图统一规范</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --paper: #ffffff;
+      --ink: #22272e;
+      --muted: #66727e;
+      --line: #d9dee5;
+      --soft: #eef2f5;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --bad: #9b3737;
+      --bad-soft: #fdeaea;
+      --good: #246b46;
+      --good-soft: #e4f4e9;
+      --code: #172530;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    .page {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 32px auto 48px;
+    }
+    header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .meta span {
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 24px;
+    }
+    nav {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    nav .title {
+      padding: 4px 8px 10px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 740;
+    }
+    nav a {
+      display: block;
+      padding: 10px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    nav a:hover {
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    main {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    section {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 20px;
+    }
+    section:last-child { border-bottom: none; }
+
+    .rule {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+    }
+    .note {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #ecd6ad;
+      border-radius: var(--radius);
+      background: var(--warn-soft);
+      color: #604219;
+    }
+    .danger {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #efb5b5;
+      border-left: 4px solid var(--bad);
+      border-radius: var(--radius);
+      background: var(--bad-soft);
+      color: #6b2424;
+    }
+    .success {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border: 1px solid #b9dfc5;
+      border-left: 4px solid var(--good);
+      border-radius: var(--radius);
+      background: var(--good-soft);
+      color: #214f35;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 16px;
+    }
+    .box {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .box.blue {
+      border-color: #c8dced;
+      background: var(--blue-soft);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 13px;
+      font-weight: 740;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: var(--code);
+      color: #e8f1f7;
+      overflow: auto;
+      font: 13px/1.65 var(--mono);
+    }
+    .diagram {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .tag {
+      display: inline-block;
+      min-width: 36px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: #44515d;
+      font-size: 12px;
+      font-weight: 740;
+      text-align: center;
+    }
+    .tag.p0 { background: #dff2e5; color: #245a3a; }
+    .tag.p1 { background: #e5f0f8; color: #22577a; }
+    .tag.p2 { background: #fff4dd; color: #805516; }
+    .tag.no { background: #fdeaea; color: #8a2c2c; }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      section { padding: 24px 20px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Combat Tech Design Requirement</div>
+      <h1>TPS 实体弹道发射点与瞄准意图统一规范</h1>
+      <p>面向 Twinblast 普攻与后续 TPS 实体弹道技能，明确“相机负责瞄准意图，枪口负责真实发射”的需求边界、配置方式、表现要求和验收标准。</p>
+      <div class="meta">
+        <span>正文讲需求</span>
+        <span>技术放备注</span>
+        <span>场景先于结构</span>
+        <span>每条需求可验收</span>
+        <span>当前日期：2026-05-06</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#background">1. 背景</a>
+        <a href="#scope">2. 范围</a>
+        <a href="#current">3. 当前工程现状</a>
+        <a href="#scenes">4. 使用场景</a>
+        <a href="#rules">5. 核心规则</a>
+        <a href="#config">6. 配置需求</a>
+        <a href="#feedback">7. 表现与交互</a>
+        <a href="#compat">8. 兼容与迁移</a>
+        <a href="#acceptance">9. 优先级与验收</a>
+        <a href="#program">10. 程序备注</a>
+        <a href="#questions">11. 待确认</a>
+      </nav>
+
+      <main>
+        <section id="background">
+          <h2>1. 背景</h2>
+          <p>当前 Twinblast 普攻的即时子弹在逻辑上更接近从相机射线发出，枪口 socket 主要用于视觉偏移。这样能保证准星命中感，但会带来 TPS 中常见的公平性问题：角色或武器仍在掩体后，子弹却从镜头线命中目标。</p>
+
+          <div class="rule">
+            <strong>本需求的核心结论：</strong>
+            <ul>
+              <li>玩家的瞄准意图由相机准星决定。</li>
+              <li>实体子弹的真实出生点由武器口或逻辑枪口决定。</li>
+              <li>子弹方向由枪口指向相机解析出的 <code>AimPoint</code>。</li>
+              <li>需要支持旧逻辑兼容，不能一次性改变全项目所有投射物手感。</li>
+            </ul>
+          </div>
+
+          <div class="danger">
+            <strong>不要把本需求理解成“所有技能都从枪口发射”。</strong>
+            这是一个可配置的发射策略需求，优先服务 Twinblast 普攻和同类 TPS 实体子弹。
+          </div>
+        </section>
+
+        <section id="scope">
+          <h2>2. 范围</h2>
+          <p>本文档只定义实体子弹发射起点与准星意图的需求，不替代动画、武器绑定、AO、IK、命中伤害和网络预测文档。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>范围项</th>
+                <th>是否纳入</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Twinblast 普攻即时子弹</td>
+                <td><span class="tag p0">P0</span></td>
+                <td>首个接入目标。当前资产已有 <code>IPD_TwinblastAttack</code> 与 <code>hand_l / hand_r</code> 多枪口配置基础。</td>
+              </tr>
+              <tr>
+                <td>其他英雄普攻即时子弹</td>
+                <td><span class="tag p1">P1</span></td>
+                <td>待 Twinblast 验证后按技能类型逐步接入，不做全量自动迁移。</td>
+              </tr>
+              <tr>
+                <td>LifeTime Projectile</td>
+                <td><span class="tag p1">P1</span></td>
+                <td>逻辑相似，但生命周期、预测和碰撞成本更高，建议第二阶段接入。</td>
+              </tr>
+              <tr>
+                <td>Beam / Laser</td>
+                <td><span class="tag p2">P2</span></td>
+                <td>需要单独定义持续射线、遮挡更新、端点吸附和表现拉线规则。</td>
+              </tr>
+              <tr>
+                <td>AO、右手 IK、开火 Overlay</td>
+                <td><span class="tag no">不纳入</span></td>
+                <td>属于身体资源和动画表现并行问题。本文只要求枪口位置可被正确读取和验收。</td>
+              </tr>
+              <tr>
+                <td>伤害数值、射速、弹道速度平衡</td>
+                <td><span class="tag no">不纳入</span></td>
+                <td>发射点改变可能影响手感，但不在本文内调整数值。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="current">
+          <h2>3. 当前工程现状</h2>
+          <p>当前工程已经有即时子弹系统和视觉枪口配置，但逻辑发射点与视觉发射点不是同一概念。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>模块 / 资产</th>
+                <th>当前职责</th>
+                <th>问题</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>FSkillModuleContinuousFire</code></td>
+                <td>技能激活后按射击间隔启动连续即时子弹。</td>
+                <td>只负责启动连续开火，不决定每发子弹的真实起点。</td>
+              </tr>
+              <tr>
+                <td><code>UInstantProjectileSystem::SpawnAndLaunchInstantProjectileFromContinuousFire</code></td>
+                <td>每次开火时从控制器获取相机视角，计算 <code>StartLocation</code> 和 <code>LaunchVelocity</code>。</td>
+                <td>当前真实 <code>StartLocation</code> 来自相机视点到角色位置的投影，不是武器口。</td>
+              </tr>
+              <tr>
+                <td><code>USkillProjectileDataBase::VisualStartSocket</code></td>
+                <td>配置表现从哪个骨骼或 socket 出现。</td>
+                <td>当前主要影响视觉偏移，不等于逻辑发射点。</td>
+              </tr>
+              <tr>
+                <td><code>IPD_TwinblastAttack</code></td>
+                <td>配置 Twinblast 普攻即时子弹。</td>
+                <td>已开启多枪口表现，数组为 <code>hand_l</code>、<code>hand_r</code>，但逻辑仍不是从这些点发射。</td>
+              </tr>
+              <tr>
+                <td><code>IPD_TwinblastAttack_R</code></td>
+                <td>右手版本即时子弹配置。</td>
+                <td>配置了 <code>hand_r</code>，仍只作为表现枪口。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            当前项目已经具备“从 socket 找表现枪口”的基础，缺的是“发射策略配置”和“逻辑发射点使用 socket”的代码路径。
+          </div>
+        </section>
+
+        <section id="scenes">
+          <h2>4. 使用场景</h2>
+          <p>需求先从玩家感知最强、最容易出问题的场景出发。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>需求</th>
+                <th>验收关注点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>常规站立开火</td>
+                <td>准星决定目标方向，子弹从当前发射手的枪口或逻辑枪口出生。</td>
+                <td>调试线显示 <code>MuzzleStart</code> 与实际子弹起点一致。</td>
+              </tr>
+              <tr>
+                <td>左右手交替开火</td>
+                <td>Twinblast 每发根据开火序号选择左手或右手枪口。</td>
+                <td>第 1 发、第 2 发分别从预期 socket 出生；视觉枪口和逻辑起点一致。</td>
+              </tr>
+              <tr>
+                <td>肩射贴墙</td>
+                <td>如果准星能看到敌人，但枪口被墙挡住，子弹不得从相机穿墙命中。</td>
+                <td>子弹应命中遮挡物，或 UI 给出枪口遮挡提示。</td>
+              </tr>
+              <tr>
+                <td>近距离贴脸</td>
+                <td>相机命中点过近时，需要避免枪口方向大角度横甩。</td>
+                <td>近距离目标命中稳定，不出现明显反向发射或横飞。</td>
+              </tr>
+              <tr>
+                <td>俯仰高低差</td>
+                <td>枪口方向应收敛到相机解析出的目标点，不能只用枪口 forward。</td>
+                <td>上坡、下坡、空中目标下准星与命中趋势一致。</td>
+              </tr>
+              <tr>
+                <td>非 Twinblast 旧技能</td>
+                <td>默认不改变旧技能逻辑。</td>
+                <td>未接入新策略的投射物表现和命中手感保持不变。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="rules">
+          <h2>5. 核心规则</h2>
+          <p>系统应采用“相机解析意图，枪口兑现物理”的规则。规则顺序必须稳定，否则调试和验收都会困难。</p>
+
+          <div class="diagram">
+            <svg viewBox="0 0 920 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TPS 实体子弹发射流程图">
+              <rect width="920" height="240" fill="#fff"/>
+              <g fill="#e2f1ee" stroke="#78aaa1" stroke-width="2">
+                <rect x="32" y="76" width="140" height="66" rx="8"/>
+                <rect x="220" y="76" width="140" height="66" rx="8"/>
+                <rect x="408" y="76" width="140" height="66" rx="8"/>
+                <rect x="596" y="76" width="140" height="66" rx="8"/>
+                <rect x="784" y="76" width="104" height="66" rx="8"/>
+              </g>
+              <g fill="#172530" font-family="Segoe UI, Microsoft YaHei, sans-serif" font-size="16" font-weight="700" text-anchor="middle">
+                <text x="102" y="104">CameraRay</text>
+                <text x="102" y="128">解析准星</text>
+                <text x="290" y="104">AimPoint</text>
+                <text x="290" y="128">目标意图点</text>
+                <text x="478" y="104">MuzzleStart</text>
+                <text x="478" y="128">枪口起点</text>
+                <text x="666" y="104">Direction</text>
+                <text x="666" y="128">枪口指向目标</text>
+                <text x="836" y="104">Spawn</text>
+                <text x="836" y="128">实体子弹</text>
+              </g>
+              <g stroke="#66727e" stroke-width="3" fill="none" marker-end="url(#arrow)">
+                <path d="M172 109 H220"/>
+                <path d="M360 109 H408"/>
+                <path d="M548 109 H596"/>
+                <path d="M736 109 H784"/>
+              </g>
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#66727e"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>规则</th>
+                <th>说明</th>
+                <th>不允许</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Camera 只表达意图</td>
+                <td>从准星中心发出 <code>CameraRay</code>，解析 <code>AimPoint</code>。</td>
+                <td>不允许直接把相机位置当作实体子弹出生点。</td>
+              </tr>
+              <tr>
+                <td>Muzzle 表达物理来源</td>
+                <td>实体子弹从 <code>LogicalMuzzle</code> 或指定 socket 出生。</td>
+                <td>不允许逻辑从相机出，视觉再从枪口补线伪装。</td>
+              </tr>
+              <tr>
+                <td>方向由枪口指向意图点</td>
+                <td><code>LaunchDirection = Normalize(AimPoint - MuzzleStart)</code>。</td>
+                <td>不允许只用枪口 forward，导致准星和命中趋势分叉。</td>
+              </tr>
+              <tr>
+                <td>近距离需要保护</td>
+                <td><code>AimPoint</code> 过近时使用最小收敛距离或远点回退。</td>
+                <td>不允许近距离下子弹大幅横飞、反向飞或穿过自己身体。</td>
+              </tr>
+              <tr>
+                <td>遮挡必须可信</td>
+                <td>枪口到目标方向被近处障碍挡住时，应表现为打墙或无法射击提示。</td>
+                <td>不允许角色躲在墙后通过镜头线命中敌人。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="config">
+          <h2>6. 配置需求</h2>
+          <p>策划需要能按投射物配置发射起点策略。默认值必须兼容现有项目。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>配置项</th>
+                <th>推荐值</th>
+                <th>需求说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>LaunchOriginPolicy</code></td>
+                <td><code>CameraProjected</code></td>
+                <td>默认保持当前逻辑。可选值建议包含 <code>CameraProjected</code>、<code>VisualStartSocket</code>、<code>CustomSocket</code>。</td>
+              </tr>
+              <tr>
+                <td><code>VisualStartSocket</code></td>
+                <td>按资产配置</td>
+                <td>单枪口模式下作为表现起点；当策略为 <code>VisualStartSocket</code> 时，也可作为逻辑起点。</td>
+              </tr>
+              <tr>
+                <td><code>MultipleVisualStartSocketArray</code></td>
+                <td>按资产配置</td>
+                <td>多枪口模式下根据开火序号选择当前枪口。Twinblast 当前为 <code>hand_l</code>、<code>hand_r</code>。</td>
+              </tr>
+              <tr>
+                <td><code>MinimumAimDistance</code></td>
+                <td>建议 800-1200</td>
+                <td>当相机命中点过近时，用于把 <code>AimPoint</code> 推到合理距离，避免近距离方向剧烈偏转。</td>
+              </tr>
+              <tr>
+                <td><code>bCheckMuzzleBlocked</code></td>
+                <td>建议 P1 开启</td>
+                <td>控制是否检测枪口近距离遮挡。P0 可先用真实枪口发射后的碰撞结果体现遮挡。</td>
+              </tr>
+              <tr>
+                <td><code>MuzzleBlockedFeedback</code></td>
+                <td>后续 UI 配置</td>
+                <td>枪口遮挡时准星、音效或提示表现。该项不阻塞 P0。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="success">
+            <strong>Twinblast 建议：</strong>
+            先把 <code>IPD_TwinblastAttack</code> 的新策略配置为 <code>VisualStartSocket</code>。如果后续武器资产存在更准确的 <code>muzzle_l / muzzle_r</code>，应优先使用真实枪口 socket 替代 <code>hand_l / hand_r</code>。
+          </div>
+        </section>
+
+        <section id="feedback">
+          <h2>7. 表现与交互要求</h2>
+          <p>发射点改变后，玩家会更明显地感知到枪口、准星、弹道、遮挡之间的关系。表现层需要配合解释系统规则。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>表现项</th>
+                <th>需求</th>
+                <th>验收方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>枪口火光</td>
+                <td>火光和实体子弹出生点一致，左右手交替时不能串手。</td>
+                <td>慢速播放开火，确认第 N 发对应第 N 个 socket。</td>
+              </tr>
+              <tr>
+                <td>弹道 / Beam 起点</td>
+                <td>弹道表现从当前枪口开始，不再从准星中心或相机附近出现。</td>
+                <td>开启 debug 线，对比 <code>VisualStartLocation</code> 与 <code>StartLocation</code>。</td>
+              </tr>
+              <tr>
+                <td>准星命中感</td>
+                <td>中远距离下仍应表现为打准星指向位置。</td>
+                <td>站立射击固定靶，中心准星命中趋势稳定。</td>
+              </tr>
+              <tr>
+                <td>枪口遮挡提示</td>
+                <td>P1 需要准星或 UI 提示当前枪口被遮挡。</td>
+                <td>贴墙瞄准敌人时，玩家能理解为什么子弹打墙。</td>
+              </tr>
+              <tr>
+                <td>手部动画</td>
+                <td>本文不要求修正 AO/IK，但要求 socket 位置可被稳定读取。</td>
+                <td>开火期间 socket 不应跳到角色内部或异常位置。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="compat">
+          <h2>8. 兼容与迁移</h2>
+          <p>发射起点会直接影响命中手感和 PVP 公平性，因此必须小步迁移。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>阶段</th>
+                <th>迁移对象</th>
+                <th>要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>阶段 1</td>
+                <td>Twinblast 普攻</td>
+                <td>只接入 <code>IPD_TwinblastAttack</code>，并保留回退到旧逻辑的配置能力。</td>
+              </tr>
+              <tr>
+                <td>阶段 2</td>
+                <td>Twinblast FastFire / 右手版本</td>
+                <td>确认普通开火稳定后，再接入同角色其他即时子弹。</td>
+              </tr>
+              <tr>
+                <td>阶段 3</td>
+                <td>其他英雄普攻</td>
+                <td>按角色逐个验收，不做批量默认切换。</td>
+              </tr>
+              <tr>
+                <td>阶段 4</td>
+                <td>特殊投射物与 Beam</td>
+                <td>根据技能语义单独配置，避免普通子弹规则误伤技能表现。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            旧资产默认继续使用 <code>CameraProjected</code>。只有明确配置为 <code>VisualStartSocket</code> 的投射物才改变真实发射点。
+          </div>
+        </section>
+
+        <section id="acceptance">
+          <h2>9. 优先级与验收</h2>
+          <p>每条需求必须能被策划、程序或 QA 直接检查。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>需求</th>
+                <th>验收标准</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>支持按投射物配置发射起点策略。</td>
+                <td>旧资产默认不变；Twinblast 可单独切到枪口发射。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>Twinblast 普攻从当前左右手枪口或逻辑枪口出生。</td>
+                <td>开启 debug 后，实体子弹 <code>StartLocation</code> 与当前发射 socket 位置一致。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>准星仍负责瞄准意图。</td>
+                <td>中远距离打靶时，子弹方向收敛到准星解析出的 <code>AimPoint</code>。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p0">P0</span></td>
+                <td>旧连续开火逻辑可回退。</td>
+                <td>把 Twinblast 策略改回 <code>CameraProjected</code> 后，表现和当前版本一致。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p1">P1</span></td>
+                <td>枪口遮挡检测与提示。</td>
+                <td>贴墙瞄准时不发生相机穿墙命中，UI 或准星能提示遮挡。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p1">P1</span></td>
+                <td>最小瞄准距离保护。</td>
+                <td>贴脸或近距离地面命中点不会导致子弹大角度横飞。</td>
+              </tr>
+              <tr>
+                <td><span class="tag p2">P2</span></td>
+                <td>扩展到 Beam / Laser / LifeTime Projectile。</td>
+                <td>每类投射物有独立验收，不复用即时子弹结论硬套。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="program">
+          <h2>10. 程序备注</h2>
+          <p>本节给程序实现参考，不作为策划正文需求的替代。</p>
+
+          <h3>建议新增发射起点策略</h3>
+          <pre>enum class EProjectileLaunchOriginPolicy : uint8
+{
+    CameraProjected,     // 当前逻辑，默认兼容旧资产
+    VisualStartSocket,  // 使用 VisualStartSocket / MultipleVisualStartSocketArray 作为逻辑起点
+    CustomSocket        // 后续扩展：单独配置逻辑枪口 socket
+};</pre>
+
+          <h3 style="margin-top:22px;">建议运行流程</h3>
+          <pre>CameraRay = GetPlayerViewPointForGameplay()
+AimPoint = ResolveCameraAimPoint(CameraRay, MaxRange, MinimumAimDistance)
+
+if LaunchOriginPolicy == VisualStartSocket:
+    MuzzleStart = ResolveCurrentVisualStartSocketLocation(CustomFireIndex)
+else:
+    MuzzleStart = CurrentCameraProjectedStartLocation
+
+LaunchDirection = Normalize(AimPoint - MuzzleStart)
+StartLocation = MuzzleStart
+LaunchVelocity = LaunchDirection * LaunchSpeed</pre>
+
+          <h3 style="margin-top:22px;">当前可能涉及的代码点</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>文件</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SkillProjectileDataAsset.h</code></td>
+                <td>适合新增策略配置。默认值必须为当前逻辑。</td>
+              </tr>
+              <tr>
+                <td><code>InstantProjectileSystem.cpp</code></td>
+                <td><code>SpawnAndLaunchInstantProjectileFromContinuousFire</code> 是 Twinblast 连续开火每发子弹起点的关键入口。</td>
+              </tr>
+              <tr>
+                <td><code>InstantProjectileSystem.h</code></td>
+                <td>可新增 socket 解析和枪口位置解析辅助函数。</td>
+              </tr>
+              <tr>
+                <td><code>IPD_TwinblastAttack</code></td>
+                <td>接入新策略后的首个配置资产。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="danger">
+            <strong>实现风险：</strong>
+            如果真实枪口 socket 配在武器 mesh 而不是角色 mesh 上，当前只查角色 mesh 的逻辑会找不到准确枪口。需要确认 Twinblast 的真实枪口 socket 所在组件。
+          </div>
+        </section>
+
+        <section id="questions">
+          <h2>11. 待确认</h2>
+          <p>以下问题会影响 P0 的最终表现，但不影响先建立可配置策略。</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>问题</th>
+                <th>建议决策</th>
+                <th>影响</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Twinblast 是否已有真实 <code>muzzle_l / muzzle_r</code> socket？</td>
+                <td>优先使用真实枪口；没有则 P0 先用 <code>hand_l / hand_r</code> 验证流程。</td>
+                <td>影响子弹出生点精度和视觉可信度。</td>
+              </tr>
+              <tr>
+                <td>socket 在角色 mesh 还是武器 mesh？</td>
+                <td>若在武器 mesh，需要提供统一武器组件查询入口。</td>
+                <td>影响程序读取枪口位置的方式。</td>
+              </tr>
+              <tr>
+                <td>贴墙时是允许开火打墙，还是直接禁止开火？</td>
+                <td>建议 P0 允许开火并打墙，P1 增加准星遮挡提示。</td>
+                <td>影响玩家反馈和输入响应。</td>
+              </tr>
+              <tr>
+                <td>双枪真实发射是否会导致左右边缘命中不同？</td>
+                <td>先接受真实枪口差异；如果手感过抖，再评估逻辑中点枪口。</td>
+                <td>影响 PVP 边缘命中手感。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

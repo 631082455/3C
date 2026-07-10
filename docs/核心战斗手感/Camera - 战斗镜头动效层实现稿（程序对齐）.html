@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>战斗镜头动效层 · 实现稿（程序对齐）</title>
+  <style>
+    :root{
+      --bg:#f5f6f8;--paper:#fff;--ink:#22272e;--muted:#66727e;--line:#d9dee5;--soft:#eef2f5;
+      --accent:#22577a;--accent-soft:#e5f0f8;--warn:#8a5b18;--warn-soft:#fff4dd;--danger:#8d3b3b;--danger-soft:#f8e5e5;
+      --code:#172530;--radius:8px;--sans:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--mono:"Cascadia Code",Consolas,monospace;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 var(--sans);}
+    .page{width:min(1180px,calc(100vw - 32px));margin:32px auto 48px;}
+    header{padding-bottom:22px;border-bottom:1px solid var(--line);}
+    .kicker{color:var(--accent);font-size:13px;font-weight:760;letter-spacing:.08em;text-transform:uppercase;}
+    h1,h2,h3{margin:0;line-height:1.28;} h1{margin-top:8px;font-size:34px;font-weight:760;} h2{font-size:23px;font-weight:740;} h3{margin-top:22px;font-size:17px;font-weight:720;}
+    p{margin:8px 0 0;color:var(--muted);} .rule p,.note p,.danger p{color:inherit;}
+    p,li,td,th{overflow-wrap:anywhere;} ul{margin:8px 0 0;padding-left:20px;} li{color:#3a434d;} li+li{margin-top:4px;} b{color:var(--ink);}
+    code{font-family:var(--mono);color:#1d5f80;font-size:.94em;}
+    .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;color:var(--muted);font-size:13px;} .meta span{padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);} .meta a{color:var(--accent);}
+    .banner{margin-top:16px;padding:12px 16px;border-left:4px solid var(--accent);border-radius:var(--radius);background:var(--accent-soft);font-size:14px;}
+    .layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:28px;margin-top:24px;}
+    nav{position:sticky;top:16px;align-self:start;padding:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);}
+    nav .title{padding:4px 8px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:740;}
+    nav a{display:block;padding:8px;border-radius:6px;color:var(--muted);font-size:14px;text-decoration:none;} nav a:hover{color:var(--ink);background:var(--soft);}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);}
+    section{padding:28px 32px;border-bottom:1px solid var(--line);scroll-margin-top:20px;} section:last-child{border-bottom:none;}
+    .rule{margin-top:16px;padding:14px 18px;border-left:4px solid var(--accent);border-radius:var(--radius);background:var(--accent-soft);}
+    .note{margin-top:16px;padding:12px 16px;border:1px solid #ecd6ad;border-radius:var(--radius);background:var(--warn-soft);color:#604219;}
+    .danger{margin-top:16px;padding:12px 16px;border:1px solid #e0bcbc;border-radius:var(--radius);background:var(--danger-soft);color:#6d2f2f;}
+    table{width:100%;margin-top:14px;border-collapse:collapse;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;} th{background:#f2f4f6;color:#303740;font-size:13px;font-weight:740;} tr:last-child td{border-bottom:none;}
+    pre{margin:12px 0 0;padding:14px 16px;border-radius:var(--radius);background:var(--code);color:#e8f1f7;overflow:auto;font:13px/1.65 var(--mono);}
+    @media(max-width:960px){.layout{grid-template-columns:1fr;} nav{position:static;} section{padding:24px 20px;}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Combat Programming · Camera · As-Built</div>
+      <h1>战斗镜头动效层 · 实现稿（程序对齐）</h1>
+      <p>技能镜头动效系统(CME)的实现说明,按已落地代码写(CL 5616212)。设计意图/配置方式见<a href="Camera - 战斗镜头动效层设计稿.html">《设计稿》</a>,本稿只写实现。<b>核心思路:所有效果是"相对基础镜头的增量",求和叠加、包络自衰减;只写最终 POV,判定视图不受影响。</b></p>
+      <div class="meta">
+        <span>拥有者:战斗程序</span>
+        <span>状态:待程序 review + 提交</span>
+        <span>v2.1 as-built · CL 5616212</span>
+      </div>
+      <div class="banner"><b>已验证(编译+PIE):</b>旋转方向正确、目标选取切判定视图后不漂、校验器报错、慢放+权重条、真英雄链路(Steel 大招挂 CME_Ult_TiltPull 自动推入/清理)。</div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#arch">1. 架构与求值管线</a>
+        <a href="#cleanup">2. 清理契约</a>
+        <a href="#semantics">3. 语义定案与校验</a>
+        <a href="#tools">4. 调试工具</a>
+        <a href="#bounds">5. 现状边界</a>
+        <a href="#backlog">6. Backlog</a>
+        <a href="#cl">7. CL 清单与确认点</a>
+      </nav>
+
+      <main>
+        <!-- 1 -->
+        <section id="arch">
+          <h2>1. 架构与求值管线</h2>
+          <p>动效层落在现有 <code>UGameMatchCameraComponent</code> 内,模式栈之后的一层叠加。<b>没动模式栈、没用 GameplayCameras 插件、无运行时新依赖。</b></p>
+          <table>
+            <thead><tr><th style="width:36%">类 / 文件</th><th>角色</th></tr></thead>
+            <tbody>
+              <tr><td><code>UCameraMotionEffect / Variant</code>(新增 Camera/CameraMotionEffect.h/.cpp)</td><td>设计师资产 CME_*/CMEV_*;IsDataValid 校验;变体经 <code>CameraMotionEffectUtil::Resolve</code> 展开</td></tr>
+              <tr><td><code>UGameMatchCameraComponent</code>(改)</td><td>动效栈 ActiveMotionEffects、Push/Release/ClearAll、包络求值、合成、看门狗、控制台命令、Debug 面板。旧 ACD 旁路保留</td></tr>
+              <tr><td><code>AGameMatchCameraManager</code>(改)</td><td>SetViewTarget override + OnHeroDeadGlobal 订阅 → ClearAll + StopAllCameraShakes</td></tr>
+              <tr><td><code>UHeroCameraMode_ThirdPerson</code>(改 .cpp)</td><td>每帧回写 LastPivotLocation(Orbit/臂长锚点);动效 Lag 覆盖接入(ACD lag 优先)</td></tr>
+              <tr><td><code>FSkillModuleCamera</code> / <code>UHeroAbility</code>(改)</td><td>模块加 MotionEffects 数组;Push/Release 桥(IsLocallyControlled 闸,EndAbility 无条件释放)</td></tr>
+              <tr><td><code>UANS_CameraMotionEffect</code>(新增)</td><td>动效挂蒙太奇窗口;状态按 MeshComp 分桶,不存 notify 对象</td></tr>
+              <tr><td><code>UTargetSelectionComponent</code>(改 .cpp)</td><td>朝向评分改读 GetPlayerViewPointForGameplay</td></tr>
+            </tbody>
+          </table>
+          <pre>GetCameraView 每帧:
+1. EvaluateStack → CameraModeView(含穿墙检测,不含动效)
+2. SetControlRotation ← 取值在动效前,动效旋转永不进 ControlRotation
+3. 组件 transform = CameraModeView  ← 即 GameplayPOV,弹道/目标选取读它
+4. UpdateMotionEffects:推进包络(Elapsed×PlayRate)、释放淡出、看门狗、到期
+5. ApplyMotionEffects → 只写 DesiredView(最终 POV):
+   增量求和 → 受击带软钳4°/全局20°(tanh 软拐点) → Orbit 同一 delta 四元数绕枢轴刚转
+   → 臂长沿枢轴轴推拉(百分比按基准换算,最小距离保护)
+   → 位移碰撞钳制:基准→最终位置单球扫(半径12,ECC_Camera),命中即收
+   → FOV 求和+软钳±15</pre>
+          <div class="rule"><b>GameplayPOV 契约:</b>动效只写 DesiredView,组件 transform 保持模式栈输出——判定纯净靠"应用点"保证,无需快照拷贝。目标选取的屏幕投影评分那半仍读渲染视图(污染小,backlog)。</div>
+        </section>
+
+        <!-- 2 -->
+        <section id="cleanup">
+          <h2>2. 清理契约</h2>
+          <table>
+            <thead><tr><th style="width:38%">事件</th><th>动作</th></tr></thead>
+            <tbody>
+              <tr><td>技能结束(含打断/取消/<b>预测拒绝</b>)</td><td>EndAbility → ReleaseMotionEffectsByOwner,<b>无条件、不看 bWasCancelled</b>(预测拒绝以 false 到达,同路径覆盖)</td></tr>
+              <tr><td>模块 Remove/Pause / 蒙太奇窗口结束 / 到期</td><td>按位点释放 / ANS NotifyEnd 按句柄释放(引擎三路保证送达) / 包络自然收尾</td></tr>
+              <tr><td>死亡 / 切观战(SetViewTarget)</td><td>Manager 全清动效 + StopAllCameraShakes + 旧旁路/FOV 哨兵复位</td></tr>
+              <tr><td><b>死主看门狗</b></td><td>每帧:无限时长条目的 OwnerObject 弱引用失效 → 强制剔除 + Error 日志(Lissandra 教训:清理不依赖健康归属者)</td></tr>
+            </tbody>
+          </table>
+          <p>震屏与动效同生共死:Push 时 StartCameraShake 存弱引用,Release/ClearAll 时 Stop。观战现状:切观战清理干净,但<b>被观战者的动效不复制给观战者</b>(观战镜头无演绎)——体验缺失非 bug,backlog。</p>
+        </section>
+
+        <!-- 3 -->
+        <section id="semantics">
+          <h2>3. 语义定案与校验(已编码)</h2>
+          <table>
+            <thead><tr><th style="width:28%">问题</th><th>行为</th></tr></thead>
+            <tbody>
+              <tr><td>重触发身份</td><td>(资产, OwnerKey, SiteId)——共享库下不同技能/位点互不干扰。受击带默认 MaxAmplitudeWins</td></tr>
+              <tr><td>包络归属</td><td>ShapeCurve(内联 FRuntimeFloatCurve,纵轴可过冲/负)有键且 Duration&gt;0 时为唯一包络;否则梯形。Blend 字段仅中断/释放路径。PlayRate 同步缩放推进;Restart 从当前值混出</td></tr>
+              <tr><td>单位</td><td>FOV/臂长支持 绝对|百分比,百分比按当前基准换算后求和</td></tr>
+              <tr><td>钳制</td><td>软拐点(tanh):受击带旋转 4°、全局 20°、FOV ±15——压缩不平顶</td></tr>
+              <tr><td>无主推入</td><td>OwnerKey=0 且 Duration&lt;0 → 钳 1.5s + Warning(看门狗是报警器不是清洁工)</td></tr>
+            </tbody>
+          </table>
+          <p><b>校验器</b>(IsDataValid,存盘/验证资产时):拒绝 = Blend≤0 / ViewKick 旋转 L2&gt;3° / Orbit&gt;25° / 绝对FOV&gt;±15 / 变体无父;警告 = 移动带&gt;3s / 有曲线无有限时长 / 空动效 / 变体无覆盖。未做:引用处按操作权档位推导的预算校验(backlog)。</p>
+        </section>
+
+        <!-- 4 -->
+        <section id="tools">
+          <h2>4. 调试工具(已实现)</h2>
+          <ul>
+            <li>控制台:<code>Moba.Camera.Debug</code>(面板+权重条)、<code>Effect.Play/ClearAll</code>(三级资产查找:已加载→约定目录→资产注册表)、<code>Effect.Slomo/Loop/LoopStop</code>(慢放+循环)。</li>
+            <li>实时调参:栈条目存资产指针不拷值,PIE 改字段/曲线下一帧生效。</li>
+            <li><b>AI 生成写盘层</b>:<code>GameProject/Scripts/cme_authoring.py</code>——make_cme(dict) + normalize()(镜像校验器 5 条 reject + 语义护栏),LLM 在编辑器外 reason、经 AIK execute_python 落资产。PoC 已验证。</li>
+          </ul>
+        </section>
+
+        <!-- 5 -->
+        <section id="bounds">
+          <h2>5. 现状边界(砍减 / 并存 / 缺口)</h2>
+          <ul>
+            <li><b>已砍:状态镜头层 CM</b>(CM_Aim/俯瞰/模式栈第二模式)——与策划对齐:无 ADS、无操控接管需求;模式栈保持单一 CM_ThirdPerson。<b>已砍:命中方向管线</b>(DirectionalMode/HitDirection)——review 发现无生产者、代码不可达,删;待弹道命中回传落地时连生产者一起重加。<b>顺手删:</b>旧死字段 bRemoveWhenAbilityEnd。</li>
+            <li><b>与 ACD 并存</b>:CME 为功能超集但 ACD 未删——存量 ACD_* 资产被 HAD 引用、HeroAbility_Traverse 代码直用、旧旁路仍在 ThirdPerson 内消费(其偏移仍污染 GameplayPOV,是迁移理由)。退役三步:迁数据 → port Traverse → 删旁路。</li>
+            <li><b>能力缺口(vs ACD,罕用易补)</b>:绝对 FOV 设值(CME 只有增量)、Lag 最大距离钳制。</li>
+            <li><b>保留的 review 判断</b>:CMEVariant(灰度逃生口,暂无资产使用);祖传 Lyra 死代码(GetBlendInfo/AddFieldOfViewOffset/bWasLaggingLastFrame)未纳本 CL,建议单独 cleanup。</li>
+          </ul>
+        </section>
+
+        <!-- 6 -->
+        <section id="backlog">
+          <h2>6. Backlog(按需触发)</h2>
+          <table>
+            <thead><tr><th style="width:44%">项</th><th>触发</th></tr></thead>
+            <tbody>
+              <tr><td>弹道命中回传触发位点(连带恢复方向性命中踢)</td><td>有脱手技能要"命中那刻给施法者反馈"</td></tr>
+              <tr><td>观战端动效重放(事件级复制+降幅决策)</td><td>观战/OB 体验变重要时</td></tr>
+              <tr><td>trauma 震屏预算 / 目标选取屏幕投影切换 / 引用处预算校验</td><td>震屏多、团战晕 / 低优先</td></tr>
+              <tr><td>Camera Bench 图形面板(EUW,命令 API 已齐)</td><td>调参嫌命令烦</td></tr>
+              <tr><td>ACD 全量迁移退役 / per-hero 距离缩放 / Gauntlet 清理断言</td><td>判定统一 / 体型悬殊英雄 / 防退化</td></tr>
+            </tbody>
+          </table>
+          <div class="note">GAS 预测:技能 LocalPredicted,拒绝=EndAbility(bWasCancelled=false),动效清理已覆盖。唯一未覆盖:中途输入 RPC(按住/确认)被服务器 gate 拒绝时无回调——该时点动效只用短包络或技能生命周期归属。</div>
+        </section>
+
+        <!-- 7 -->
+        <section id="cl">
+          <h2>7. CL 5616212 清单与确认点</h2>
+          <p><b>27 文件,纯相机</b>:新增 CameraMotionEffect.h/.cpp、ANS_CameraMotionEffect.h/.cpp、10 个 CME 资产;修改 GameMatchCameraComponent/Manager、HeroCameraMode_ThirdPerson.cpp、SkillModuleCamera、HeroAbility、TargetSelectionComponent.cpp、Build.cs(+AssetRegistry)、uproject(pin EngineCameras/TemplateSequence/GameplayCameras 服务器禁用)、HAD_Steel_RadialGravity(示例)。另有未入 CL 的 <code>Scripts/cme_authoring.py</code> + CME_AI_HeavySlam(AI PoC 产物,可并入或单独提)。</p>
+          <div class="danger"><b>提交前请程序确认:</b>①HeroAbility.cpp / Build.cs / HAD 有同事共同 checkout(当前查证零冲突,先提无痛,拖到对方先提则二进制 HAD resolve 很痛——建议尽快);②动效位移碰撞钳制采用"单球扫"方案(每帧≤1 次 sweep,不动 penetration feeler 状态)是否认可;③干净基线全编一次。</div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

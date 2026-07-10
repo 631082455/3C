@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill - 范围施法落点 V1.2 (Deadlock 派 grill 精修)</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --paper: #ffffff;
+      --ink: #22272e;
+      --muted: #65717f;
+      --line: #d9dee5;
+      --soft: #eef2f5;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn: #8a5b18;
+      --warn-soft: #fff4dd;
+      --bad: #8d3b3b;
+      --bad-soft: #fbe9e7;
+      --code: #172530;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.75 var(--sans); }
+    .page { width: min(1180px, calc(100vw - 32px)); margin: 32px auto 48px; }
+    header { padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+    .kicker { color: var(--accent); font-size: 13px; font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; }
+    h1, h2, h3 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul, ol { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono { font-family: var(--mono); color: #1d5f80; font-size: 0.94em; overflow-wrap: anywhere; }
+    del { color: var(--muted); text-decoration: line-through; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; color: var(--muted); font-size: 13px; }
+    .meta span { padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); }
+    .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; margin-top: 24px; }
+    nav { position: sticky; top: 16px; align-self: start; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+    nav .title { padding: 4px 8px 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 740; }
+    nav a { display: block; padding: 10px 8px; border-radius: 6px; color: var(--muted); text-decoration: none; }
+    nav a:hover { color: var(--ink); background: var(--soft); }
+    main { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+    section { padding: 28px 32px; border-bottom: 1px solid var(--line); scroll-margin-top: 20px; }
+    section:last-child { border-bottom: none; }
+    .rule { margin-top: 16px; padding: 16px 18px; border-left: 4px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
+    .note { margin-top: 16px; padding: 14px 16px; border: 1px solid #ecd6ad; border-radius: var(--radius); background: var(--warn-soft); color: #604219; }
+    .risk { margin-top: 16px; padding: 14px 16px; border: 1px solid #e8c1bc; border-radius: var(--radius); background: var(--bad-soft); color: #6b302c; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 16px; }
+    .box { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: #fbfcfd; }
+    .box.blue { border-color: #c8dced; background: var(--blue-soft); }
+    .box.bad { border-color: #e8c1bc; background: var(--bad-soft); }
+    .box.good { border-color: #9bcfc5; background: var(--accent-soft); }
+    .scene-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+    .scene { border: 1px solid var(--line); border-radius: var(--radius); background: #fbfcfd; overflow: hidden; }
+    .scene-body { padding: 12px 14px 14px; }
+    .scene h3 { font-size: 15px; }
+    .scene p { font-size: 13px; line-height: 1.65; }
+    table { width: 100%; margin-top: 16px; border-collapse: collapse; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #f2f4f6; color: #303740; font-size: 13px; font-weight: 740; }
+    tr:last-child td { border-bottom: none; }
+    pre { margin: 12px 0 0; padding: 14px 16px; border-radius: var(--radius); background: var(--code); color: #e8f1f7; overflow: auto; font: 13px/1.65 var(--mono); }
+    .diagram { margin-top: 16px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #fff; }
+    svg { display: block; width: 100%; height: auto; }
+    .changelog { margin-top: 16px; padding: 14px 16px; border-left: 4px solid var(--blue); background: var(--blue-soft); border-radius: var(--radius); }
+    .changelog h3 { color: var(--blue); font-size: 14px; }
+    .changelog ul { margin-top: 6px; font-size: 13px; color: #2d4759; }
+    .goal-id { display: inline-block; padding: 1px 7px; border-radius: 999px; background: #256f65; color: #fff; font-weight: 700; font-size: 12px; margin-right: 4px; }
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      section { padding: 24px 20px; }
+      .grid { grid-template-columns: 1fr; }
+      .scene-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Planning Requirement / Combat 3C · V1.2 grill 精修版</div>
+      <h1>Skill - 范围施法落点 V1.2(Deadlock 派 · 精简)</h1>
+      <p>
+        本文档替代 <code>Skill - 范围施法落点.html</code>(V1.0 原稿)以及 V1.1 中间稿。
+        V1.2 是与策划/程序 grill 一轮后的精修版,<strong>V1 范围相比原稿砍掉约 70%</strong>,
+        只保留"抽统一 Library + 服务端 trace 复算 + 反作弊阈值"这一最小骨架。
+      </p>
+      <div class="meta">
+        <span>需求方:战斗 / 3C 策划</span>
+        <span>实现方:战斗程序</span>
+        <span>适用:Ground AOE / Deployable / Teleport(BasedOnPreview 模式)</span>
+        <span>版本:V1.2 精修</span>
+      </div>
+
+      <div class="changelog">
+        <h3>📌 V1.1 → V1.2 主要变化(grill 一轮后)</h3>
+        <ul>
+          <li><strong>V1.2 本版新加 §1 需求目标章节</strong>(原 §1-§12 顺延为 §2-§13),把"为什么做"显化为目标 / 非目标 / 成功度量,避免后续追问</li>
+          <li><strong>V1 Profile 从 9 字段砍到 6 字段</strong> — 去掉 FootprintShape / FootprintRadius / MaxSnapDistance(随 Footprint 功能整体降到 V2)</li>
+          <li><strong>V1 Library 不再做 Footprint Adapt</strong> — 召唤继续 AlwaysSpawn 接受偶尔穿墙,V2 与 Footprint 字段一起加</li>
+          <li><strong>V1 覆盖范围加 Teleport</strong> — `SkillModuleTeleportToTarget` 的 BasedOnSummonPreview / BasedOnSkillAreaPreview 模式自动获益,Execute 加服务端复算</li>
+          <li><strong>反作弊改阈值制(200cm 写死)</strong> — 不再"总用服务端结果";正常延迟无感,cheat 才被修正</li>
+          <li><strong>AOE Profile.Mode 加 None 值</strong> — 空中 AOE 不是"过渡技术债",是真实设计需求,fallback 永久保留</li>
+          <li><strong>TPS 相机射线起点已代码验证</strong> — <code>MatchPlayerController.cpp:333</code> 返回相机位置(非角色眼睛),emergent LOS 立论成立</li>
+          <li><strong>V2+ scope 扩展</strong> — 新增"严格空中放置 / 表面附着"(类似 Sage 头顶云、悬空标记圈)</li>
+        </ul>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <div class="title">目录</div>
+        <a href="#goal">1. 需求目标</a>
+        <a href="#philosophy">2. 设计哲学</a>
+        <a href="#scope">3. 本版范围</a>
+        <a href="#terms">4. 术语</a>
+        <a href="#pipeline">5. 落点流水线</a>
+        <a href="#algorithm">6. 算法规范</a>
+        <a href="#network">7. 服务端权威</a>
+        <a href="#profile">8. PlacementProfile</a>
+        <a href="#preview">9. 预览与反馈</a>
+        <a href="#cases">10. 边界案例</a>
+        <a href="#acceptance">11. 验收</a>
+        <a href="#tech-notes">12. 程序备注</a>
+        <a href="#bugfix">13. 已知 bug 修复</a>
+      </nav>
+
+      <main>
+
+        <section id="goal">
+          <h2>1. 需求目标</h2>
+
+          <h3>1.1 背景</h3>
+          <p>
+            项目所有"落点类技能"(召唤、AOE、传送)的落点算法<strong>散落在 4 处</strong>,且<strong>服务端零校验</strong>:
+          </p>
+          <table>
+            <thead>
+              <tr><th>模块</th><th>现状</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>SummonPreviewDataAsset.cpp:53-124</code></td><td>完整算法(相机射线 + downtrace),仅客户端</td></tr>
+              <tr><td><code>SkillAreaPreviewDataAsset.cpp:49-66</code></td><td>不接地,camera-rooted + 策划手配 offset</td></tr>
+              <tr><td><code>ProjectilePreviewDataAsset</code></td><td>几乎空</td></tr>
+              <tr><td><code>SkillModule*::Execute</code> 服务端路径</td><td>全部 <code>= TargetData-&gt;XxxLocation</code> 裸信任客户端</td></tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top: 16px;">随着项目进入战测 / 封测阶段,以下风险变得紧迫:</p>
+          <ul>
+            <li><strong>已存在的 bug</strong>:<code>SummonPreviewDataAsset</code> 存在 pick-further 算法 bug(水平瞄墙时落点穿墙到对面),策划 / QA 未必察觉。详见 §13</li>
+            <li><strong>反作弊缺位</strong>:客户端发什么服务端用什么 → 任何客户端 bug / 网络抖动 / cheat 工具都能让单位 spawn 到地图任意位置</li>
+            <li><strong>后续机制需要的底座</strong>:未来"传送进墙保护"、"投射物 reticle 一致"、"严格空中放置"都需要一个统一的落点底座</li>
+          </ul>
+
+          <h3 style="margin-top: 22px;">1.2 V1 目标(交付什么)</h3>
+          <table>
+            <thead>
+              <tr><th>#</th><th>目标</th><th>现状 → V1</th><th>验收方式</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="goal-id">G1</span></td>
+                <td>统一落点算法</td>
+                <td>4 处分散算法 → 1 个 <code>UPlacementResolverLibrary</code></td>
+                <td>代码层确认:客户端预览 / 客户端释放 / 服务端复算 全部调用 Library</td>
+              </tr>
+              <tr>
+                <td><span class="goal-id">G2</span></td>
+                <td>修复 pick-further 穿墙 bug</td>
+                <td>水平瞄墙时召唤穿墙到对面</td>
+                <td>QA 场景:站墙前水平瞄墙,召唤落墙这侧</td>
+              </tr>
+              <tr>
+                <td><span class="goal-id">G3</span></td>
+                <td>服务端基础反作弊</td>
+                <td>客户端发什么服务端用什么</td>
+                <td>用 cheat tool 伪造坐标偏差 > 200cm:服务端用复算结果 + log 记录</td>
+              </tr>
+              <tr>
+                <td><span class="goal-id">G4</span></td>
+                <td>Teleport 落点统一</td>
+                <td>Teleport <code>BasedOnSummonPreview</code> / <code>BasedOnSkillAreaPreview</code> 服务端裸信任</td>
+                <td>Teleport 服务端也走 Library 复算 + 阈值</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 22px;">1.3 非目标(V1 明确不做,避免后续被追问)</h3>
+          <table>
+            <thead>
+              <tr><th>项</th><th>为什么不做</th><th>何时做</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>召唤物完全不穿墙</td><td>需要 Footprint Capsule check + Adapt</td><td>V2(召唤穿墙成为 QA 优先级时启动)</td></tr>
+              <tr><td>失败反馈 UI / 红色非法预览</td><td>与 Deadlock 派"按下即出"哲学冲突</td><td>永不做</td></tr>
+              <tr><td>投射物 reticle 与服务端命中点一致</td><td>需要先解决投射物轨迹模拟一致性</td><td>V2+</td></tr>
+              <tr><td>严格放置技能基础设施(<code>Reject</code> 分支)</td><td>项目当前无对应技能需求</td><td>仅当出现"必须严格放在某处"技能时</td></tr>
+              <tr><td>AimRay 严格反作弊</td><td>V1 用客户端 AimRay,cheat 可同时伪造 AimRay + 坐标</td><td>V2(发现实际 cheat 使用此路径时)</td></tr>
+              <tr><td>严格空中 / 表面附着放置</td><td>需要新 Mode + 表面朝向算法</td><td>V2+</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 22px;">1.4 成功度量</h3>
+          <p>V1 上线后,<strong>详细验收清单见 §11</strong>。这里给出"什么算做好了"的高阶判据:</p>
+          <ul>
+            <li>所有现有技能行为<strong>零回归</strong>(Profile.Mode = None 默认值生效)</li>
+            <li>pick-further 穿墙 bug <strong>不再出现</strong></li>
+            <li>cheat 工具伪造坐标 > 200cm 时被<strong>服务端修正 + log</strong></li>
+            <li>算法不再有"客户端用 A,服务端用 B"的分歧</li>
+          </ul>
+
+          <div class="rule">
+            <h3>给非工程 stakeholder 的一句话</h3>
+            <p>
+              V1 是一次<strong>"内部 refactor + 反作弊基础 + 顺手修一个穿墙 bug"</strong>。
+              对玩家几乎不可见(因为我们刻意做到零回归),但为后续所有"落点类机制"(召唤不穿墙、传送防穿墙、严格空中放置、投射物 reticle 一致)铺好了底座。
+              单独看 V1 性价比中等,但作为"上线前必修的反作弊基础设施",必须做。
+            </p>
+          </div>
+        </section>
+
+        <section id="philosophy">
+          <h2>2. 设计哲学</h2>
+
+          <div class="rule">
+            <h3>一句话规则</h3>
+            <p>
+              玩家按下技能键,系统<strong>总是给出一个合法落点</strong>并把技能放出去。
+              落点合不合"理想",由系统调整(Clamp)。
+              <strong>玩家永远不会"按了键技能没出"</strong>。
+            </p>
+          </div>
+
+          <h3 style="margin-top: 22px;">2.1 Deadlock 派 vs Valorant 派</h3>
+          <table>
+            <thead>
+              <tr><th>维度</th><th>Deadlock 派(本系统采用)</th><th>Valorant 派(明确不采用)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>落点不合法时</td><td>Clamp 到最近合法点</td><td>红色预览,按键无效</td></tr>
+              <tr><td>资源/CD 消耗</td><td>总是消耗(因为总是出技能)</td><td>失败时不消耗</td></tr>
+              <tr><td>预览状态数</td><td>2 态:合法 / 已 clamp</td><td>3 态:合法 / 已修正 / 非法</td></tr>
+              <tr><td>LineOfSight</td><td><strong>由相机射线几何自然涌现(emergent)</strong>,无显式校验</td><td>显式 LOS 检测,隔墙拒绝</td></tr>
+              <tr><td>跨层处理</td><td>不强求识别"同层",Clamp 到当前射线命中地面</td><td>严格识别"同支撑面",跨层拒绝</td></tr>
+              <tr><td>巨大偏差时</td><td><strong>仍然出技能,玩家自己练瞄准</strong></td><td>失败,不消耗</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 22px;">2.2 为什么选 Deadlock 派</h3>
+          <ul>
+            <li><strong>与项目当前真实行为一致</strong>:所有 SkillModule 服务端都是"信任客户端坐标直接执行",<code>SpawnCollisionHandlingOverride = AlwaysSpawn</code>。本版只是把这个隐性行为显化为设计规范</li>
+            <li><strong>实现工作量小</strong>:不需要做"失败原因 → GAS Commit 时序拦截 → 客户端预测回滚"这条复杂链路</li>
+            <li><strong>手感更稳定</strong>:玩家不会被"明明能瞄到但不让放"惊讶</li>
+            <li><strong>对应项目调性</strong>:项目参照 Deadlock / Paragon 风格的 TPS MOBA,技能设计本身就避免了"必须精准放在某处"的范式</li>
+          </ul>
+
+          <h3 style="margin-top: 22px;">2.3 emergent LOS 已经过代码验证</h3>
+          <p>
+            grill 时验证了 <code>MatchPlayerController.cpp:333</code>: 真人玩家 <code>GetPlayerViewPointForGameplay</code>
+            返回相机位置(<strong>不是角色眼睛</strong>),旋转也是相机旋转。
+            这意味着 emergent LOS 的行为是 <strong>"相机能瞄到的地方就能放,角色被挡住不重要"</strong>,正好对应玩家
+            "我准星指着哪 = 我能放在哪"的直觉。
+          </p>
+          <div class="note">
+            <strong>未来如果出现"严格精准放置"技能</strong>(类似 Sage 墙、Symmetra TP),
+            再讨论 V2 是否加 <code>Reject</code> 分支。V1 不为不存在的需求做基础设施。
+          </div>
+        </section>
+
+        <section id="scope">
+          <h2>3. 本版范围</h2>
+
+          <h3>3.1 V1 必做(grill 后精简)</h3>
+          <table>
+            <thead>
+              <tr><th>范围</th><th>要求</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>统一落点 Library</td>
+                <td>提供 <code>UPlacementResolverLibrary</code>(纯函数),客户端预览、客户端释放、服务端 Execute 共用</td>
+                <td>当前 <code>SummonPreviewDataAsset</code> / <code>SkillAreaPreviewDataAsset</code> 各写各的算法,统一到一处</td>
+              </tr>
+              <tr>
+                <td>地面范围 + 召唤 + 传送(3 个 SkillModule)</td>
+                <td><code>SkillModuleSpawnMobaUnit</code> / <code>SkillModuleAddSkillAreaWithBuffs</code> / <code>SkillModuleTeleportToTarget</code> 全部接入 Library</td>
+                <td>Teleport 的 BasedOnSummonPreview / BasedOnSkillAreaPreview 模式自动获益,服务端 Execute 加 Library 复算</td>
+              </tr>
+              <tr>
+                <td>服务端复算 + 200cm 反作弊阈值</td>
+                <td>服务端用同一 Library 重算落点。与客户端坐标差异 ≤ 200cm 用客户端坐标(玩家手感无突变);差异 > 200cm 用服务端坐标(挡 cheat)</td>
+                <td>反作弊基础保证。阈值 200cm 写死在代码全局常量(V1 不上 Profile,V2 如有个别技能需要再开)</td>
+              </tr>
+              <tr>
+                <td>修复 SummonPreview 的 pick-further 穿墙 bug</td>
+                <td>砍掉 Method B 作为"远点候选",Method B 仅在射线完全落空时兜底</td>
+                <td>详见 §13,这是抽 Library 时的副产物</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 22px;">3.2 V1 不做(明确砍掉,相对原 FDD)</h3>
+          <table>
+            <thead>
+              <tr><th>原 FDD 项</th><th>砍掉理由</th><th>降级到</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>FailureReason 9 值枚举</td><td>Deadlock 派从不失败</td><td>永不做</td></tr>
+              <tr><td>Reject ResolvePolicy</td><td>无对应技能需求</td><td>V2 如有严格放置技能再说</td></tr>
+              <tr><td>"失败不消耗 CD/资源"GAS Commit 时序集成</td><td>无失败路径</td><td>永不做</td></tr>
+              <tr><td>红色非法预览 / 失败 UI</td><td>无失败状态</td><td>永不做</td></tr>
+              <tr><td>显式 LineOfSight 校验</td><td>emergent,无需独立 check</td><td>永不做</td></tr>
+              <tr><td>"同支撑面"严格识别</td><td>Deadlock 派不区分</td><td>V2 如需精准放置</td></tr>
+              <tr><td><strong>Footprint 校验 / Adapt</strong></td><td><strong>V1 grill 后决定降级</strong>,召唤继续 AlwaysSpawn 接受偶尔穿墙</td><td><strong>V2(与 Capsule 形状支持一起)</strong></td></tr>
+              <tr><td>客户端预测 + 服务端拒绝时回滚 CD/资源</td><td>阈值制无"拒绝"路径(只调整坐标,技能还是出)</td><td>永不做</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 22px;">3.3 V2+ 排期</h3>
+          <ul>
+            <li><strong>Footprint 校验 + Adapt</strong>(支持 Capsule,匹配 <code>AMobaMinion</code> 形状)— 当 QA 报"召唤物穿墙"成为优先级时启动</li>
+            <li><strong>严格空中放置 / 表面附着</strong> — Profile 新增 <code>AirPlaced</code> / <code>SurfaceAttached</code> Mode,用于"玩家头顶云"、"墙面图腾"等需要明确高度/朝向控制的技能</li>
+            <li><strong>投射物落点 reticle 与服务端真实命中点统一</strong> — 需要先解决 <code>InstantProjectileSystem</code> 轨迹模拟的客户端服务端一致性</li>
+            <li><strong>AimRay 严格反作弊</strong> — V1 用客户端发来的 AimRay 复算(cheat 工具可同时伪造 AimRay + 坐标),V2 改用服务端 ControlRotation 或加 AimRay 合理性校验</li>
+            <li><strong>Reject 分支</strong> — 仅当未来确实出现"严格精准放置"技能时</li>
+          </ul>
+
+          <h3 style="margin-top: 22px;">3.4 永远不进入本系统</h3>
+          <ul>
+            <li><strong>锁敌 / 辅助瞄准 / 单体目标选择</strong> — 归 <code>TargetSelectionComponent</code>(TSC)管,与本系统正交。本系统只处理"空间位置在哪里"</li>
+          </ul>
+        </section>
+
+        <section id="terms">
+          <h2>4. 术语</h2>
+          <table>
+            <thead>
+              <tr><th>术语</th><th>含义</th><th>验收口径</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>AimRay</code></td><td>玩家瞄准射线,源自 <code>ControllerInterface::GetPlayerViewPointForGameplay</code></td><td>真人玩家:相机位置 + 相机旋转(已验证 <code>MatchPlayerController.cpp:333</code>)</td></tr>
+              <tr><td><code>IntentPoint</code></td><td>由 AimRay 命中(或兜底)得到的"玩家想点哪里"XY 位置</td><td>仅表达意图,不一定可站立</td></tr>
+              <tr><td><code>PlacementProfile</code></td><td>USTRUCT,嵌入 PreviewDataAsset。<strong>V1 共 6 字段(见 §8.1)</strong></td><td>策划唯一配置入口</td></tr>
+              <tr><td><code>PlacementInput</code></td><td>Library 入参:Caster Location、AimRay、World</td><td>客户端服务端共用</td></tr>
+              <tr><td><code>FinalPlacement</code></td><td>Library 输出:最终落点(<strong>永远是合法位置</strong>)</td><td>无 FailureReason 字段</td></tr>
+              <tr><td><code>MaxServerClientDeviation</code></td><td>反作弊阈值,代码全局常量,V1 写死 <strong>200cm</strong></td><td>差异 ≤ 此值用客户端坐标,> 此值用服务端坐标</td></tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            <strong>V1 不出现的术语</strong>:<code>FailureReason</code>、<code>ResolvePolicy</code>、<code>SupportSurface</code>、<code>HeightPolicy</code>、<code>Footprint</code>(V2 才回归)。
+          </div>
+        </section>
+
+        <section id="pipeline">
+          <h2>5. 落点流水线</h2>
+          <p>
+            所有接入技能按同一条流水线求值。<strong>客户端预览高频调用,服务端 Execute 调用一次</strong>,
+            两者代码完全相同。流水线永远输出 FinalPlacement,不返回失败。
+          </p>
+
+          <div class="diagram">
+            <svg viewBox="0 0 980 220" role="img" aria-label="落点决议流程图(V1.2 精简版)">
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="220" fill="#ffffff"/>
+              <text x="40" y="42" fill="#65717f" font-size="16" font-weight="700">Placement Resolver(永远成功)</text>
+              <g fill="#f8fbfc" stroke="#cfd8df" stroke-width="1.5">
+                <rect x="60" y="80" width="240" height="80" rx="8"/>
+                <rect x="350" y="80" width="240" height="80" rx="8"/>
+                <rect x="640" y="80" width="240" height="80" rx="8"/>
+              </g>
+              <g fill="#202830" font-size="15" text-anchor="middle" font-weight="700">
+                <text x="180" y="111">1. PlacementInput</text>
+                <text x="470" y="111">2. IntentPoint</text>
+                <text x="760" y="111">3. Ground</text>
+              </g>
+              <g fill="#65717f" font-size="12" text-anchor="middle">
+                <text x="180" y="136">Caster + AimRay + Profile</text>
+                <text x="470" y="136">射线命中 OR 兜底 MaxRange + Clamp</text>
+                <text x="760" y="136">垂直 downtrace</text>
+              </g>
+              <g stroke="#6b7580" stroke-width="2" marker-end="url(#arrow)">
+                <line x1="300" y1="120" x2="342" y2="120"/>
+                <line x1="590" y1="120" x2="632" y2="120"/>
+              </g>
+              <text x="470" y="195" fill="#256f65" font-size="14" text-anchor="middle">输出 FinalPlacement(永远合法)</text>
+            </svg>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>步骤</th><th>输入</th><th>输出</th><th>要求</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1. 构建上下文</td><td>Caster、AimRay、Profile</td><td><code>PlacementInput</code></td><td>客户端预览和服务端 Execute 用同一类输入</td></tr>
+              <tr><td>2. 求 IntentPoint</td><td>AimRay、SurfaceChannel、MaxRange</td><td><code>IntentXY</code></td><td>射线命中则取命中 XY;未命中则朝瞄准方向兜底到 MaxRange;最后 clamp 水平距离到 MaxRange</td></tr>
+              <tr><td>3. 落地</td><td><code>IntentXY</code>、UpwardTrace / DownwardTrace、MinSurfaceNormalDotUp</td><td><code>FinalPlacement</code></td><td>从 IntentXY 上方往下垂直射线,取第一个法线朝上的命中</td></tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            <strong>原 V1.1 §4 的"Footprint Adapt"步骤已删除</strong>。V1 不做 Footprint 校验,召唤继续 AlwaysSpawn。V2 与 Footprint 字段一起加回。
+          </div>
+        </section>
+
+        <section id="algorithm">
+          <h2>6. 算法规范</h2>
+          <p>
+            本节给出 <code>UPlacementResolverLibrary::ResolveGroundPlacement</code> 的精确行为定义,
+            是策划、QA、程序对落点行为的唯一仲裁标准。
+          </p>
+
+          <h3>6.1 IntentPoint 算法(emergent LOS,修复 pick-further bug)</h3>
+          <pre>FVector2D ResolveIntentXY(AimRay, Caster, Profile):
+    // 唯一一条射线:从 AimRay.Origin 沿 AimRay.Direction 打 SurfaceChannel
+    HitResult = LineTrace(AimRay.Origin, AimRay.Direction, MaxTraceLength)
+
+    if HitResult.bBlockingHit:
+        IntentXY = HitResult.ImpactPoint.XY    // 撞哪算哪 → emergent LOS 自然生效
+    else:
+        // 射线完全没击中任何东西(比如瞄向天空)
+        HorizontalDir = Normalize(AimRay.Direction.XY)
+        IntentXY = Caster.XY + HorizontalDir * MaxRange
+
+    // 水平距离 clamp
+    Offset = IntentXY - Caster.XY
+    if Offset.Size() > MaxRange:
+        IntentXY = Caster.XY + Offset.Normalized() * MaxRange
+
+    return IntentXY</pre>
+
+          <div class="rule">
+            <h3>关键性质:emergent LineOfSight</h3>
+            <p>
+              "墙能不能放过去"<strong>不需要</strong>额外做 caster → placement 的 LOS trace。
+              由相机射线几何自然涌现(已代码验证起点 = 相机位置):
+            </p>
+            <ul style="color: #1b4a44;">
+              <li>射线撞墙 → IntentXY 在墙这一侧 → 落点在墙这一侧</li>
+              <li>玩家抬枪让射线越过墙 → IntentXY 在墙那一侧 → 落点在墙那一侧</li>
+              <li>玩家想"隔墙放"必须能"瞄过墙",与 Deadlock 行为完全一致</li>
+            </ul>
+          </div>
+
+          <h3 style="margin-top: 22px;">6.2 落地算法</h3>
+          <pre>FVector ResolveGroundLocation(IntentXY, Caster, Profile):
+    TraceStart = (IntentXY.X, IntentXY.Y, Caster.Z + Profile.UpwardTraceHeight)
+    TraceEnd   = (IntentXY.X, IntentXY.Y, Caster.Z - Profile.DownwardTraceHeight)
+
+    HitResult = LineTrace(TraceStart, TraceEnd, Profile.SurfaceChannel)
+
+    if HitResult.bBlockingHit AND
+       Dot(HitResult.ImpactNormal, UpVector) >= Profile.MinSurfaceNormalDotUp:
+        return HitResult.Location
+    else:
+        // 完全找不到合法地面(罕见,通常是 IntentXY 在悬崖外 / 地图边界)
+        return Caster.Location + AimRay.Direction.XY.Normalized() * 100</pre>
+
+          <div class="note">
+            <strong>V1 没有 Footprint Adapt 步骤</strong>。Spawn 直接用 ResolveGroundLocation 输出,接受偶尔穿墙。V2 再加。
+          </div>
+        </section>
+
+        <section id="network">
+          <h2>7. 服务端权威</h2>
+
+          <p>
+            客户端高频预览、客户端释放、服务端复检三处<strong>调用同一 Library</strong>。
+            服务端用 <strong>200cm 阈值制</strong> 决定最终坐标:差异小信任客户端(玩家手感无突变),差异大用服务端(挡 cheat)。
+          </p>
+
+          <div class="diagram">
+            <svg viewBox="0 0 980 280" role="img" aria-label="客户端服务端阈值反作弊流程">
+              <defs>
+                <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
+                </marker>
+              </defs>
+              <rect width="980" height="280" fill="#ffffff"/>
+              <rect x="40" y="60" width="220" height="80" rx="8" fill="#e5f0f8" stroke="#9bbfd9"/>
+              <text x="150" y="93" fill="#202830" font-size="16" font-weight="700" text-anchor="middle">Client</text>
+              <text x="150" y="118" fill="#65717f" font-size="12" text-anchor="middle">Library 算 FinalPlacement</text>
+              <text x="150" y="133" fill="#65717f" font-size="12" text-anchor="middle">提交 AimRay + 坐标</text>
+
+              <rect x="370" y="60" width="240" height="80" rx="8" fill="#f8fbfc" stroke="#cfd8df"/>
+              <text x="490" y="93" fill="#202830" font-size="16" font-weight="700" text-anchor="middle">Server Resolve</text>
+              <text x="490" y="118" fill="#65717f" font-size="12" text-anchor="middle">同 Library 重算</text>
+              <text x="490" y="133" fill="#65717f" font-size="12" text-anchor="middle">得 ServerFinal</text>
+
+              <rect x="720" y="20" width="240" height="70" rx="8" fill="#e2f1ee" stroke="#9bcfc5"/>
+              <text x="840" y="50" fill="#256f65" font-size="14" font-weight="700" text-anchor="middle">|Client - Server| ≤ 200cm</text>
+              <text x="840" y="72" fill="#65717f" font-size="12" text-anchor="middle">→ 用客户端坐标 spawn</text>
+
+              <rect x="720" y="110" width="240" height="70" rx="8" fill="#fbe9e7" stroke="#e8c1bc"/>
+              <text x="840" y="140" fill="#8d3b3b" font-size="14" font-weight="700" text-anchor="middle">|Client - Server| > 200cm</text>
+              <text x="840" y="162" fill="#65717f" font-size="12" text-anchor="middle">→ 用服务端坐标 spawn + log</text>
+
+              <line x1="260" y1="100" x2="362" y2="100" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow3)"/>
+              <line x1="610" y1="90" x2="712" y2="55" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow3)"/>
+              <line x1="610" y1="110" x2="712" y2="145" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow3)"/>
+
+              <text x="490" y="240" fill="#256f65" font-size="14" text-anchor="middle">无失败路径——技能必然出,只是位置可能在阈值外被修正</text>
+            </svg>
+          </div>
+
+          <h3>7.1 数据流</h3>
+          <table>
+            <thead>
+              <tr><th>数据</th><th>要求</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>客户端提交</td><td><code>AimRay</code>(Origin + Direction)、<code>PlacementProfileId</code> 或对应 Preview 引用、客户端预测 <code>FinalPlacement</code> 坐标</td></tr>
+              <tr><td>服务端复检</td><td>用客户端 <code>AimRay</code> 和同一 Profile 调 <code>ResolveGroundPlacement</code> 得 <code>ServerFinal</code></td></tr>
+              <tr><td>阈值判定</td><td>计算 <code>|ClientFinal - ServerFinal|</code>。≤ 200cm 用 <code>ClientFinal</code> 出技能;> 200cm 用 <code>ServerFinal</code> 出技能并记录 audit log</td></tr>
+              <tr><td>失败路径</td><td><strong>无</strong>。技能必然出,资源/CD 必然消耗</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 22px;">7.2 AimRay 来源(V1 简化)</h3>
+          <p>
+            V1 服务端复算时使用<strong>客户端 TargetData 里发来的 AimRay</strong>。这意味着 cheat 工具同时伪造
+            AimRay + 坐标(让两者"自洽")可以绕过阈值——V1 接受这个漏洞,留待 V2 改用服务端
+            <code>ControlRotation</code> 或加 AimRay 合理性校验。
+          </p>
+
+          <div class="risk">
+            <strong>当前代码风险(V1 必修)</strong>:
+            <code>SkillModuleSpawnMobaUnit.cpp:84</code>、
+            <code>SkillModuleAddSkillAreaWithBuffs.cpp:48</code>、
+            <code>SkillModuleTeleportToTarget.cpp(Execute)</code> 现在都是直接 <code>SpawnLocation = TargetData->XxxLocation</code>,
+            服务端零校验。任何客户端工具可以 spawn 单位到地图任意角落。V1 必须修复——但按 Deadlock 派"修正不拒绝"方式,
+            走 §7.1 阈值流程。
+          </div>
+        </section>
+
+        <section id="profile">
+          <h2>8. PlacementProfile 配置</h2>
+
+          <h3>8.1 字段定义(V1 共 6 字段)</h3>
+          <table>
+            <thead>
+              <tr><th>字段</th><th>类型</th><th>说明</th><th>建议默认值</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>Mode</code></td><td><code>EPlacementMode</code></td><td>技能落点类型。<code>None</code> = 不走 Library(camera-rooted,用于空中 AOE);<code>GroundAOE</code>/<code>Deployable</code> = 走 Library 接地</td><td><code>None</code>(老 AOE 默认);<code>Deployable</code>(召唤);<code>GroundAOE</code>(新接地 AOE)</td></tr>
+              <tr><td><code>MaxRange</code></td><td><code>float</code></td><td>最大施法距离(cm)</td><td>1200.0</td></tr>
+              <tr><td><code>SurfaceChannel</code></td><td><code>ECollisionChannel</code></td><td>用于 AimRay 和 Downtrace 的碰撞通道</td><td><code>ECC_SummonPreview</code>(沿用现有)</td></tr>
+              <tr><td><code>UpwardTraceHeight</code></td><td><code>float</code></td><td>Downtrace 从 IntentXY 上方多少 cm 开始</td><td>250.0</td></tr>
+              <tr><td><code>DownwardTraceHeight</code></td><td><code>float</code></td><td>Downtrace 向下追踪多远</td><td>2000.0</td></tr>
+              <tr><td><code>MinSurfaceNormalDotUp</code></td><td><code>float</code></td><td>地面法线与上方向最小点积(过滤陡坡)</td><td>0.1</td></tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            <strong>V1 明确不在字段表里</strong>:
+            <code>ResolvePolicy</code>(只一种)、
+            <code>bRequireLineOfSight</code>(emergent)、
+            <code>HeightPolicy</code> / <code>MaxHeightDelta</code>(不分层)、
+            <code>FootprintShape</code> / <code>FootprintRadius</code> / <code>MaxSnapDistance</code>(V2 与 Footprint 功能一起加)、
+            <code>MaxServerClientDeviation</code>(V1 用全局常量 200cm,V2 如需个别技能调整再上字段)。
+          </div>
+
+          <h3 style="margin-top: 22px;">8.2 Mode = None 的含义</h3>
+          <p>
+            <code>Mode = None</code> 表示这个技能<strong>不走 Library 接地</strong>,Library 不会被调用,
+            落点继续由 PreviewDataAsset 原有逻辑产生(对 <code>SkillAreaPreviewDataAsset</code> 来说就是
+            camera-rooted + <code>AreaRelativeTransform</code> 偏移)。
+          </p>
+          <ul>
+            <li><strong>项目现有所有 AOE 资产默认 Mode = None</strong>,接入零侵入,V1 上线无回归</li>
+            <li>新接地 AOE 资产策划手动改 <code>Mode = GroundAOE</code></li>
+            <li><strong>空中 AOE(玩家头顶云、悬空标记圈等)永久保留 Mode = None</strong>——这不是技术债,是真实设计需求</li>
+          </ul>
+
+          <h3 style="margin-top: 22px;">8.3 嵌入位置</h3>
+          <p>
+            Profile 作为 USTRUCT 字段嵌入到现有 PreviewDataAsset 子类。<strong>不</strong>新建独立 DataAsset(策划无需多管理一个文件)。
+          </p>
+          <table>
+            <thead>
+              <tr><th>SkillModule</th><th>挂载位置</th><th>接入说明</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SkillModuleSpawnMobaUnit</code></td>
+                <td><code>USummonPreviewDataAsset</code> 新增 <code>FPlacementProfile PlacementProfile;</code></td>
+                <td>现有字段(<code>SummonPreviewRange</code> / <code>UpwardTraceHeight</code> / <code>DownwardTraceHeight</code>)迁移进 Profile,旧字段保留向后兼容期</td>
+              </tr>
+              <tr>
+                <td><code>SkillModuleAddSkillAreaWithBuffs</code></td>
+                <td><code>USkillAreaPreviewDataAsset</code> 新增 <code>FPlacementProfile PlacementProfile;</code></td>
+                <td>默认 <code>Mode = None</code>,现有 AOE 行为不变;新接地 AOE 改 <code>Mode = GroundAOE</code></td>
+              </tr>
+              <tr>
+                <td><code>SkillModuleTeleportToTarget</code></td>
+                <td>不挂自己的 Profile,通过 <code>SummonPreview</code> / <code>SkillAreaPreview</code> 反查</td>
+                <td><strong>自动获益</strong>:Teleport 的 BasedOnSummonPreview / BasedOnSkillAreaPreview 模式只要 Preview 接入 Profile,Teleport 自动跟上。Execute 加服务端复算 + 阈值即可</td>
+              </tr>
+              <tr>
+                <td><code>SkillModuleLaunchProjectile</code></td>
+                <td>暂不接入</td>
+                <td>V2+ 与投射物 reticle 一致性一起做</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="preview">
+          <h2>9. 预览与反馈</h2>
+
+          <p>
+            Deadlock 派预览<strong>只有两态</strong>:合法 / 已 clamp。<strong>没有"非法"</strong>。
+            预览渲染必须显示 <code>FinalPlacement</code>(Library 输出),不显示原始 IntentPoint。
+          </p>
+
+          <div class="scene-grid">
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="合法预览">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <rect x="42" y="84" width="236" height="58" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="160" cy="112" r="42" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
+                <circle cx="160" cy="112" r="5" fill="#256f65"/>
+                <text x="160" y="45" fill="#256f65" font-size="16" font-weight="700" text-anchor="middle">合法</text>
+                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">IntentPoint == FinalPlacement</text>
+              </svg>
+              <div class="scene-body">
+                <h3>合法</h3>
+                <p>玩家瞄准点本身合法,预览圈直接显示在该位置。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="已 clamp 预览">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <rect x="54" y="78" width="220" height="56" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <circle cx="244" cy="106" r="35" fill="rgba(214,157,55,.16)" stroke="#d69d37" stroke-width="3" stroke-dasharray="6 5"/>
+                <circle cx="194" cy="106" r="35" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
+                <path d="M242 106 L199 106" stroke="#6b7580" stroke-width="2"/>
+                <text x="160" y="45" fill="#8a5b18" font-size="16" font-weight="700" text-anchor="middle">已 clamp</text>
+                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">预览显示 FinalPlacement(已 clamp 后)</text>
+              </svg>
+              <div class="scene-body">
+                <h3>已 clamp</h3>
+                <p>玩家瞄准点被 Library 夹取(超距 / 跨地形 downtrace 找到不同高度),预览显示最终落点。</p>
+              </div>
+            </div>
+            <div class="scene">
+              <svg viewBox="0 0 320 210" role="img" aria-label="无非法态">
+                <rect width="320" height="210" fill="#f8fbfc"/>
+                <circle cx="160" cy="105" r="42" fill="rgba(141,59,59,.10)" stroke="#8d3b3b" stroke-width="3" stroke-dasharray="7 5"/>
+                <line x1="130" y1="75" x2="190" y2="135" stroke="#8d3b3b" stroke-width="4"/>
+                <line x1="190" y1="75" x2="130" y2="135" stroke="#8d3b3b" stroke-width="4"/>
+                <text x="160" y="45" fill="#8d3b3b" font-size="16" font-weight="700" text-anchor="middle">不存在的"非法"</text>
+                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">Deadlock 派从不显示红色非法预览</text>
+              </svg>
+              <div class="scene-body">
+                <h3>不存在</h3>
+                <p>无论玩家瞄什么,系统总能给出 FinalPlacement,所以没有"非法"展现态。</p>
+              </div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>状态</th><th>视觉</th><th>释放结果</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>合法</td><td>正常颜色预览圈 / 召唤轮廓 / 落点标记</td><td>释放到 FinalPlacement</td></tr>
+              <tr><td>已 clamp</td><td>预览圈显示在 FinalPlacement。<strong>可选</strong>:超过 MaxRange 时变橙色提示"已 clamp 到最大距离"</td><td>释放到 FinalPlacement</td></tr>
+              <tr><td>抖动平滑</td><td>拖拽预览时 Library 每帧重算即可,自然平滑</td><td>释放时服务端再算一遍 + 阈值判定</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="cases">
+          <h2>10. 边界案例</h2>
+          <table>
+            <thead>
+              <tr><th>案例</th><th>玩家意图</th><th>Library 行为</th><th>验收要点</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>最大距离外</td><td>瞄远超 MaxRange 处</td><td>沿瞄准方向 Clamp 到 MaxRange</td><td>预览圈显示在夹取后位置</td></tr>
+              <tr><td>水平瞄墙</td><td>瞄一堵近距离墙</td><td>射线撞墙 → 落点在墙这一侧</td><td>不会穿墙落到对面(emergent LOS,且修复了 pick-further bug)</td></tr>
+              <tr><td>抬枪过墙</td><td>射线越过墙击中远端地面</td><td>落点在墙那一侧远端</td><td>玩家可以通过"瞄过墙"主动放到墙后</td></tr>
+              <tr><td>瞄向天空</td><td>射线完全没击中任何东西</td><td>兜底到 Caster + AimDirection.XY × MaxRange,downtrace 找地面</td><td>落到脚前方 MaxRange 处地面,技能照样出</td></tr>
+              <tr><td>桥面 → 桥下</td><td>瞄过桥边</td><td>射线越过桥沿 → 命中桥下地面 → 落点在桥下</td><td><strong>Deadlock 派接受这种行为</strong>,不强求识别"应该在桥上"</td></tr>
+              <tr><td>楼梯 / 斜坡</td><td>瞄楼梯中段</td><td>Downtrace 命中楼梯踏面 → 合法</td><td>过陡坡(法线 dot Up &lt; 0.1)时走兜底</td></tr>
+              <tr><td>反作弊(小幅伪造)</td><td>客户端发坐标比 AimRay 算的偏 100cm</td><td>差异 ≤ 200cm → 用客户端坐标</td><td>正常延迟/抖动场景,玩家手感无突变</td></tr>
+              <tr><td>反作弊(大幅伪造)</td><td>客户端发坐标到地图角落,与 AimRay 算的差 > 200cm</td><td>用服务端坐标 + 记录 audit log</td><td>cheat 工具不能 spawn 到任意位置</td></tr>
+              <tr><td>反作弊(同时伪造 AimRay)</td><td>客户端发"瞄远处" + "坐标远处",两者自洽</td><td><strong>V1 漏洞:阈值挡不住</strong></td><td>V2 加 AimRay 来源校验</td></tr>
+            </tbody>
+          </table>
+
+          <div class="grid">
+            <div class="box good">
+              <h3>✓ Deadlock 派 V1 会发生的</h3>
+              <ul>
+                <li>越距 → Clamp 到 MaxRange,出技能</li>
+                <li>瞄过桥沿 → 落桥下,出技能</li>
+                <li>瞄向天空 → 兜底落地,出技能</li>
+                <li>小幅延迟/抖动 → 用客户端坐标,无突变</li>
+                <li>大幅伪造坐标 → 用服务端坐标修正</li>
+              </ul>
+            </div>
+            <div class="box bad">
+              <h3>✗ Deadlock 派 V1 不会发生的</h3>
+              <ul>
+                <li>红色预览不让放</li>
+                <li>按了键技能没出,CD 还走了</li>
+                <li>UI 弹出"非法落点"提示</li>
+                <li>水平瞄墙穿到对面(emergent LOS 修复)</li>
+                <li>召唤物完美避免穿墙(V2 才做 Footprint)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="acceptance">
+          <h2>11. 验收</h2>
+          <table>
+            <thead>
+              <tr><th>优先级</th><th>验收项</th><th>对应目标</th><th>标准</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>P0</td><td>客户端预览 ≈ 服务端结果(小延迟)</td><td>G1</td><td>50ms 延迟下,客户端预测与服务端坐标差 ≤ 200cm(走客户端坐标),玩家手感无突变</td></tr>
+              <tr><td>P0</td><td>反作弊阈值生效</td><td>G3</td><td>客户端通过工具发送大幅伪造坐标 → 与服务端复算差异 > 200cm → 实际 Spawn 使用服务端坐标 + log 记录</td></tr>
+              <tr><td>P0</td><td>emergent LOS 与 pick-further bug 修复</td><td>G2</td><td>水平瞄墙 → 落点在墙这一侧(不穿墙);抬枪过墙 → 落点在墙那一侧</td></tr>
+              <tr><td>P0</td><td>Teleport 自动获益</td><td>G4</td><td><code>SkillModuleTeleportToTarget</code> 的 BasedOnSummonPreview / BasedOnSkillAreaPreview 模式无需单独配置 Profile,Preview 接入后传送落点跟着改善</td></tr>
+              <tr><td>P0</td><td>技能永远出</td><td>设计哲学</td><td>任意瞄准方向 + 任意有效 Profile,按键释放技能必然激活、必然消耗资源/CD、必然产生 FinalPlacement</td></tr>
+              <tr><td>P0</td><td>老 AOE 零回归</td><td>G1</td><td>所有现有 AOE 资产 Profile.Mode = None,行为与改动前完全一致</td></tr>
+              <tr><td>P1</td><td>边缘手感稳定</td><td>—</td><td>玩家在平台边缘缓慢拖拽预览,Library 输出连续平滑,不频繁闪烁</td></tr>
+              <tr><td>P1</td><td>网络容忍</td><td>G3</td><td>200ms 模拟延迟下,客户端预测和服务端最终位置偏差 ≤ 200cm(阈值内),玩家手感无突变</td></tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            <strong>QA 场景清单</strong>:平地、楼梯、平台边缘、上下层平台、墙角、斜坡、最大距离边界、抬枪过墙、瞄向天空、桥面边缘、地图边界外、反作弊小幅/大幅/AimRay 同伪造。
+          </div>
+
+          <div class="note">
+            <strong>本版不在 P0 的常见项</strong>(对应 V2):召唤物 Footprint 校验、严格空中放置、投射物 reticle 一致性、AimRay 严格反作弊。
+          </div>
+        </section>
+
+        <section id="tech-notes">
+          <h2>12. 程序备注</h2>
+
+          <h3>12.1 接入点</h3>
+          <table>
+            <thead>
+              <tr><th>模块</th><th>接入要求</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>UPlacementResolverLibrary</code></td><td>新建,<code>BlueprintFunctionLibrary</code>,纯函数。提供 <code>ResolveGroundPlacement(Input, Profile) → FinalPlacement</code></td></tr>
+              <tr><td><code>FPlacementProfile</code></td><td>新建 USTRUCT,6 字段(见 §8.1)</td></tr>
+              <tr><td><code>EPlacementMode</code></td><td>UENUM,值:<code>None</code> / <code>GroundAOE</code> / <code>Deployable</code> / <code>ProjectileLanding</code>(后者 V2 才用)</td></tr>
+              <tr><td><code>FSummonPreviewDataInstance::UpdatePreviewInternal</code></td><td>现有 <code>SummonPreviewDataAsset.cpp:53-124</code> 算法<strong>整体替换</strong>为 Library 调用。同时修复 §13 描述的 pick-further bug</td></tr>
+              <tr><td><code>FSkillAreaPreviewDataInstance::UpdatePreviewInternal</code></td><td>Profile.Mode != None 时走 Library;Mode == None 维持现有 <code>bFollowCamera</code> 行为(向后兼容)</td></tr>
+              <tr><td><code>SkillModuleSpawnMobaUnit::Execute</code></td><td>服务端 Spawn 前调 Library 重算 → 走 §7.1 阈值流程 → 200cm 内用客户端坐标,超过用服务端坐标。<strong>仍然必然 Spawn</strong></td></tr>
+              <tr><td><code>SkillModuleAddSkillAreaWithBuffs::Execute</code></td><td>同上,Profile.Mode = None 时跳过 Library 复算(维持现有行为)</td></tr>
+              <tr><td><code>SkillModuleTeleportToTarget::Execute</code></td><td>BasedOnSummonPreview / BasedOnSkillAreaPreview 模式接入服务端阈值复算;RelativeToSelf 模式不动(有自己的 SweepSingleByProfile);BasedOnArmedTarget 不在本系统</td></tr>
+              <tr><td><code>FSpawnMobaUnitTargetData</code> / <code>FSkillAreaSpawnTargetData</code> / <code>FTeleportToTargetData</code></td><td>新增 <code>FVector_NetQuantize AimOrigin</code> + <code>FVector_NetQuantizeNormal AimDirection</code> 字段,供服务端复算</td></tr>
+              <tr><td>全局常量 <code>MaxServerClientDeviation = 200.0f</code></td><td>放在 <code>UPlacementResolverLibrary</code> 或战斗模块的常量头文件中</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 22px;">12.2 不得修改(规范 5/6/7/8 条)</h3>
+          <ul>
+            <li>不在 <code>AHeroCharacter</code> / <code>AMobaUnit</code> / <code>AMatchPlayerState</code> 上加 <code>Replicated</code> 变量或 RPC</li>
+            <li>不修改 <code>UHeroCharacterMovementComponent</code></li>
+            <li>不修改 <code>UMobaUserWidget</code> / <code>UMobaActivatableWidget</code> 基类</li>
+            <li>不在 C++ 注册新 GameplayTag,<code>EPlacementMode</code> 用普通 UENUM</li>
+            <li>失败反馈特效(本版无)如有,走 <code>FSkillParticle</code> + <code>USkillParticleSystem</code></li>
+          </ul>
+
+          <h3 style="margin-top: 22px;">12.3 建议改造顺序</h3>
+          <ol>
+            <li>建立 <code>FPlacementProfile</code> + <code>UPlacementResolverLibrary</code>(纯函数,可独立单元测试 §6 伪代码逻辑)</li>
+            <li>把 <code>SummonPreviewDataAsset</code> 现有算法迁入 Library,<strong>同时修复 §13 pick-further bug</strong>;客户端预览验证(QA P0 场景:水平瞄墙不穿)</li>
+            <li><code>SkillModuleSpawnMobaUnit</code> 服务端接入(加 AimRay 字段,Execute 走 §7.1 阈值流程)</li>
+            <li>QA 验收召唤类技能,确认 §11 P0 全部通过</li>
+            <li>接入 <code>SkillModuleAddSkillAreaWithBuffs</code>(AOE),Profile.Mode 默认 None 验证老 AOE 零回归</li>
+            <li>接入 <code>SkillModuleTeleportToTarget</code> 服务端复算(Preview 已接入,这里只加 Execute 阈值流程)</li>
+            <li>Footprint / 严格空中放置 / 投射物 reticle / AimRay 严格反作弊 → V2+,本版不做</li>
+          </ol>
+        </section>
+
+        <section id="bugfix">
+          <h2>13. 已知 bug 修复(顺手做)</h2>
+
+          <h3>13.1 SummonPreviewDataAsset 的 pick-further 穿墙 bug</h3>
+          <p>
+            现行 <code>FSummonPreviewDataInstance::UpdatePreviewInternal</code>(<code>SummonPreviewDataAsset.cpp:53-104</code>)的 IntentXY 算法:
+          </p>
+          <pre>// Method A: 相机射线撞到什么,取 ImpactPoint XY
+// Method B: 数学投影到角色 Z 平面(忽略所有碰撞)
+// 取两者距离更远的(注释说:防止 "tilting up snap-back")</pre>
+
+          <p><strong>问题</strong>:水平瞄墙(墙距 500,MaxRange=1200):</p>
+          <ul>
+            <li>Method A: 撞墙,DirectDist = 500</li>
+            <li>Method B: aim.Z ≥ 0 走 fallback,ProjectedDist = MaxRange = 1200</li>
+            <li>"取更远"→ 选 1200 → IntentXY 在墙后 1200 处</li>
+            <li>Downtrace 在 1200-XY 找到地面 → <strong>落点穿墙到对面</strong></li>
+          </ul>
+
+          <p>这与 Deadlock emergent LOS 行为冲突,玩家明明瞄的是墙,结果落到墙背后。</p>
+
+          <h3 style="margin-top: 16px;">13.2 修复方案</h3>
+          <p>新 Library 算法砍掉 Method B 作为"远点候选",Method B 仅在射线完全没击中任何东西时兜底(见 §6.1)。</p>
+
+          <h3 style="margin-top: 16px;">13.3 行为变化预警</h3>
+          <div class="note">
+            修复后,<strong>原本能"水平瞄墙穿过去"放置的技能,会改为落在墙这一侧</strong>。
+            如果存在依赖该行为的技能,需要 QA 验收时确认是否仍可玩。
+            如果某个技能策划<strong>故意</strong>要"穿墙放",再讨论 V2 是否给 Profile 加 <code>bAllowAimThroughObstacles</code>(默认 false)。V1 不主动加。
+          </div>
+
+          <h3 style="margin-top: 22px;">13.4 注释里担心的 "tilting up snap-back" 不会发生</h3>
+          <ul>
+            <li>抬枪指远方时,相机射线照样会撞到地面或远处物体(地面、山、建筑),IntentXY 仍然是远点</li>
+            <li>只有完全瞄向天空(射线 100% 落空)才走 fallback,落到 Caster 前方 MaxRange 也合理</li>
+          </ul>
+        </section>
+
+      </main>
+    </div>
+  </div>
+</body>
+</html>
