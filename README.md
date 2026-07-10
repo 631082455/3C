@@ -1,5 +1,9 @@
 # 3C Combat Design Workflow（战斗 3C 设计工作流）
 
+> ### 📖 [在线阅读文档站 → 631082455.github.io/3C](https://631082455.github.io/3C/)
+> HTML 文档请从上面的文档站打开（渲染版）。在本仓库页面里点 `.html` 文件只会看到源码——那是 GitHub 的源码视图，不是网页。
+> 直达：[核心战斗手感 · 需求总览](https://631082455.github.io/3C/docs/核心战斗手感/核心战斗手感需求总览.html)
+
 一个面向**动作/MOBA/射击等实时战斗游戏**的 3C（Character / Control / Camera）设计方法论知识库，设计为可被任意 AI agent（Claude Code、Cursor、GPT 等）加载使用的 skill。
 
 核心理念：**项目无关**。本库不预设任何一套 3C 体系——镜头类型（锁定/自由/固定俯角）、输入设备、网络模型、引擎，全部由使用者在 `conventions/` 中自行定义。知识库只提供方法论、参数化框架、质量标尺与避坑规则。
