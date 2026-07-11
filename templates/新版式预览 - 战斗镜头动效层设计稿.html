@@ -50,6 +50,11 @@
       background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
 
     .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:2K/4K 下加宽版心并放大基准字号(正文行宽由 em 上限自动跟随) */
+    @media(min-width:1800px){
+      body{font-size:17px;}
+      .page{width:min(1400px,calc(100vw - 64px));}
+    }
 
     /* ---- 封面:深墨蓝书封,内嵌细线框,双主题下保持深色 ---- */
     .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
