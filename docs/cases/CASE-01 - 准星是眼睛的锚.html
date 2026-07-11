@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>准星是眼睛的锚 · 案例复盘</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿 v2:背景/过程/结果+资料 结构。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1540px,calc(100vw - 64px));}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1760px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{border-bottom:none;}
+    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    section p,section li{max-width:45em;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Case Study · Doc CASE-01</div>
+      <h1>准星是眼睛的锚<br>—— 技能镜头演绎与瞄准诚实如何同时成立</h1>
+      <p class="lede">技能镜头要有环绕、推近、爆发的演出感,skillshot 的准星要指哪打哪——两个都对的目标在几何上打架。本案例记录三步实验(一次妥协、一次证伪、一次终案)如何解开这对矛盾,以及沉淀下来的知觉规律与反模式。</p>
+      <div class="tldr">
+        <div><i>课题</i><span>技能蓄力要环绕运镜,skillshot 准星要一丝不偏——视线每转 1°,准星与世界的对应就平移 1°,三维投影上无两全。</span></div>
+        <div><i>终案</i><span>新增「瞄点锁定环绕」旋转空间:机位绕角色走弧线,视线逐帧反解看向真实瞄准点——<b>准星钉死屏幕中心,环绕感由世界在画面里流动提供</b>。</span></div>
+        <div><i>结果</i><span>验收原话"准星完全没有晃动感了";环绕预算从 2.6° 解放到 10.4°;逐帧数据确认逻辑瞄准全程不受任何演绎影响(单人验收,n=1)。</span></div>
+        <div><i>分工</i><span>我(战斗 3C 策划)定方向、逐档验收、拍板参数;AI agent 在我指挥下写 C++、跑调研与代码审查、搭数据工具;战斗程序提供动效层一期框架、承接遗留 P0。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>CASE-01</b></div>
+        <div><i>版本 / 状态</i><b>v2.0 · 已定稿入库 · 2026-07-11</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>实现方</i><b>战斗 3C 策划 × AI agent(实现)· 战斗程序(框架 / P0)</b></div>
+        <div class="wide"><i>配套文档</i><b><a href="../核心战斗手感/Camera - 战斗镜头动效层设计稿.html">《战斗镜头动效层设计稿》</a> · <a href="../核心战斗手感/Camera - 镜头动效配置手册.html">《镜头动效配置手册》</a> · <a href="../核心战斗手感/Camera - 战斗镜头动效层实现稿（程序对齐）.html">《实现稿(程序对齐)》</a></b></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">背景</div>
+        <a href="#goal"><i>01</i>体验目标与课题</a>
+        <div class="grp">过程</div>
+        <a href="#research"><i>02</i>业界调研</a>
+        <a href="#decision"><i>03</i>方案排定</a>
+        <a href="#implementation"><i>04</i>实验与落地实录</a>
+        <div class="grp">结果</div>
+        <a href="#solution"><i>05</i>终案分层</a>
+        <a href="#acceptance"><i>06</i>验收实录</a>
+        <div class="grp">资料</div>
+        <a href="#params"><i>07</i>关键参数</a>
+        <a href="#leftovers"><i>08</i>遗留与保险丝</a>
+        <a href="#methodology"><i>09</i>方法论沉淀</a>
+        <a href="#appendix"><i>10</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>背景</b></div>
+
+        <!-- 01 -->
+        <section id="goal">
+          <h2>体验目标与课题</h2>
+          <p>项目背景:UE5 第三人称 MOBA 射击,技能镜头走自研的「镜头动效层」系统——一期已上线,负责技能期间镜头的推拉、FOV、冲击反馈,当时不含可瞄准窗口内的旋转。本案是该系统在可瞄准窗口做真旋转的第一次尝试。</p>
+          <p>玩家语言版的目标只有一句:"放技能的时候镜头要跟我一起憋劲、一起爆发——但我瞄的是 skillshot,准星指哪打哪,一丝都不能骗我。"蓄力时镜头环绕推近卖蓄势,出手那一帧干脆地弹开,这是技能有排面;准星底下压住的敌人,刀波飞过去就要打中他,这是手感可信。两件事都是对的,玩家两个都要。</p>
+          <p>案例载体是 Kallari(近战刺客型英雄)的 CrossSlash——按住蓄力约 0.37 秒后向准星方向射出一道直线刀波的方向型技能,典型 skillshot。动效层一期上线后,我们给它配了完整的施法镜头演绎,蓄力环绕就是在这里第一次撞上准星问题。</p>
+          <h3>现状背离:验收原始反馈(时间序)</h3>
+          <blockquote>"效果确实很好,不过准心确实还是偏移了,还有什么好的办法吗?" <i>—— 验收人(作者本人),蓄力环绕 3.25° 保持版</i></blockquote>
+          <blockquote>"其实发射的时候可以接受有一点偏移,只不过之前太多了。你记得环绕感受优先。" <i>—— 验收人(作者本人),妥协探索期:环绕感和准星,两个都不想放</i></blockquote>
+          <p>背离不是"没有演出"或"打不准"其中之一,而是二者在同一个 0.4 秒的蓄力窗口里互相挤压:演出每加一度,准星就多说一分谎。</p>
+          <p>先划清一件事:<b>逻辑层从头到尾没有说过谎</b>。弹道方向取自 GameplayPOV(判定视图快照——弹道、目标选取等玩法判定读取的、不含任何镜头表现效果的视线),逐帧记录数据里控制朝向在整个演绎期间纹丝不动。问题完全出在视觉层:准星 UI 画在屏幕中心,而屏幕中心被镜头旋转挪走了。</p>
+          <div class="rule">
+            <h3>两个正确目标的几何冲突</h3>
+            <p>环绕感需要真旋转——背景在画面里流动的感觉,只有视线方向真的转过去才有;准星诚实需要中心射线不动——屏幕中心与世界的对应关系,视线转 1° 就整体平移 1°。这不是实现取舍,是三维投影的数学:<b>不存在"转了视线但准星映射不变"的解</b>。能做的只有:不转(阉割演出)、转但骗人(阉割信任)、或者把"转"的定义换掉(本案的出路)。</p>
+          </div>
+          <p>不解决的代价,两头都在流血:演出侧,环绕被迫压到 2.6°(实测偏移勉强可忍的量)仍不满足,演出预算被准星问题扣押了四分之三;信任侧,每局上百次施放的 skillshot,蓄力期正是玩家做最后瞄准精修的窗口,准星在这个窗口里说谎,轻则命中率受伤,重则玩家不再相信准星——射击游戏最贵的资产没了。</p>
+          <h3>分工与工作方式</h3>
+          <p>本案由三方完成,如实记录:作者(战斗 3C 策划)——体验判断、方向决策、逐档验收、参数拍板、业界案例取舍;AI agent(作者指挥)——C++ 实现、对抗性代码审查、web 调研执行、逐帧记录仪搭建;战斗程序——动效层一期框架、遗留 P0 需求承接。工作方式本身是本案的一部分:策划用 AI agent 打通了原本需要排程序档期的"假设 → 实现 → 实测 → 证伪 → 换方案"实验闭环,三次方案迭代发生在两天之内。</p>
+        </section>
+
+        <div class="part"><b>过程</b></div>
+
+        <!-- 02 -->
+        <section id="research">
+          <h2>业界调研</h2>
+          <p>三路并行调研(第三人称动作系 / 射击系反馈通道 / 投影准星实现),由 AI agent 执行检索、作者做取舍;关键实证经 web 检索核实,核实方式逐条标注,记不清且查不到的一律标注存疑。</p>
+          <table>
+            <thead><tr><th style="width:19%">案例</th><th>它的做法</th><th style="width:30%">借了什么 / 为什么排除</th><th style="width:14%">核实方式</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="4">路线 A · 时序回避(主流答案)</td></tr>
+              <tr><td>怪物猎人(太刀/大剑/弓蓄力)</td><td>可瞄准窗口内镜头完全静默,蓄力戏剧感全部由角色动画、特效、音效承担;镜头冲击只在命中、骑乘等"瞄准已结算"时刻</td><td>借用:作为默认基线——挪准星的效果一律避开瞄准关键窗口。不够用:本案诉求就是蓄力期要有镜头演出</td><td>实机归纳(确信);设计动机归因(推测)</td></tr>
+              <tr><td>战神 2018(斧瞄准)</td><td>进瞄准做一次性过肩拉近加 FOV 收窄的转场,之后全程静止;演出都在投掷释放后</td><td>借用:它的"拉近"其实是 FOV 加沿肩轴推拉的组合——不动屏幕中心射线的通道的活教材</td><td>实机归纳(确信)</td></tr>
+              <tr class="group"><td colspan="4">路线 B · 不动中心射线的效果词汇</td></tr>
+              <tr><td>几何事实</td><td>FOV 变化、绕视轴 roll、沿瞄准轴推拉,都不移动穿过屏幕中心的射线</td><td>借用:蓄力效果的主体(推近、平移视差、roll)全走这类通道</td><td>数学(确信)</td></tr>
+              <tr><td>OW2 双滑条</td><td>camera shake 与 HUD shake 是两个独立可关的无障碍选项</td><td>借用:"可关闭性=非玩法通道"的判据;高频抖动可下放 UI 层的思路(储备)</td><td>官方论坛与选项指南(确信)</td></tr>
+              <tr><td>BF4 / OW 灵敏度补偿</td><td>FOV 变化按焦距比换算输入灵敏度(BF4 Uniform Soldier Aiming 系数 1.33、OW zoom sens 37.89 成社区标准)</td><td>借用:坐实我们的盲点——有 FOV 冲加可瞄窗口就必须补偿,已列 P0 需求</td><td>社区文档大量核实(确信)</td></tr>
+              <tr class="group"><td colspan="4">路线 C · 准星跟随 / 投影准星</td></tr>
+              <tr><td>CS:GO / CS2</td><td>视觉后座(viewPunch)与弹道后座(aimPunch)双通道;CS2 新增 Follow Recoil 把准星绑到真实弹道——职业选手大多不开</td><td>借用:准星绑真值的先例,触发了实验一。警示:"职业不开"暗示跟随式准星有观感代价——后被我们的实验坐实</td><td>逆向分析博客加官方选项(确信)</td></tr>
+              <tr><td>坦克世界 / 战争雷霆</td><td>双准星:屏幕中心为意图锚点,半透明标记投影在炮管真实指向,分离与收敛全程平滑;WT 官方 devblog 明说为解决第三人称视差</td><td>借用:成功规律——偏心的必须是"次级真值标记"而非主准星;留作大演出技能的储备形态</td><td>双方官方文档(确信)</td></tr>
+              <tr><td>怪猎荒野 Focus Mode</td><td>正式设置项:准星可选"跟镜头中心"或"跟角色朝向"(即浮动准星)</td><td>借用:浮动准星可行性的正面先例;也说明它是给"角色朝向不等于镜头"场景的,长时间大偏移会累</td><td>多家攻略站核实(确信)</td></tr>
+              <tr class="group"><td colspan="4">路线 D · Look-at 反解(锁定镜头骨架)</td></tr>
+              <tr><td>魂系 / 塞尔达锁定镜头</td><td>机位在弹簧臂、碰撞、滞后作用下自由移动,旋转始终由"看向目标"的 look-at 约束求解</td><td>借用:终案的全部骨架——位置自由、旋转被瞄点接管,是唯一能同时保住环绕与诚实的结构</td><td>全系实机(确信)</td></tr>
+              <tr><td>Nesky《50 Game Camera Mistakes》(GDC 2014)</td><td>近目标滑移勿旋转;旋转朝向目标时防角色遮挡;脚本镜头让位玩家意图</td><td>借用:终案 12° 建议值就是为"角色挡准线"设的。引用纪律:该讲无公开编号文本,只述内容不引条号</td><td>转录摘要(内容确信,编号不可考)</td></tr>
+            </tbody>
+          </table>
+          <div class="note">调研中的一处修正:最初把 Destiny 列为浮动准星案例,核实后不成立(Destiny 是 FPS,准星永远居中)。它真正可借的是官方补丁说明里 recoil 与 camera movement 作为两个独立调参维度出现(2021 sandbox 调整,冲锋枪 camera movement −24% 而 recoil 独立变动)——通道分离的实证。</div>
+        </section>
+
+        <!-- 03 -->
+        <section id="decision">
+          <h2>方案排定</h2>
+          <p>候选路径四条:A 时序回避、B 不动中心射线的效果词汇、C 准星跟随真值、D look-at 反解。A 与 B 在一期就已是基线——蓄力效果里推近、平移、roll、微震四件全是 B 的词汇,出手冲击踢排在弹道采样之后是 A 的时序。剩下的矛盾集中在一处:蓄力段的 yaw 环绕。C 和 D 都能解它,排定过程如下:</p>
+          <table>
+            <thead><tr><th style="width:14%"></th><th>C · 准星跟随(CS2 式)</th><th>D · look-at 反解(瞄点锁定环绕)</th></tr></thead>
+            <tbody>
+              <tr><td>成本</td><td>纯准星 UI 改动,不碰镜头求值核心,一小时级</td><td>动镜头核心求值函数,加旋转空间枚举,半天级加审查</td></tr>
+              <tr><td>覆盖面</td><td>全局兜底:任何效果挪了中心都自动纠正,包括未来的、配错的</td><td>只合法化"环绕"这一类;其他偏移源不受益</td></tr>
+              <tr><td>风险</td><td>准星离心的观感未知(CS2 职业不开是警讯)</td><td>结构可靠(锁定镜头骨架久经考验),但改核心代码有回归面</td></tr>
+            </tbody>
+          </table>
+          <div class="rule">
+            <h3>决策与回退条款</h3>
+            <p>先做 C:便宜、覆盖广、能当天验证,且作者点名"我也是 CS2 方式"。同时写下回退条款:<b>"如果离心瞄准别扭,就上 D"</b>——把证伪后的路径提前定好,实验失败不产生方向争论,只触发预案。事后看,这个条款一天后就被触发了,切换零摩擦。</p>
+          </div>
+          <p>另一个显式决策:不同时做 C 和 D。两套机制叠加会说不清是谁在起作用,实验必须单变量。</p>
+        </section>
+
+        <!-- 04 -->
+        <section id="implementation">
+          <h2>实验与落地实录(时间序:假设 → 验证 → 数据 → 结论)</h2>
+          <h3>前置:接口与约束、数据工具</h3>
+          <ul>
+            <li>动效只写渲染视图,判定视图(GameplayPOV)保持纯净——判定永不受染;这是动效层一期与程序对齐的既有契约;</li>
+            <li>蒙太奇窗口驱动生命周期,打断时结束回调由引擎保证送达;技能结束无条件释放;死亡、切观战全清加看门狗兜底;</li>
+            <li>camera_trace(自制的逐帧镜头记录仪:编辑器脚本,每帧采样镜头位置旋转、FOV、蒙太奇进度、投射物首现,落 CSV)由 AI agent 搭建,作为全程的客观裁判——本案所有"准星有没有动"的争论都由它的控制朝向列与旋转列终审。</li>
+          </ul>
+          <h3>实验零:保持型环绕(问题暴露)</h3>
+          <p>假设:蓄力窗口挂普通环绕 yaw 3.25° 保持,演绎够排面。结果:环绕感好评,但准星偏移被点名(原话见第 1 节)。数据:3.25° 约等于 1080p 下 75 像素的中心映射平移,持续整个 0.4 秒精修窗口。结论:保持型视线旋转在可瞄窗口不可持续。</p>
+          <h3>妥协探索:分摊到多通道(部分成功)</h3>
+          <p>把全押在 yaw 上的旋转预算拆开:yaw 减半,加平移视差(准星零代价)和 roll 0.65°(绕视轴,数学上不挪中心映射)。结果:偏移可忍,但"那种环绕感确实是没了"——平移的视差终究不是真旋转。最终停在 yaw 2.0 的中间档,两头都不满意。这个僵局证明矛盾无法在原有词汇表内调和,必须引入新机制。</p>
+          <h3>实验一:CS2 式准星跟随(完整证伪,保留全篇)</h3>
+          <p>假设:准星 UI 每帧跟到真实瞄准方向的屏幕投影处,则镜头随便演、准星永远诚实。实现(AI agent,准星 widget 内自包含):比较渲染视线与判定视线夹角,超 0.3° 阈值把真值射线 15 米处投影回屏幕,整个准星平滑移过去(0.19 秒指数趋近、最大偏移钳制、DPI 换算),阈值内行为与旧版完全一致。为什么它看起来对:逻辑上无懈可击,准星永远指着真话。</p>
+          <blockquote>"我跑验证了,确实是始终固定的,但是视觉上看起来,整个准星在乱飘,更奇怪了。" <i>—— 验收人(作者本人),实验一实测</i></blockquote>
+          <div class="rule">
+            <h3>证伪产出:知觉规律</h3>
+            <p><b>准星是眼睛的锚。</b>人以屏幕框为参照系:UI 元素在屏幕上滑动读作"界面坏了",世界在画面里流动读作"正常镜头语言"。准星明明钉着世界真值点(逻辑全对),体验却是"乱飘"——诚实不等于好。这也回溯解释了 CS2 Follow Recoil 职业选手不开、坦克世界漂移的是次级标记而非主准星。</p>
+          </div>
+          <p>处置:功能默认关、代码保留(它是 WoT 式次级真值标记的九成积木);回退条款触发,转入 D。</p>
+          <h3>实验二:瞄点锁定环绕(终案,机制详见第 5 节)</h3>
+          <p>把"转"的定义换掉:动效角度只驱动机位绕角色走弧线,视线逐帧反解为看向真实瞄准射线上的参考点。准星底下的世界点不动,环绕感来自世界在画面里流动。实现由 AI agent 完成(镜头求值函数内约 40 行),作者逐档实测。</p>
+          <blockquote>"天啊,现在我发现,准星完全没有晃动感了。" <i>—— 验收人(作者本人),实验二实测</i></blockquote>
+          <p>连锁收益:环绕预算当场从被扣押的 2.6° 解放到 10.4°(作者随后主动逐档加码 4°、6°、8°),演出自由度约 4 倍,准星代价归零。</p>
+          <h3>对抗性代码审查:5 真 4 误报</h3>
+          <p>审查由 AI agent 以三个视角(数学边界 / 系统集成 / 配置滥用)对新代码做对抗性检查,产出 9 条告警;<b>作者逐条对源码复核裁决,确认 5 条真实、否决 4 条误报</b>——裁决过程本身就是判断力的工作量:每条误报都要拿出"现有防护在哪一行"的证据才敢否。</p>
+          <table>
+            <thead><tr><th style="width:44%">真实问题(已修)</th><th>误报(逐条对源码否决)</th></tr></thead>
+            <tbody>
+              <tr><td>实验开关 C++ 默认开,两个直接继承基类的英雄准星暗开着跟随(未来配旋转动效会"乱飘"且无人知晓根因)——默认翻关加资产显式关</td><td>相机管理器空指针(判空本来就在)</td></tr>
+              <tr><td>工具链钳制上限与校验器不一致,AI 生成资产存盘即报错——对齐</td><td>投影失败准星卡住(目标偏移初始即零,失败自动回中)</td></tr>
+              <tr><td>参考距离控制台变量极端值毁视差承诺——钳到合理区间</td><td>DPI 除零出无穷大(最大偏移钳制兜底)</td></tr>
+              <tr><td>动效条目出生、消亡帧与其他位移效果叠加时约 1° 视线微跳——幅度小于 1° 时按比例渐入渐出</td><td>roll 漏过软钳(整体缩放本就含 roll)</td></tr>
+              <tr><td>受击带挂锁定环绕绕过受击 4° 预算——校验器警告加手册红线</td><td></td></tr>
+            </tbody>
+          </table>
+          <h3>数据链的意外收获</h3>
+          <p>为镜头装的逐帧记录仪在第一次录制里就抓到一个与镜头无关的真 bug:投射物在蒙太奇 0.036 秒已在场——逻辑发射帧配在了 0.03(动画表演在 0.37 才出手),发射帧与表演帧错位。作者随即把触发点挪到 0.342 秒。教训:发射帧要实测,别信动画描述。</p>
+        </section>
+
+        <div class="part"><b>结果</b></div>
+
+        <!-- 05 -->
+        <section id="solution">
+          <h2>终案分层:五层各守一条体验</h2>
+          <table>
+            <thead><tr><th style="width:19%">层</th><th>机制</th><th style="width:30%">守住的体验</th></tr></thead>
+            <tbody>
+              <tr><td>逻辑层</td><td>GameplayPOV 快照:弹道、目标选取、发射方向全部读动效介入前的视线</td><td>"打出去的永远是我瞄的"——不论视觉层发生什么,这条永真</td></tr>
+              <tr><td>通道层</td><td>可瞄窗口优先用不动中心射线的词汇:FOV、roll、平移视差、沿轴推拉、零均值微震</td><td>演出的大部分预算不欠准星一分钱</td></tr>
+              <tr><td>时序层</td><td>出手冲击踢在发射方向采样之后才开始;压缩释放推到恢复期,操作权归还前混完</td><td>"这一发"永远不受任何冲击效果影响</td></tr>
+              <tr><td>镜头层(本案新增)</td><td>瞄点锁定环绕(OrbitAimLocked)第三旋转空间:机位绕枢轴走弧线,视线逐帧反解看向真实瞄准射线上的参考点;进出按幅度比例渐入渐出;拥有独立预算,不进视线旋转预算</td><td>环绕感与准星钉死中心同时成立——矛盾的正面解</td></tr>
+              <tr><td>UI 层(储备)</td><td>真值跟随代码保留、默认关;未来演化为 WoT 式次级真值标记</td><td>超出镜头层覆盖的大偏移场景(大招级演出)的后手</td></tr>
+            </tbody>
+          </table>
+          <h3>镜头层的几何:普通环绕 vs 瞄点锁定环绕</h3>
+          <svg class="diagram" viewBox="0 0 860 250" role="img" aria-label="Orbit 与 OrbitAimLocked 的几何对比">
+            <g font-family="Consolas,monospace" font-size="12">
+              <text x="110" y="24" fill="var(--muted)" font-weight="700">普通环绕 Orbit(挪准星)</text>
+              <circle cx="200" cy="130" r="9" fill="var(--muted)"/>
+              <text x="188" y="158" fill="var(--muted)">角色</text>
+              <circle cx="70" cy="170" r="6" fill="var(--line)"/>
+              <path d="M 70 170 A 138 138 0 0 1 96 96" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 4"/>
+              <circle cx="96" cy="96" r="7" fill="var(--accent)"/>
+              <text x="30" y="88" fill="var(--accent)">机位绕弧</text>
+              <path d="M 380 60 l 5 12 12 2 -9 9 2 13 -10 -7 -10 7 2 -13 -9 -9 12 -2 z" fill="var(--brass)"/>
+              <text x="352" y="46" fill="var(--brass)">真值点(瞄准射线上)</text>
+              <line x1="70" y1="170" x2="380" y2="66" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="2 4"/>
+              <line x1="96" y1="96" x2="410" y2="132" stroke="var(--danger)" stroke-width="2" stroke-dasharray="6 4"/>
+              <text x="300" y="152" fill="var(--danger)">屏幕中心射线偏走 → 准星说谎</text>
+              <g transform="translate(440,0)">
+                <text x="96" y="24" fill="var(--muted)" font-weight="700">瞄点锁定环绕 OrbitAimLocked(终案)</text>
+                <circle cx="200" cy="130" r="9" fill="var(--muted)"/>
+                <text x="188" y="158" fill="var(--muted)">角色</text>
+                <circle cx="70" cy="170" r="6" fill="var(--line)"/>
+                <path d="M 70 170 A 138 138 0 0 1 96 96" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 4"/>
+                <circle cx="96" cy="96" r="7" fill="var(--accent)"/>
+                <text x="14" y="88" fill="var(--accent)">机位照样绕弧</text>
+                <path d="M 380 60 l 5 12 12 2 -9 9 2 13 -10 -7 -10 7 2 -13 -9 -9 12 -2 z" fill="var(--brass)"/>
+                <line x1="96" y1="96" x2="380" y2="66" stroke="var(--ok)" stroke-width="2.5"/>
+                <line x1="70" y1="170" x2="380" y2="66" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="2 4"/>
+                <text x="180" y="52" fill="var(--ok)">视线逐帧反解看向真值点</text>
+                <text x="236" y="188" fill="var(--ok)">准星钉死中心,环绕=世界在画面里流动</text>
+              </g>
+            </g>
+          </svg>
+          <p>一句话读图:两边机位走的弧线一模一样;左边视线跟着刚体一起转,屏幕中心射线甩离真值点;右边视线每帧被"看向真值点"重新求解——<b>机位在动、世界在流、准星底下的世界点纹丝不动</b>。这是锁定镜头(魂系、塞尔达)沿用二十多年的骨架,我们把它做成了动效资产上的一个下拉选项,配置成本为零。</p>
+          <p>代价也要写明:它只对参考深度(默认 15 米,取主交火距离)完全诚实,贴脸目标有轻微视差;旋转的约束从"说谎预算"换成了"角色遮挡准线预算"——约束没消失,换成了更便宜的一种。</p>
+        </section>
+
+        <!-- 06 -->
+        <section id="acceptance">
+          <h2>验收实录</h2>
+          <p>验收口径先说明:<b>验收人 = 需求方本人(作者),单人闭环,n=1</b>。手感结论存在个体差异风险,多人盲测列在遗留清单。</p>
+          <table>
+            <thead><tr><th style="width:22%">阶段</th><th>验收人原话(逐字)</th><th style="width:26%">判定</th></tr></thead>
+            <tbody>
+              <tr><td>实验零 · 保持环绕</td><td>"效果确实很好,不过准心确实还是偏移了"</td><td><span class="no">准星不合格</span></td></tr>
+              <tr><td>妥协 · 多通道分摊</td><td>"但那种环绕感确实是没了"</td><td><span class="no">演出不合格</span></td></tr>
+              <tr><td>实验一 · 准星跟随</td><td>"确实是始终固定的,但是视觉上看起来整个准星在乱飘,更奇怪了"</td><td><span class="no">证伪(知觉层)</span></td></tr>
+              <tr><td>实验二 · 瞄点锁定</td><td>"天啊,现在我发现,准星完全没有晃动感了"</td><td><span class="ok">✅ 终案通过</span></td></tr>
+            </tbody>
+          </table>
+          <p>数据佐证:50 余次施放的逐帧记录中,控制朝向列全程不随任何演绎变化(逻辑诚实);出手冲击峰值与投射物首现出现在同一采样行(时序对齐)。行为学佐证:终案后验收人主动将环绕逐档加码至 10.4° 并保持——"敢不敢加码"是体验信任的证据,但注明:这是单人证据。</p>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <!-- 07 -->
+        <section id="params">
+          <h2>关键参数</h2>
+          <details class="fold"><summary>展开参数表</summary>
+          <table>
+            <thead><tr><th style="width:30%">参数</th><th style="width:22%">定稿值</th><th>体验依据</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="3">瞄点锁定环绕</td></tr>
+              <tr><td>Kallari 蓄力环绕(资产 yaw × 站点强度)</td><td>8° × 1.3 = 10.4°</td><td>验收人逐档加到此值(4→6→8),环绕感满足且未触发"角色挡准线";上限区留 18° 硬顶</td></tr>
+              <tr><td>look-at 参考距离</td><td>1500cm,钳 [500,10000]</td><td>主交火距离附近视差最小;单深度诚实是固有代价,取交火距离使代价最低</td></tr>
+              <tr><td>进出平滑</td><td>幅度 &lt;1° 时按比例混入</td><td>消除条目出生、消亡帧的约 1° 微跳(审查发现)</td></tr>
+              <tr class="group"><td colspan="3">旋转预算(双层:建议值→警告 / 硬上限→拒绝)</td></tr>
+              <tr><td>视线踢 ViewKick(唯一直接挪准星的通道)</td><td>3° / 5°</td><td>可瞄窗口的说谎量底线;瞬态短于 0.2 秒且在弹道采样后,故可容忍小幅</td></tr>
+              <tr><td>瞄点锁定环绕</td><td>12° / 18°</td><td>预算性质已变:不再是说谎预算,而是角色遮挡准线预算(Nesky:近目标滑移勿旋转)</td></tr>
+              <tr><td>普通环绕 Orbit(不可瞄窗口)</td><td>25° / 35°</td><td>操作权受限窗口的演出档;双层化让实验期校验器不挡路</td></tr>
+              <tr><td>受击带旋转合计</td><td>4° 软钳(未放宽)</td><td>防疲劳预算,团战刷屏不叠爆——刻意不随本次放宽</td></tr>
+              <tr class="group"><td colspan="3">真值跟随(默认关,参数留档)</td></tr>
+              <tr><td>触发阈值 / 投影深度 / 最大偏移 / 回中</td><td>0.3° / 15m / 180 单位 / 约 0.19s</td><td>回中时长落在调研定的 0.15~0.3s 区间(快于此读作瞬移,慢于此读作漂移)</td></tr>
+            </tbody>
+          </table>
+          </details>
+        </section>
+
+        <!-- 08 -->
+        <section id="leftovers">
+          <h2>遗留与保险丝</h2>
+          <details class="fold"><summary>展开清单</summary>
+          <table>
+            <thead><tr><th style="width:30%">事项</th><th style="width:14%">状态</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>FOV 灵敏度补偿</td><td><span class="later">P0 · 待程序</span></td><td>有 FOV 冲加可瞄窗口,不补偿等于演绎期间偷改手感;按动效后渲染 FOV 换算(BF4/OW 行业标配)</td></tr>
+              <tr><td>多人盲测</td><td><span class="later">P2 · 未做</span></td><td>本案全部手感结论来自单人验收(n=1),存在个体差异风险;上多人前应做小规模盲测</td></tr>
+              <tr><td>AimSafe 资产分类加瞄准态抑制</td><td><span class="later">P2 · 待程序</span></td><td>"什么能进可瞄窗口"目前是人脑纪律,需校验器字段加运行时兜底制度化</td></tr>
+              <tr><td>WoT 式次级真值标记</td><td><span class="later">储备</span></td><td>大招级大偏移演出的后手;实验一的代码即其九成积木</td></tr>
+              <tr><td>单深度视差(固有代价)</td><td><span class="ok">已知妥协</span></td><td>锁定环绕只对参考深度完全诚实,贴脸目标有轻微视差;参考距离取主交火距离使代价最低</td></tr>
+              <tr><td>角色遮挡准线</td><td><span class="ok">已知妥协</span></td><td>换来的新约束(旧约束是说谎):12° 建议值、18° 硬顶为它而设,超建议值校验器警告</td></tr>
+              <tr><td>观战端不重放动效</td><td><span class="later">缓议</span></td><td>一期已知盲点,本案未改变;观战体验变重要时再议</td></tr>
+            </tbody>
+          </table>
+          </details>
+        </section>
+
+        <!-- 09 -->
+        <section id="methodology">
+          <h2>方法论沉淀</h2>
+          <p>本节候选条目已由知识库维护侧审定收录：元规则 <b>M15 准星是眼睛的锚 / M16 约束预算可以换币种 / M17 通道归属两判据 / M18 便宜实验先行</b>，反模式 <b>AP15–AP18</b>（见仓库 <a href="https://github.com/631082455/3C/blob/main/references/meta-rules.md">references/meta-rules.md</a> 与 <a href="https://github.com/631082455/3C/blob/main/references/anti-patterns.md">anti-patterns.md</a>）。"锁定镜头骨架"条保留于本案例——它是镜头领域的方案模式，不列为跨系统铁律。</p>
+          <details class="fold"><summary>展开沉淀条目</summary>
+          <h3>候选元规则(M)</h3>
+          <table>
+            <thead><tr><th style="width:34%">规律</th><th>内容与适用边界</th></tr></thead>
+            <tbody>
+              <tr><td><b>M · 准星是眼睛的锚</b></td><td>UI 元素在屏幕上自行移动读作故障,世界在画面里流动读作镜头语言。边界:针对保持型偏移(大于 0.2 秒);瞬态踢的短暂偏心可容忍;"次级半透明标记"不受此律约束(WoT 实证)</td></tr>
+              <tr><td><b>M · 预算换币种</b></td><td>旋转预算与操作权成反比是铁律,但 look-at 反解把"说谎预算"换成"遮挡预算"——约束没消失,换成了更便宜的货币。边界:代价是单深度诚实;参考深度取主交火距离</td></tr>
+              <tr><td>M · 锁定镜头骨架是可瞄窗口环绕的唯一合法化路径</td><td>位置自由、旋转被瞄点接管。边界:幅度受角色遮挡约束(18° 以内);空旷方向参考点须取射程截断</td></tr>
+              <tr><td>M · 通道归属的两个判据</td><td>影响弹道的必须可被玩家补偿(输入通道);纯反馈的必须可被玩家关闭(表现通道)。凡分不清归属的效果,用这两问裁决</td></tr>
+              <tr><td>M · 便宜实验先行,回退条款预写</td><td>C(一小时)先于 D(半天)不是因为 C 更可能对,而是证伪成本低;"如果 X 则转 Y"提前写下,失败不引发方向争论。边界:两方案必须单变量,禁止同时上</td></tr>
+            </tbody>
+          </table>
+          <h3>候选反模式(AP)</h3>
+          <ul>
+            <li>AP · 主准星跟随治保持型偏移——诚实但乱飘;CS2 职业不开早已预警,仍值得亲测一次拿到一手结论;</li>
+            <li>AP · 实验功能的 C++ 默认值设为开——直接继承基类的资产全部暗中启用,排查成本极高。正确姿势:代码默认关、资产显式开;</li>
+            <li>AP · 双重折扣——资产振幅烤小、引用处强度再打折,效果直接不可感知。标定值应唯一(资产=1.0 基准);</li>
+            <li>AP · 信动画描述定关键帧——发射帧必须实测(本案抓到 0.03 对 0.37 的真 bug)。</li>
+          </ul>
+          <h3>检查清单:新增旋转类镜头效果上线前四问</h3>
+          <ol>
+            <li>它在哪个操作权窗口生效?可瞄窗口只允许视线踢(3° 内)或瞄点锁定环绕;</li>
+            <li>它选对旋转空间了吗?要环绕感选瞄点锁定;要冲击顿挫选视线踢;不可瞄演出选普通环绕;</li>
+            <li>幅度落在建议值内吗?超了警告是否有意为之、写没写依据;</li>
+            <li>蓄力压着准星微调时,角色挡不挡准线、贴脸目标视差能不能忍?实机验,不看参数猜。</li>
+          </ol>
+          </details>
+        </section>
+
+        <!-- 10 -->
+        <section id="appendix">
+          <h2>附录:未入正文的素材</h2>
+          <details class="fold"><summary>展开附录</summary>
+          <h3>Kallari CrossSlash 定稿时间线(终案全貌)</h3>
+          <svg class="diagram" viewBox="0 0 860 190" role="img" aria-label="CrossSlash 镜头时间线">
+            <g font-family="Consolas,monospace" font-size="11.5">
+              <line x1="60" y1="150" x2="820" y2="150" stroke="var(--line)" stroke-width="2"/>
+              <g fill="var(--muted)">
+                <text x="54" y="170">0</text><text x="322" y="170">0.342 触发</text>
+                <text x="748" y="170">0.93s</text>
+              </g>
+              <line x1="340" y1="60" x2="340" y2="150" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <text x="346" y="58" fill="var(--danger)">0.37 刀波离手</text>
+              <rect x="84" y="66" width="229" height="14" rx="4" fill="var(--brass-soft)" stroke="var(--brass)"/>
+              <text x="90" y="77" fill="var(--brass)">后撤呼吸+仰头(自归零)+微震渐强(出手前熄火)</text>
+              <rect x="84" y="90" width="384" height="14" rx="4" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <rect x="468" y="90" width="286" height="14" rx="4" fill="none" stroke="var(--accent)" stroke-dasharray="4 3"/>
+              <text x="90" y="101" fill="var(--accent-text)">压近14% + 瞄点锁定环绕10.4° + 平移视差(保持贯穿出手)</text>
+              <text x="478" y="101" fill="var(--muted)">恢复期缓释 → 0.85 归零</text>
+              <rect x="345" y="114" width="180" height="14" rx="4" fill="var(--danger-soft)" stroke="var(--danger)"/>
+              <text x="352" y="125" fill="var(--danger)">出手冲击:踢0.9°+FOV+脆震0.09s(峰值骑发射帧)</text>
+            </g>
+          </svg>
+          <h3>杂项(检索价值)</h3>
+          <ul>
+            <li>逐帧记录仪列定义:wall_t / montage_pos / 相机位置(3) / 旋转(3) / FOV / 臂长 / ControlRotation(2) / 投射物首现标记——"准星纯净"的量化定义 = ControlRotation 列与演绎无关;</li>
+            <li>竞品参数留档:BF4 Uniform Soldier Aiming 系数 1.33;OW zoom sens 37.89(Widow/Ana);CS:GO visual_recoil = viewPunch + aimPunch×scale×tracking,actual = aimPunch×scale(逆向);</li>
+            <li>Deadlock 参照:存在一类"大招被打断镜头永久卡拉远"bug(进出成对事件、出事件被吞)——本系统效果无"出事件",结构免疫;</li>
+            <li>震屏调音三定律(同期沉淀,详见配置手册):资产振幅即标定值;干脆=短时长高频定相;憋劲=低频渐强且必须在出手帧前熄火;</li>
+            <li>准星 widget 拓扑:准星是 HAD(技能数据资产,每个技能一份的配置载体)按技能配置的 widget,18 英雄共用一个另有 2 个英雄自有,按技能 tag 挂到 HUD——这个拓扑是"实验开关暗开"反模式的土壤;</li>
+            <li>版本控制工具坑(与 3C 方法论无关,留档):p4 change -i 更新描述时不带 Files 段会静默清空 CL 文件列表(本案踩过,当场捞回);二进制资产存盘只信 LogSavePackage 不信返回值;</li>
+            <li>提交轨迹:资产一期 CL 5636536(已提交);本案代码 CL 5643871、手感定稿资产 CL 5644306(待提交);</li>
+            <li>存疑标注:BotW 弓的"×"落点标记为中等置信记忆,检索未获文献确证;Nesky 讲座无公开编号文本,引用只述内容不引条号。</li>
+          </ul>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
