@@ -7,8 +7,10 @@
   <style>
     /* ============================================================
        3C Doc Theme v3 — "精装手册 / Hardcover Manual"
-       案例稿空白母版:11 段骨架已预置,填空即可。
-       硬规则:只用下方已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       案例稿空白母版 v2:三幕+资料区结构预置,填空即可。
+       结构:封面TL;DR → 第一幕·矛盾 → 第二幕·求解 → 第三幕·终案与验收
+            → 资料区(可折叠,打印自动展开)
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
        ============================================================ */
     :root{
       --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
@@ -64,7 +66,14 @@
       border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
       font-size:16px;cursor:pointer;transition:background .2s;}
     #themeBtn:hover{background:rgba(255,255,255,.13);}
-    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:26px;
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
       border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
     .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
     .docinfo>div:nth-child(4){border-right:none;}
@@ -78,14 +87,22 @@
       border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
     nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
       font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
-    nav a{display:flex;align-items:baseline;gap:9px;padding:7px 10px;border-radius:6px;border-left:2px solid transparent;
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
       color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
     nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
     nav a:hover{color:var(--ink);background:var(--soft);}
     nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
     nav a.active i{color:var(--accent-text);opacity:1;}
     main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
-      box-shadow:var(--shadow);counter-reset:sec;}
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
     section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
     section:last-child{border-bottom:none;}
     h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
@@ -106,7 +123,8 @@
       padding:1px 6px;border-radius:5px;}
     img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
     svg.diagram{display:block;max-width:100%;margin-top:14px;}
-    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--line);color:var(--muted);font-style:normal;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
     .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
       background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
       border-left:4px solid var(--accent);}
@@ -135,6 +153,16 @@
     .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
     .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
     .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
     footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
     footer a{color:var(--brass);text-decoration:none;}
     #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
@@ -143,8 +171,8 @@
     #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
     @media(max-width:980px){
       .layout{grid-template-columns:1fr;}
-      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title{width:100%;}
-      nav a{padding:6px 10px;} section{padding:26px 20px;} .grid{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
       .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
       .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
       .docinfo>div:nth-child(2n){border-right:none;}
@@ -165,11 +193,18 @@
       <div class="kicker">Combat 3C · Case Study · Doc CASE-XX</div>
       <h1>《案例标题：一句话矛盾或最终原则》</h1>
       <p class="lede">【一段话摘要占位：这个案例解决了什么体验矛盾、终案是什么形态、验证到什么程度。写完正文最后回来写它。】</p>
+      <!-- TL;DR:快读层。四行各一句,给只有 3 分钟的读者。分工行必须如实写明 人/AI/程序 各做了什么 -->
+      <div class="tldr">
+        <div><i>矛盾</i><span>【占位：哪两个正确目标打架】</span></div>
+        <div><i>终案</i><span>【占位：最终机制一句话】</span></div>
+        <div><i>结果</i><span>【占位：数据/验收结论一句话】</span></div>
+        <div><i>分工</i><span>【占位：我做什么 / AI 做什么 / 程序做什么】</span></div>
+      </div>
       <div class="docinfo">
         <div><i>文档编号</i><b>CASE-XX（由入库时分配，先留 XX）</b></div>
         <div><i>版本 / 状态</i><b>v0.1 · 迭代中</b></div>
         <div><i>需求方</i><b>战斗 3C 策划</b></div>
-        <div><i>实现方</i><b>战斗程序</b></div>
+        <div><i>实现方</i><b>【如实写：谁/什么执行的实现】</b></div>
         <div class="wide"><i>配套文档</i><b>【如有相关设计稿/手册在此放相对链接，没有则删除本行】</b></div>
       </div>
     </header>
@@ -177,84 +212,106 @@
     <div class="layout">
       <nav id="toc">
         <div class="title">Contents</div>
-        <a href="#experience"><i>01</i>体验目标</a>
-        <a href="#problem"><i>02</i>问题定义</a>
-        <a href="#research"><i>03</i>业界调研</a>
-        <a href="#decision"><i>04</i>方案排定</a>
+        <div class="grp">第一幕 · 矛盾</div>
+        <a href="#goal"><i>01</i>体验目标与问题定义</a>
+        <div class="grp">第二幕 · 求解</div>
+        <a href="#research"><i>02</i>业界调研</a>
+        <a href="#decision"><i>03</i>方案排定</a>
+        <a href="#implementation"><i>04</i>实验与落地实录</a>
+        <div class="grp">第三幕 · 终案与验收</div>
         <a href="#solution"><i>05</i>终案分层</a>
-        <a href="#implementation"><i>06</i>工程落地实录</a>
-        <a href="#parameters"><i>07</i>关键参数</a>
-        <a href="#acceptance"><i>08</i>验收实录</a>
-        <a href="#remaining"><i>09</i>遗留与保险丝</a>
-        <a href="#methodology"><i>10</i>方法论沉淀</a>
-        <a href="#appendix"><i>11</i>附录</a>
+        <a href="#acceptance"><i>06</i>验收实录</a>
+        <div class="grp">资料区</div>
+        <a href="#params"><i>07</i>关键参数</a>
+        <a href="#leftovers"><i>08</i>遗留与保险丝</a>
+        <a href="#methodology"><i>09</i>方法论沉淀</a>
+        <a href="#appendix"><i>10</i>附录</a>
       </nav>
 
       <main>
-        <section id="experience">
-          <h2>体验目标</h2>
-          <!-- 用玩家体验语言开篇,禁止技术开场。要玩家感受到什么;现状哪里背离;附玩家/测试者原始反馈(blockquote) -->
+        <div class="part"><i>第一幕</i><b>矛盾</b></div>
+
+        <section id="goal">
+          <h2>体验目标与问题定义</h2>
+          <!-- 开头 1-2 句项目背景(游戏类型/引擎/系统阶段),给外部读者上下文。
+               然后:玩家体验语言写目标(禁技术开场)→现状背离(附原始反馈 blockquote,注明反馈者身份)
+               →拆成明确矛盾:哪两个正确目标打架、为什么不能全都要、不解决的代价。核心矛盾用 .rule 卡。
+               本节末尾放「分工与工作方式」小节(h3):如实写 我/AI/程序 各自做什么——这是工作方式展示,不要遮掩 -->
           <p>【占位】</p>
         </section>
 
-        <section id="problem">
-          <h2>问题定义</h2>
-          <!-- 体验落差拆成明确矛盾:哪两个正确目标打架、为什么不能全都要、不解决的代价。核心矛盾可用 .rule 卡强调 -->
-          <p>【占位】</p>
-        </section>
+        <div class="part"><i>第二幕</i><b>求解</b></div>
 
         <section id="research">
           <h2>业界调研</h2>
-          <!-- 逐案:它的做法→借了什么/为什么排除,注明核实方式。适合用 table;外部参考资料可放超链接 -->
+          <!-- 逐案:它的做法→借了什么/为什么排除,注明核实方式。适合 table;外部参考资料可放超链接 -->
           <p>【占位】</p>
         </section>
 
         <section id="decision">
           <h2>方案排定</h2>
-          <!-- 全文重心之一:候选路径、取舍标准(体验优先级/成本/风险)、每步为什么。写决策过程,不要只给结论。候选对比适合 .grid+.box 或 table -->
-          <p>【占位】</p>
-        </section>
-
-        <section id="solution">
-          <h2>终案分层</h2>
-          <!-- 分层拆解,每层一句"它守住了哪条体验"。分层/几何/时序关系画内联 SVG(class="diagram",颜色只用 var(--accent)/var(--brass)/var(--line)/var(--muted)/var(--ink)) -->
+          <!-- 候选路径、取舍标准(体验优先级/成本/风险)、每步为什么。写决策过程,不要只给结论。
+               两个平行候选的对比可用 .grid+.box 双卡;回退条款用 .rule 卡 -->
           <p>【占位】</p>
         </section>
 
         <section id="implementation">
-          <h2>工程落地实录</h2>
-          <!-- 与程序对齐的接口与约束;实现中暴露的新问题及应对;实验与证伪(时间序:假设→验证→数据→结论)。被否方案保留完整篇幅。竞品坑/教训可用 .note 卡 -->
+          <h2>实验与落地实录</h2>
+          <!-- 时间序:对齐的接口与约束→各轮实验(假设→验证→数据→证实/证伪)→审查/意外收获。
+               被否方案保留完整篇幅:"为什么它看起来对、实际错在哪"。执行者(人/AI)如实注明。
+               竞品坑/教训用 .note 卡 -->
           <p>【占位】</p>
         </section>
 
-        <section id="parameters">
-          <h2>关键参数</h2>
-          <!-- 拍板的数字/阈值/曲线,逐条附体验依据。用 table -->
+        <div class="part"><i>第三幕</i><b>终案与验收</b></div>
+
+        <section id="solution">
+          <h2>终案分层</h2>
+          <!-- 实验尘埃落定后的静态全貌:分层拆解,每层一句"它守住了哪条体验"。
+               几何/分层/时序关系画内联 SVG(class="diagram",颜色只用 var(--accent)/var(--brass)/var(--line)/var(--muted)/var(--ink)) -->
           <p>【占位】</p>
         </section>
 
         <section id="acceptance">
           <h2>验收实录</h2>
-          <!-- 实测结论与用户/玩家原话(注明原话)。逐条可打勾的验收表参考:# | 验收项 | 状态(.ok/.no/.later 徽章) -->
+          <!-- 实测结论与原话(注明验收人身份与样本量,如"验收人=需求方本人,n=1")。
+               逐条验收表:# | 验收项 | 状态(.ok/.no/.later 徽章) -->
           <p>【占位】</p>
         </section>
 
-        <section id="remaining">
+        <div class="part"><i>资料区</i><b>手册与沉淀</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="params">
+          <h2>关键参数</h2>
+          <!-- 拍板的数字/阈值/曲线,逐条附体验依据。用 table,包在 details.fold 里 -->
+          <details class="fold"><summary>展开参数表</summary>
+            <p>【占位】</p>
+          </details>
+        </section>
+
+        <section id="leftovers">
           <h2>遗留与保险丝</h2>
-          <!-- 挂着的需求、兜底设计、已知妥协 -->
-          <p>【占位】</p>
+          <!-- 挂着的需求、兜底设计、已知妥协;验收局限(如未做多人盲测)也列在这里 -->
+          <details class="fold"><summary>展开清单</summary>
+            <p>【占位】</p>
+          </details>
         </section>
 
         <section id="methodology">
           <h2>方法论沉淀</h2>
-          <!-- 知识库钩子:候选元规则/反模式/检查清单,每条写适用边界(什么情况成立/不适用)。入库时据此反哺 references/ -->
-          <p>【占位】</p>
+          <!-- 知识库钩子:候选元规则/反模式/检查清单,每条写适用边界。只收 3C 方法论,工具坑放附录。
+               入库时据此反哺 references/ -->
+          <details class="fold"><summary>展开沉淀条目</summary>
+            <p>【占位】</p>
+          </details>
         </section>
 
         <section id="appendix">
           <h2>附录：未入正文的素材</h2>
-          <!-- 没进正文但可能有用的细节全倒进来,宁滥勿缺:数据、对话记录、资产/代码路径、中间结论 -->
-          <p>【占位】</p>
+          <!-- 没进正文但可能有用的细节全倒进来,宁滥勿缺:数据、对话记录、资产/代码路径、内部编号(CL等只出现在这里)、中间结论 -->
+          <details class="fold"><summary>展开附录</summary>
+            <p>【占位】</p>
+          </details>
         </section>
       </main>
     </div>
@@ -299,6 +356,17 @@
       }
       var topBtn=document.getElementById('topBtn');
       topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
     })();
   </script>
 </body>
