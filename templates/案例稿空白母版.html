@@ -7,9 +7,9 @@
   <style>
     /* ============================================================
        3C Doc Theme v3 — "精装手册 / Hardcover Manual"
-       案例稿空白母版 v2:三幕+资料区结构预置,填空即可。
-       结构:封面TL;DR → 第一幕·矛盾 → 第二幕·求解 → 第三幕·终案与验收
-            → 资料区(可折叠,打印自动展开)
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
        硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
        ============================================================ */
     :root{
@@ -195,7 +195,7 @@
       <p class="lede">【一段话摘要占位：这个案例解决了什么体验矛盾、终案是什么形态、验证到什么程度。写完正文最后回来写它。】</p>
       <!-- TL;DR:快读层。四行各一句,给只有 3 分钟的读者。分工行必须如实写明 人/AI/程序 各做了什么 -->
       <div class="tldr">
-        <div><i>矛盾</i><span>【占位：哪两个正确目标打架】</span></div>
+        <div><i>课题</i><span>【占位：一句话说清这次要解决什么（矛盾/缺失/打磨点/故障）】</span></div>
         <div><i>终案</i><span>【占位：最终机制一句话】</span></div>
         <div><i>结果</i><span>【占位：数据/验收结论一句话】</span></div>
         <div><i>分工</i><span>【占位：我做什么 / AI 做什么 / 程序做什么】</span></div>
@@ -212,16 +212,16 @@
     <div class="layout">
       <nav id="toc">
         <div class="title">Contents</div>
-        <div class="grp">第一幕 · 矛盾</div>
-        <a href="#goal"><i>01</i>体验目标与问题定义</a>
-        <div class="grp">第二幕 · 求解</div>
+        <div class="grp">背景</div>
+        <a href="#goal"><i>01</i>体验目标与课题</a>
+        <div class="grp">过程</div>
         <a href="#research"><i>02</i>业界调研</a>
         <a href="#decision"><i>03</i>方案排定</a>
         <a href="#implementation"><i>04</i>实验与落地实录</a>
-        <div class="grp">第三幕 · 终案与验收</div>
+        <div class="grp">结果</div>
         <a href="#solution"><i>05</i>终案分层</a>
         <a href="#acceptance"><i>06</i>验收实录</a>
-        <div class="grp">资料区</div>
+        <div class="grp">资料</div>
         <a href="#params"><i>07</i>关键参数</a>
         <a href="#leftovers"><i>08</i>遗留与保险丝</a>
         <a href="#methodology"><i>09</i>方法论沉淀</a>
@@ -229,18 +229,20 @@
       </nav>
 
       <main>
-        <div class="part"><i>第一幕</i><b>矛盾</b></div>
+        <div class="part"><b>背景</b></div>
 
         <section id="goal">
-          <h2>体验目标与问题定义</h2>
+          <h2>体验目标与课题</h2>
           <!-- 开头 1-2 句项目背景(游戏类型/引擎/系统阶段),给外部读者上下文。
                然后:玩家体验语言写目标(禁技术开场)→现状背离(附原始反馈 blockquote,注明反馈者身份)
-               →拆成明确矛盾:哪两个正确目标打架、为什么不能全都要、不解决的代价。核心矛盾用 .rule 卡。
+               →课题定性。课题形态因案例而异:矛盾型(两个正确目标打架)/建设型(0→1缺什么)/
+               打磨型(哪里不够好)/排查型(什么在出错)——如实定性,没有矛盾不要硬造矛盾。
+               核心课题用 .rule 卡。
                本节末尾放「分工与工作方式」小节(h3):如实写 我/AI/程序 各自做什么——这是工作方式展示,不要遮掩 -->
           <p>【占位】</p>
         </section>
 
-        <div class="part"><i>第二幕</i><b>求解</b></div>
+        <div class="part"><b>过程</b></div>
 
         <section id="research">
           <h2>业界调研</h2>
@@ -263,7 +265,7 @@
           <p>【占位】</p>
         </section>
 
-        <div class="part"><i>第三幕</i><b>终案与验收</b></div>
+        <div class="part"><b>结果</b></div>
 
         <section id="solution">
           <h2>终案分层</h2>
@@ -279,7 +281,7 @@
           <p>【占位】</p>
         </section>
 
-        <div class="part"><i>资料区</i><b>手册与沉淀</b><span>按需查阅 · 打印自动展开</span></div>
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
 
         <section id="params">
           <h2>关键参数</h2>
