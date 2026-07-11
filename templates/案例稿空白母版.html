@@ -49,10 +49,15 @@
     #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
       background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
     .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
-    /* 宽屏适配:2K/4K 下加宽版心并放大基准字号(正文行宽由 em 上限自动跟随) */
-    @media(min-width:1800px){
-      body{font-size:17px;}
-      .page{width:min(1400px,calc(100vw - 64px));}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1540px,calc(100vw - 64px));}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1760px,calc(100vw - 80px));}
     }
     .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
       background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
