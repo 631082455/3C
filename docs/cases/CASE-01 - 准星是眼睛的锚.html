@@ -146,6 +146,11 @@
       border-left:4px solid var(--warn);color:var(--ink);}
     .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
     .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
     .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
@@ -527,6 +532,17 @@
             <li>提交轨迹:资产一期 CL 5636536(已提交);本案代码 CL 5643871、手感定稿资产 CL 5644306(待提交);</li>
             <li>存疑标注:BotW 弓的"×"落点标记为中等置信记忆,检索未获文献确证;Nesky 讲座无公开编号文本,引用只述内容不引条号。</li>
           </ul>
+          <h3>修订记录</h3>
+          <table>
+            <thead><tr><th style="width:16%">日期</th><th style="width:14%">版本</th><th>变更</th></tr></thead>
+            <tbody>
+              <tr><td>2026-07-11</td><td>v1.0</td><td>初稿:源工作会话产出(六层拆解+三步实验全记录)</td></tr>
+              <tr><td>2026-07-11</td><td>v2.0</td><td>四身份评审修订:分工如实化、验收 n=1 标注、外部读者上下文、结构迁移(背景/过程/结果/资料)</td></tr>
+              <tr><td>2026-07-11</td><td>入库</td><td>编号 CASE-01;方法论沉淀收录为元规则 M15–M18 / 反模式 AP15–AP18</td></tr>
+              <tr><td>2026-07-11</td><td>—</td><td>全篇去冗余:同一论点只陈述一次(01/04/05 节共十处)</td></tr>
+              <tr><td>2026-07-12</td><td>—</td><td>宽屏排版两轮修正:视口分档、移除正文行宽上限</td></tr>
+            </tbody>
+          </table>
           </details>
         </section>
       </main>
