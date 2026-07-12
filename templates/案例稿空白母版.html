@@ -152,6 +152,14 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
     .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
     .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
@@ -225,6 +233,11 @@
         <div class="wide"><i>配套文档</i><b>【如有相关设计稿/手册在此放相对链接，没有则删除本行】</b></div>
       </div>
     </header>
+
+    <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
+    <div class="foreword">
+      <p>【占位：这篇在干嘛。第一段说课题，第二段说解法（与业界已知做法同源就直说老手艺和差异，不写发明），第三段说结果和最值钱的发现。零自造词，每句站在读者已知的东西上。】</p>
+    </div>
 
     <div class="layout">
       <nav id="toc">
