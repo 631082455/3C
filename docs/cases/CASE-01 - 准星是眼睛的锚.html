@@ -133,6 +133,10 @@
     code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
       padding:1px 6px;border-radius:5px;}
     img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
     svg.diagram{display:block;max-width:100%;margin-top:14px;}
     blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
     blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
@@ -236,6 +240,16 @@
       <p>先说这篇在干嘛。技能蓄力的时候想让镜头绕着角色转一圈，有点演出感。但镜头一转，准星指的地方就不对了，这是个 skillshot，准星骗人是大忌。两个都想要。</p>
       <p>解法其实是老手艺。射击游戏里 FPP 切 TPP、开镜，都要处理机位变了但世界瞄准点不能变这件事，只不过人家是切换瞬间算一次，我们把它改成持续的：机位照常绕弧，视线每帧重新对回原来的瞄准点，然后做成资产上的一个选项，策划想用就选。</p>
       <p>结果准星不动了，环绕从被压着的 2.6° 放开到 10.4°。中间试过一版让准星跟着真实弹道走的方案，证伪了，逻辑上完全诚实，看起来却像准星在乱飘，为什么错第 4 节细讲，这条歧路可能比终案还值钱。</p>
+      <div class="grid">
+        <figure>
+          <video autoplay loop muted playsinline src="CASE-01-crosshair-before.mp4"></video>
+          <figcaption><b>优化前：</b>蓄力环绕期间，屏幕中心被镜头旋转带走，准星指向的世界点在漂移——准星在骗人。</figcaption>
+        </figure>
+        <figure>
+          <video autoplay loop muted playsinline src="CASE-01-crosshair-after.mp4"></video>
+          <figcaption><b>优化后：</b>同样的环绕，视线逐帧反解回瞄准点，准星底下的世界点纹丝不动。</figcaption>
+        </figure>
+      </div>
     </div>
 
     <div class="layout">
@@ -558,6 +572,7 @@
               <tr><td>2026-07-11</td><td>—</td><td>全篇去冗余：同一论点只陈述一次（01/04/05 节共十处）</td></tr>
               <tr><td>2026-07-12</td><td>—</td><td>宽屏排版两轮修正：视口分档、移除正文行宽上限</td></tr>
               <tr><td>2026-07-12</td><td>v2.1</td><td>导语与 TL;DR 重写为人话口径；调研补路线 E（切换瞬间瞄点还原，作者盲区修正）；发明式措辞降调</td></tr>
+              <tr><td>2026-07-13</td><td>—</td><td>作者按补优化前后实机对比动图（GIF 转 MP4 内嵌）</td></tr>
             </tbody>
           </table>
           </details>
