@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>三选一才留：Motion Matching 移动库的竞技化改造 · 案例复盘</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:20px 60px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{border-bottom:none;}
+    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Movement · Doc MOV-EXT</div>
+      <h1>三选一才留：Motion Matching 移动库的竞技化改造</h1>
+      <p class="lede">把 GASP 展示级的 Motion Matching 移动整套搬进 MOBA 之后要算两笔账：手感病灶（冲刺打摆子进不了巡航、起步误选反身动画）要治到根因层；量产成本要从每英雄 <b>624 条</b>移动动画裁到 <b>87 条</b>，并立下一条以后每次取舍都用的保留判据。本篇是这两笔账的完整过程，验证到 11 个英雄局内一键 AB。</p>
+      <!-- TL;DR:快读层。四行各一句,给只有 3 分钟的读者。分工行必须如实写明 人/AI/程序 各做了什么 -->
+      <div class="tldr">
+        <div><i>课题</i><span>展示级移动库搬进 MOBA 后两头不对：<b>冲刺在过渡动画里打摆子、起步误选反身动画</b>；量产一个英雄要 624 条移动动画，几十个英雄摊不起。</span></div>
+        <div><i>终案</i><span>裁出 MOBA-Lite 档（8 库 87 条，判据：<b>能感知、做得出、影响命中判定，三选一才留</b>）；Gait 档位改由移速属性驱动（含 buff，迟滞 560/480）；局内一键 Dense/Sparse 实机 AB。</span></div>
+        <div><i>结果</i><span>11 英雄生效，起步与巡航稳定；移动动画量产账 624 → 87；起步偶发误选 Reface 未根治，写在遗留区。</span></div>
+        <div><i>分工</i><span><b>作者</b>（战斗 3C 策划）定原则、否方案、逐轮实机验收；<b>AI agent</b> 做编辑器实测、资产修改、引擎源码查证并代写唯一一处 C++；<b>程序</b>本轮零投入。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>MOV-EXT（竞技化拓展）</b></div>
+        <div><i>版本 / 状态</i><b>v0.1 · 迭代中</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>实现方</i><b>策划指挥验收 + AI agent 执行（AIK 编辑器自动化）</b></div>
+        <div class="wide"><i>配套文档</i><b>本篇同时是「移动优化历程」五篇之四（总入口见《<a href="MM调参手册.html">MM 调参手册</a>》优化历程面板）；量产标准：GameProject/Docs/motion-matching-locomotion-spec.md（团队内，未随本站发布）</b></div>
+      </div>
+    </header>
+
+    <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
+    <div class="foreword">
+      <p>项目的移动是拿 Epic 的 GASP（Game Animation Sample）整套 Motion Matching 方案搬进来的。它是个展示级 demo，搬进 MOBA 之后两头都不对：手感上有病灶，移速拉到 650 一直按前进，角色在几个过渡动画里打摆子，进不了巡航；起步还会突然播一个反身转 180° 的动画。量产上也养不起，一套移动库 624 条动画，英雄有几十个。</p>
+      <p>解法没有发明。动画库分档瘦身是 GASP 官方自带的路数（Dense/Sparse 两档），我们做的是顺着它的砍法再切一档 MOBA 特化档：不要走路、不要下蹲，8 个库 87 条动画，再立一条判据管住以后每一次取舍，能感知、做得出、影响命中判定，三选一才留。手感那头，把冲刺档位的判断依据从"此刻跑多快"改成"角色能跑多快"（移速属性含 buff），配一对迟滞阈值。</p>
+      <p>结果是全英雄生效，起步和巡航稳了，每个新英雄的移动动画交付量从 624 压到 87，局内 F1 面板能一键切两档实机对比。起步偶发误选反身动画的问题没有根治，七轮假设全被证伪，老老实实写在遗留区。回头看最值钱的是那条保留判据，和几次干净的证伪（其中一个坑还是我们自己修复时埋的）。</p>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">背景</div>
+        <a href="#goal"><i>01</i>体验目标与课题</a>
+        <div class="grp">过程</div>
+        <a href="#research"><i>02</i>业界调研</a>
+        <a href="#decision"><i>03</i>方案排定</a>
+        <a href="#implementation"><i>04</i>实验与落地实录</a>
+        <div class="grp">结果</div>
+        <a href="#solution"><i>05</i>终案分层</a>
+        <a href="#acceptance"><i>06</i>验收实录</a>
+        <div class="grp">资料</div>
+        <a href="#params"><i>07</i>关键参数</a>
+        <a href="#leftovers"><i>08</i>遗留与保险丝</a>
+        <a href="#methodology"><i>09</i>方法论沉淀</a>
+        <a href="#appendix"><i>10</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>背景</b></div>
+
+        <section id="goal">
+          <h2>体验目标与课题</h2>
+          <!-- 开头 1-2 句项目背景(游戏类型/引擎/系统阶段),给外部读者上下文。
+               然后:玩家体验语言写目标(禁技术开场)→现状背离(附原始反馈 blockquote,注明反馈者身份)
+               →课题定性。课题形态因案例而异:矛盾型(两个正确目标打架)/建设型(0→1缺什么)/
+               打磨型(哪里不够好)/排查型(什么在出错)——如实定性,没有矛盾不要硬造矛盾。
+               核心课题用 .rule 卡。
+               本节末尾放「分工与工作方式」小节(h3):如实写 我/AI/程序 各自做什么——这是工作方式展示,不要遮掩 -->
+          <p>项目是 UE5 的多人 MOBA 射击游戏，移动层整套采用 GASPALS（项目对 Epic Game Animation Sample 与 ALS Overlay 体系的整合插件），全部英雄共享同一个 Motion Matching 动画蓝图。做这件事时移动系统已经上线跑了半年，处在"能用，但要过竞技这关"的阶段。</p>
+          <p>竞技移动对动画层的要求其实就三条：按下去就动、松开就停、转身干脆；播出来的动作和角色实际运动一致，不骗人；这套东西要养得起几十个英雄。前两条是手感，第三条是账。</p>
+          <h3>现状背离</h3>
+          <p>手感这头有两个病灶，都发生在冲刺（Sprint）档：</p>
+          <blockquote>现在我的 MCD 把角色设置到了 650，一直按住前进键，但是角色始终在这些动画里切，实际预期应该是一个 Loop 了。<br><i>需求方（作者本人），2026-06-02。MCD 即 MovementConfigDataAsset，逐英雄的移动配置资产</i></blockquote>
+          <blockquote>我明明是在只往前跑 为什么会被这个 reface 给干掉啊<br><i>同上，2026-06-24。Reface 指反身 180° 转身起步动画，正前直跑时被它抢中</i></blockquote>
+          <p>账这头：GASP 的 Dense 全量档，仅移动四族（巡航/起步/急停/折返）就 624 条动画条目。照这个标准量产，每个新英雄都要交付一套 624，项目排不起这个产能。</p>
+          <p>课题定性：打磨型为主（病灶要治到根因层，不打补丁），兼一点建设型（裁库标准从无到有）。这里没有两个正确目标打架的矛盾，就是系统从展示级转竞技级欠下的两笔账。</p>
+          <div class="rule">
+            <h3>核心课题</h3>
+            <p>一，冲刺档的两个病灶治到根因层，修复不许以砍动画为代价；二，移动库裁到 MOBA 品类值得付的量，并且立下判据，管住以后每一次"这条动画留不留"的争论。</p>
+          </div>
+          <h3>分工与工作方式</h3>
+          <p>作者（战斗 3C 策划，不写 C++）：出课题、定设计原则、否决方案、每一轮实机验收。AI agent（经 AIK 编辑器自动化桥）：库数据实测、资产修改、引擎源码查证，本案唯一一处 C++（控制台变量注册）也由 AI 代写、作者提交。程序：本轮零投入。</p>
+          <p>工作方式上有一条贯穿全程：单变量实验加明确证伪。AI 的每个结论都要过作者实机复核，实录里 AI 被驳回、被打脸的地方全部保留原样，那正是定位问题最快的几步。</p>
+        </section>
+
+        <div class="part"><b>过程</b></div>
+
+        <section id="research">
+          <h2>业界调研</h2>
+          <!-- 逐案:它的做法→借了什么/为什么排除,注明核实方式。适合 table;外部参考资料可放超链接 -->
+          <p>先回答必答题：处理"动画库太大养不起"，业界最普遍的做法是<b>动画数据分档</b>，同一套匹配框架，配不同保真度的候选库。这个先例不用出门找，GASP 官方自带 Dense/Sparse 两档。我们与它的差异只有一步：顺着它的砍法再切一档品类特化档，并把"砍什么"从官方的经验做法整理成可执行的判据。</p>
+          <table>
+            <thead><tr><th>对象</th><th>它的做法</th><th>借了什么 / 为什么不走</th><th>核实方式</th></tr></thead>
+            <tbody>
+              <tr><td><b>GASP Sparse（官方精简档）</b></td><td>高频移动四族砍 66%（624 → 215），低频（跳跃/待机/落地/原地转身）不做精简版，路由直接指回 Dense</td><td>砍法策略全部照搬（见下表）；"精简高频、复用低频"的结构照搬</td><td>AIK 编辑器实测，16 对同名库逐条 entry 对比</td></tr>
+              <tr><td><b>Fortnite</b></td><td>与 GASP 同款 PoseSearch 框架，上线跑竞技</td><td>框架层竞技可用的信心，框架一行不重写</td><td>Epic 公开资料</td></tr>
+              <tr><td><b>Marvel Rivals</b></td><td>locomotion 全部原地动画（拆包实测 12 片段 root 位移 = 0）加 6 向 blendspace，胶囊驱动，完全不用 MM</td><td>竞技射击的另一极参照：响应优先可以彻底不要 MM。没走这条：已有 MM 框架与资产的沉没成本，以及转向/起步的表现上限</td><td>项目内拆包资产实测。注意边界：其状态机结构文档是由命名反推的，非真实 ABP 解析</td></tr>
+              <tr><td><b>ALS（社区）</b></td><td>上一代事实标准：状态机 + blendspace + 分层 Overlay</td><td>无直接借用，作为技术代际坐标</td><td>公开仓库</td></tr>
+            </tbody>
+          </table>
+          <h3>从 Sparse 逆向出的五条砍法</h3>
+          <p>对 16 对同名库逐条对比后，官方的砍法可以归纳成五条（这是我们自己的归纳，不是官方文档写的）：</p>
+          <table>
+            <thead><tr><th>#</th><th>策略</th><th>实例</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Sprint 系不砍</td><td>Loops 7 / Starts 6 / Stops 2，两档同份（本就极简）</td></tr>
+              <tr><td>2</td><td>方向矩阵砍 45° 对角，留正向与 90° 侧向</td><td>Run_Stops 20 → 12，对角靠惯性混合在 0.2s 内插出来</td></tr>
+              <tr><td>3</td><td>折返库砍复合过渡</td><td>Run_Pivots 136 → 34（−75%），Diamond/Hourglass/Prism 全砍</td></tr>
+              <tr><td>4</td><td>Reface 反身起步全留</td><td>急转后起步是玩家最敏感的戏剧瞬间，8 条一条不砍</td></tr>
+              <tr><td>5</td><td>巡航砍微变体</td><td>微偏角、相位偏移、单脚 mirror，靠轨迹插值补回</td></tr>
+            </tbody>
+          </table>
+          <div class="aside">
+            <p>这一节的谱系实测多于文献。"竞技游戏怎么裁动画库"这种行业常识很少有人专门写文章，检索只能找到被写下来的东西（路灯效应），所以先例主要靠拆手边的资产。谱系有没有漏掉更近的同类解，入库前要请作者本人过目。</p>
+          </div>
+        </section>
+
+        <section id="decision">
+          <h2>方案排定</h2>
+          <!-- 候选路径、取舍标准(体验优先级/成本/风险)、每步为什么。写决策过程,不要只给结论。
+               两个平行候选的对比可用 .grid+.box 双卡;回退条款用 .rule 卡 -->
+          <p>方案是四刀切出来的，每一刀都有被否掉的对手。</p>
+          <h3>第一刀：框架和资产分开判</h3>
+          <p>裁库之前先回答一个更根本的问题，作者的原话问得很直接：</p>
+          <blockquote>实际上 如果我们是一个上线项目 直接采用 GASP 这套移动资产 会不会太挫了？ 但感觉自己做 意义又不大<br><i>作者，2026-06-22</i></blockquote>
+          <p>判断是把这个问题拆成两层。框架层（MM 匹配 + PoseSearch + Chooser 路由 + Warping 变形）直接吃，一行不重写，Fortnite 同款没什么可自研的；资产层分级换：旗舰英雄专属全套，普通英雄共享下半身加专属上半身 Overlay，杂兵全共享。"挫不挫"只发生在资产层，而资产层是可以逐英雄逐步替换的。</p>
+          <h3>第二刀：裁多少</h3>
+          <p>让 AI 分别站动画设计师、程序、3C 策划三个立场各给一份保留清单，三个视角的结论收敛成一句判据（见下卡）。然后算两档账：只砍 Walk，省 29%；Walk 和 Crouch 全砍，省 58%，落到 8 库 87 条。作者拍板走激进档："没有 Crouch 也没有 Walk"。MOBA 视角拉得远，走与跑的姿态差玩家几乎不可感知；下蹲这个动词在本项目玩法里根本不存在。低速走位（补刀、卡位）靠 Stride Warping 压步幅防脚滑兜底。</p>
+          <div class="rule">
+            <h3>保留判据（本案最重要的沉淀）</h3>
+            <p>一条动画候选留不留，三问：玩家<b>能感知</b>吗；玩家<b>做得出</b>这个操作吗；它<b>影响命中判定</b>吗。三选一就留，三个都不沾就砍。程序侧另有一条硬指标兜底：单库候选 ≤35 条是搜索开销与匹配干净度的舒适区。</p>
+          </div>
+          <h3>第三刀：Gait 档位的驱动依据</h3>
+          <p>修冲刺病灶时 AI 先后提过两个方案：锁档（起步保护期强制 Run 1.3 秒）和瞬时速度驱动。都被否了，否决原话在第 04 节实录里。定下来的原则：<b>Gait 由"角色能跑多快"（移速属性，运行时含 buff 的 GetMaxSpeed）决定，不由"此刻跑多快"（瞬时速度）决定</b>。加速期是暂态，档位是身份，身份不该随暂态漂移。配迟滞双阈值（升 560 / 降 480）防临界抖动。</p>
+          <h3>第四刀：验证工具先行</h3>
+          <p>裁库是数据决策，数据决策要能实机 AB 才敢下刀。所以先做局内切换开关再动库：控制台变量方案（作弊位，不写配置不持久化，重启回 Dense），挂在 F1 GM 面板上一个勾选框。这一步顺序是有意的，工具先于决策。</p>
+          <div class="rule">
+            <h3>回退条款</h3>
+            <p>裁库用软改：只删 Chooser 路由行，不删插件共享库的任何资产。路由不到等于不存在，效果与删库相同，但随时可以把行加回来；共享库牵一发动全身（多英雄引用、归一化集合引用 Crouch 库），物理删除不可轻回滚。所有匹配参数（采样范围、cost bias）的调整，没调稳的一律回退不提交。</p>
+          </div>
+        </section>
+
+        <section id="implementation">
+          <h2>实验与落地实录</h2>
+          <!-- 时间序:对齐的接口与约束→各轮实验(假设→验证→数据→证实/证伪)→审查/意外收获。
+               被否方案保留完整篇幅:"为什么它看起来对、实际错在哪"。执行者(人/AI)如实注明。
+               竞品坑/教训用 .note 卡 -->
+          <p>按时间序五场战役。执行者均为 AI agent，每轮结论由作者实机复核。</p>
+
+          <h3>战役一：冲刺打摆子，三层根因（06-02）</h3>
+          <p>650 移速按住前进进不了巡航。根因链逐层挖出，一层比一层深：</p>
+          <ol>
+            <li><b>Gait 变量全项目无驱动来源</b>。GASP 原版在它自己的角色蓝图里 set Gait，本项目角色是 C++ 类不继承它，转型失败后 Gait 永远卡在动画蓝图默认值 Run（C++ 全局检索 0 处写入实证）。</li>
+            <li>Chooser 路由只认 Gait 枚举不看速度，于是永远只把 Run 巡航库喂给 MM。</li>
+            <li>Run 巡航库里藏着两条"Sprint 转 Run"的过渡动画，原生速度约 650 与查询轨迹匹配度最高，MM 反复选它们，循环不止。</li>
+          </ol>
+          <p>当天先落地 Gait 驱动（临时用瞬时速度版）并断开原版每帧把 Gait 覆盖回 Run 的原始 bug。之后 AI 开始连环调参（重选开关、cost bias 一路加码到 −0.5、直接禁用条目），越调越乱，被作者叫停：</p>
+          <blockquote>还是会混 你先别急 这样打补丁修改肯定是不合理的<br><i>作者，2026-06-02</i></blockquote>
+          <div class="note">
+            <p>撤回补丁时发现一个大乌龙：前几轮所有库改动改的都是 Steel 目录下的副本，而角色实际走的是插件目录的原版库，等于全部白改。教训：改共享资产前先摸清引用链，"我以为在改的库"和"角色在用的库"可以不是同一个。</p>
+          </div>
+
+          <h3>战役二：Dense 和 Sparse 到底差在哪（06-15 ~ 06-16）</h3>
+          <p>为裁库做的全量实测：16 对同名库逐条对比，移动四族 624 → 215（−66%），折返库砍得最狠（Run_Pivots 136 → 34），Sprint 系一条不砍。两档引擎参数完全一致（同 Schema、同 KD 树配置），Sparse 只减候选不动算法。中途 AI 断言"Sparse 档不能跳跃"，被作者实机打脸：</p>
+          <blockquote>我切到 SPARSE 后 是有跳跃的呀<br><i>作者，2026-06-15</i></blockquote>
+          <p>修正后的认知成了裁库结构的地基：Sparse 只精简巡航/起步/急停/折返四类高频族，跳跃、待机、落地、原地转身这些低频库不做精简版，路由直接指回 Dense。五条砍法的归纳见第 02 节。</p>
+
+          <h3>战役三：冲刺卡过渡，速度失配（06-24）</h3>
+          <p>裁库方案定稿后回头治病灶。先确认与精简无关（作者："不是 我是说 dense 的 psd 里 依然会这样"）。第一个假设"重选开关导致粘滞"被单变量实验干净证伪。决定性证据来自 Blend Stack 调试面板：巡航动画的播放速率显示 0.86，反推动画原生速度 650 / 0.86 ≈ <b>756</b>，正是 GASP 标准三档 200/500/750 里的 750。根因就此清楚：<b>角色 650 与动画 756 的速度失配</b>。"Run 转 Sprint"的过渡动画中段必然扫过 650，那一帧的匹配代价天然最低，MM 死守它不放，动画层没有坏，是数据和配置的错配。</p>
+          <p>修法是把过渡动画的采样范围限到前半段 [0, 0.5]，稳了；试着放宽到 [0, 0.8]，又乱（作者："又开始乱切了 而且乱七八糟的"），回到 0.5。结论记录在案：在采样这个维度上，"起步动画完整"和"巡航无波浪"天生冲突，没有甜点值，停止调参。</p>
+          <p>这场战役里 AI 有一次自我收回值得记录：曾推荐用 Stride Warping 解决速度失配，查证后收回，因为匹配代价用的是烘进 KD 树的原始轨迹，Warping 是选中之后的变形，改的是"选中之后脚怎么摆"，改不了"MM 选谁"。</p>
+          <p>Gait 驱动依据的三连纠错也发生在这天，最后一问 AI 被引擎源码打脸：</p>
+          <blockquote>这么设计好像不对吧，假如我角色的移速属性已经达到 650 了，当前速度还没达到，我这时候也不应该锁在 run 的 start 呀<br><i>作者，2026-06-24，否决"起步保护期锁 Run"方案，确立移速属性驱动原则</i></blockquote>
+          <blockquote>那个值确实不是那里，我所说的 是游戏实际运行时生效的速度属性。我现在进入之后会有一个加速 buff<br><i>作者，2026-06-24，指出真实移速要含 buff</i></blockquote>
+          <blockquote>你确定是吧 现在没办法拿到真实移速？ 你确认下<br><i>作者，2026-06-24。AI 此前断言 GetMaxSpeed 不可蓝图调用、必须加 C++ 接口，查引擎源码后认错：它本就是 BlueprintCallable</i></blockquote>
+          <p>落地方案：事件图（游戏线程）每帧把 GetMaxSpeed 缓存进 EffectiveMaxSpeed 变量，动画线程读变量算 Gait，绕开线程安全限制（GetMaxSpeed 节点由作者在编辑器手连，AIK 生成不了引擎继承函数的本地化节点）。</p>
+          <p>三值全对之后起步还是不进起步库，最后一环是 GASP 原始数据自己的 bug：Sprint 子表里"巡航行（条件填 Any）"排在"起步行（条件 = True）"之前，Any 兜底行截胡了一切；Run 子表行序本来就对，所以 Run 从来没犯病。挪一行修复。作者当天验收："现在对了 还有什么茬子不你感觉"。</p>
+
+          <h3>战役四：起步误选 Reface，七轮证伪，未根治（06-24 晚 ~ 06-25）</h3>
+          <p>冲刺稳了之后，起步问题浮出：正前直跑，起步却播反身 180° 转身动画，还在左右两个 180 之间抽搐。七轮假设全部证伪：</p>
+          <table>
+            <thead><tr><th>轮</th><th>假设</th><th>验证</th><th>结果</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>上一战役补进起步库的过渡动画扰动了匹配空间</td><td>禁用后重建索引</td><td><span class="no">证伪</span> Reface 照旧</td></tr>
+              <tr><td>2</td><td>特定角色骨骼问题</td><td>换 Sparrow 对照</td><td><span class="no">证伪</span> 同骨骼同表现</td></tr>
+              <tr><td>3</td><td>strafe 朝向模式（面朝 ≠ 移动向）</td><td>运行时切朝移动方向</td><td><span class="no">否决</span> Reface 消失但违背设计意图：镜头朝后时就该有反身转跑</td></tr>
+              <tr><td>4</td><td>轨迹生成漏配镜头转向速率钳制</td><td>补配 MaxControllerYawRate=100</td><td><span class="no">证伪</span> 无效，回退</td></tr>
+              <tr><td>5</td><td>朝向模式在 C++ 层永久生效再测</td><td>编译实测，运行时确认 flag 生效</td><td><span class="no">证伪</span> 仍 Reface，彻底排除朝向路线</td></tr>
+              <tr><td>6</td><td>Gait 改瞬时速度驱动</td><td>实测</td><td><span class="no">证伪</span> 更糟：临界抖动，且暴露 Run 起步同样有 Reface（全向库把它盖住了）</td></tr>
+              <tr><td>7</td><td>限制 Reface 采样到转身段</td><td>实测仍抽搐</td><td><span class="later">存疑</span> 事后发现 AIK 写采样范围读不回、无法确认真正生效，此方案等于从未被真正测过</td></tr>
+            </tbody>
+          </table>
+          <p>方向的每一次扭转都来自作者的追问。第一问挖出数据面：Run 起步库 28 条全向覆盖，Sprint 起步库只有 8 条（正前 2 + Reface 4 + 补的过渡 2），侧向中间角度全缺，GASP 的设计里 Sprint 是"Run 的加速态"，起步库天然残缺。第三问破了题：</p>
+          <blockquote>跑起来了，不过你得想一个问题 为什么 run 没有这个问题 sprint 才有<br><i>作者，2026-06-25</i></blockquote>
+          <blockquote>我禁了 但是我这是想引出一个问题，为什么连这两个都会抢 似乎就不是角度判断的问题了吧<br><i>作者，2026-06-25。由此破题：MM 匹配的核心是速度与运动状态，不只是角度。角色升档瞬间早已带速，"静止起步"动画的匹配代价天然高于"带速升档"的候选，MM 一直没选错，是场景与数据的矛盾</i></blockquote>
+          <blockquote>现在是好的啊 但是我不能接受其它的动画没了啊<br><i>作者，2026-06-25。禁用实验虽然顺了，但砍掉反身和升档动画不可接受，手感红线：根治不许以动画为代价</i></blockquote>
+          <p>另一条机制事实也在这轮挖出：起步状态的判定是"未来速度 ≥ 当前速度 + 100"，0 → 650 的整个加速期这个条件恒成立，角色全程被关在残缺的起步库里撞数据。</p>
+          <p>战役里有一个 AI 自己埋、自己挖出来的坑：上一战役"进不了巡航"的元凶，正是 AI 同批补进起步库的两条过渡动画（GASP 原版起步库根本没有过渡类候选），撤掉后起步到巡航当即顺畅。AI 当时原话："这个'进不了 Loop'是我自己埋的坑，现在填上。"补库这个动作本身就是回归源，没有证据不要往库里加东西。</p>
+          <p>最终状态：误选 Reface 未根治。调试绘制实测查询轨迹朝前正常，根因收窄为 Reface 后半段（转身完成后向前冲）的轨迹与直跑查询同貌且代价反超正前起步。下一步是编辑器手动设采样范围复测第 7 轮，以及 Rewind Debugger 逐帧代价拆解，都记在遗留区。</p>
+
+          <h3>战役五：局内一键 AB 与收尾（06-24 ~ 06-26）</h3>
+          <p>切换开关的实现比预想省：GASP 原生就设计了控制台变量驱动档位（动画蓝图里现成的读取函数），项目移植时断了两处链，变量没在 C++ 注册、函数没有调用者。补齐三件：C++ 注册（作弊位、不持久化）、事件图补回调用、GM 面板加勾选框（面板的执行函数本质是控制台命令透传，零新增 C++）。继承扫描确认 11 个英雄全部生效；两个直接继承 C++ 基类的英雄（Narbash/Riktor）拿不到切换，作者拍板接受，根治方案（逻辑下沉 C++）备查。</p>
+          <p>期间一个像 bug 的乌龙：不勾选 Sparse，角色却跑着 Sparse。真相是控制台变量是编辑器进程级全局，此前手动设过的值在 PIE 重开后不重置，而勾选框每次重新初始化为未勾选，UI 在撒谎。修复是面板每次显示时反读变量同步勾选状态。调试开关必须做状态回读，否则开关本身会误导排查。</p>
+          <div class="note">
+            <p>工艺事故：AIK 大事务（一次 spawn 多节点 + 连线 + 编译 + 保存）压崩编辑器三次，崩溃期间 Perforce 待提交列表被改号。此后立规矩：编辑器自动化拆最小事务，保存成功只信 LogSavePackage 日志，不信工具返回值。细目在附录。</p>
+          </div>
+          <p>收尾一件：补回的读取函数在专用服务器上每帧刷"找不到控制台变量"的警告（它顺带读 4 个只在编辑器注册的 GASP 调试变量），断掉那 4 条支路只留档位那条，日志安静。</p>
+        </section>
+
+        <div class="part"><b>结果</b></div>
+
+        <section id="solution">
+          <h2>终案分层</h2>
+          <!-- 实验尘埃落定后的静态全貌:分层拆解,每层一句"它守住了哪条体验"。
+               几何/分层/时序关系画内联 SVG(class="diagram",颜色只用 var(--accent)/var(--brass)/var(--line)/var(--muted)/var(--ink)) -->
+          <p>尘埃落定后的系统是四层，自下而上：</p>
+          <table>
+            <thead><tr><th>层</th><th>形态</th><th>它守住的体验</th></tr></thead>
+            <tbody>
+              <tr><td><b>数据层</b></td><td>MOBA-Lite 档：8 库 87 条（Run 四族 70 + Sprint 四族 17），跳跃/待机/落地/原地转身复用 Dense 不重做</td><td>量产账（每英雄 624 → 87），以及匹配干净度：候选越少，互相抢戏越少</td></tr>
+              <tr><td><b>驱动层</b></td><td>Gait = 移速属性（运行时含 buff），事件图缓存变量给动画线程；迟滞升 560 / 降 480</td><td>档位换挡的确定性：买了加速鞋，静止起步直接播冲刺起步，不用先跑几步再切</td></tr>
+              <tr><td><b>路由层</b></td><td>Chooser 修正：起步行提到兜底行之前；过渡动画限采样 [0, 0.5]</td><td>起步动画该出就出，巡航不被过渡动画抢戏</td></tr>
+              <tr><td><b>工具层</b></td><td>F1 面板一键 Dense/Sparse，进程内即时生效，重启回默认</td><td>之后每一次裁库取舍都能被实机 AB 检验，不靠嘴争</td></tr>
+            </tbody>
+          </table>
+          <svg class="diagram" viewBox="0 0 920 300" role="img" aria-label="MM 路由链与本案修正点">
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+              </marker>
+            </defs>
+            <rect x="20" y="110" width="150" height="58" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="95" y="134" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">Root Chooser</text>
+            <text x="95" y="153" text-anchor="middle" fill="var(--muted)" font-size="11">按英雄 ID 路由</text>
+            <rect x="220" y="110" width="130" height="58" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="285" y="134" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">LOD 列</text>
+            <text x="285" y="153" text-anchor="middle" fill="var(--muted)" font-size="11">0=Dense / 1=Sparse</text>
+            <rect x="400" y="110" width="180" height="58" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="490" y="134" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">四列条件</text>
+            <text x="490" y="153" text-anchor="middle" fill="var(--muted)" font-size="11">模式 / 姿态 / 起停 / Gait</text>
+            <rect x="630" y="30" width="270" height="50" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+            <text x="765" y="51" text-anchor="middle" fill="var(--ink)" font-size="12.5" font-weight="600">Sprint 起步库（8 条）</text>
+            <text x="765" y="68" text-anchor="middle" fill="var(--brass)" font-size="11">修正：起步行提到兜底行之前</text>
+            <rect x="630" y="124" width="270" height="50" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+            <text x="765" y="145" text-anchor="middle" fill="var(--ink)" font-size="12.5" font-weight="600">Sprint 巡航库（7 条）</text>
+            <text x="765" y="162" text-anchor="middle" fill="var(--brass)" font-size="11">修正：过渡动画限采样 [0, 0.5]</text>
+            <rect x="630" y="218" width="270" height="50" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+            <text x="765" y="239" text-anchor="middle" fill="var(--ink)" font-size="12.5" font-weight="600">Run 四族 / 低频库</text>
+            <text x="765" y="256" text-anchor="middle" fill="var(--muted)" font-size="11">低频不做精简版，直接复用 Dense</text>
+            <line x1="170" y1="139" x2="212" y2="139" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="350" y1="139" x2="392" y2="139" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="580" y1="125" x2="622" y2="62" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="580" y1="139" x2="622" y2="149" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <line x1="580" y1="155" x2="622" y2="238" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
+            <text x="285" y="98" text-anchor="middle" fill="var(--brass)" font-size="11">F1 面板 / 控制台变量驱动</text>
+            <text x="490" y="98" text-anchor="middle" fill="var(--brass)" font-size="11">Gait ← 移速属性（迟滞 560/480）</text>
+          </svg>
+          <p>数据层的量产含义单独说一句：新英雄的移动动画交付清单从此按 8 库开列（Run 巡航 ~10、起步 ~14、急停 12、折返 34，Sprint 四族 17），明细在配套的量产标准文档里，这里不重抄。</p>
+        </section>
+
+        <section id="acceptance">
+          <h2>验收实录</h2>
+          <!-- 实测结论与原话(注明验收人身份与样本量,如"验收人=需求方本人,n=1")。
+               逐条验收表:# | 验收项 | 状态(.ok/.no/.later 徽章) -->
+          <p>验收人 = 需求方本人（作者），编辑器 PIE 实机，n = 1；DS 侧一项由服务器程序同事在其环境同步后确认。</p>
+          <table>
+            <thead><tr><th>#</th><th>验收项</th><th>状态</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>650 移速按住前进，起步进冲刺起步库、随后稳定巡航</td><td><span class="ok">通过</span></td><td>验收原话："现在对了 还有什么茬子不你感觉"（06-24）</td></tr>
+              <tr><td>2</td><td>巡航无过渡动画抢戏（无波浪）</td><td><span class="ok">通过</span></td><td>限采样 [0, 0.5] 后："现在稳了"（06-24）</td></tr>
+              <tr><td>3</td><td>升降档迟滞，无临界抖动</td><td><span class="ok">通过</span></td><td>560/480 为估值，手感定稿留遗留</td></tr>
+              <tr><td>4</td><td>F1 一键 Dense/Sparse，局内即时生效</td><td><span class="ok">通过</span></td><td>11 个英雄逐一扫描确认继承链生效</td></tr>
+              <tr><td>5</td><td>专用服务器日志无控制台变量警告</td><td><span class="ok">通过</span></td><td>验证人 = 服务器程序同事，其环境同步后确认</td></tr>
+              <tr><td>6</td><td>起步不误选反身动画</td><td><span class="no">未过</span></td><td>七轮证伪未根治，下一步方案在遗留区</td></tr>
+              <tr><td>7</td><td>Narbash / Riktor 两英雄的档位切换</td><td><span class="later">已接受</span></td><td>继承链不经过共享父蓝图，作者拍板不管，根治方案备查</td></tr>
+            </tbody>
+          </table>
+          <p>验收局限：全部为单人 PIE 场景，未做多人对局与真机验证；迟滞阈值与 buff 后实测移速（595，与配置 650 的差额未查清）都还挂着账。</p>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="params">
+          <h2>关键参数</h2>
+          <!-- 拍板的数字/阈值/曲线,逐条附体验依据。用 table,包在 details.fold 里 -->
+          <details class="fold"><summary>展开参数表</summary>
+            <table>
+              <thead><tr><th>参数</th><th>值</th><th>体验依据</th></tr></thead>
+              <tbody>
+                <tr class="group"><td colspan="3">档位驱动</td></tr>
+                <tr><td>Gait 升档阈值</td><td>560</td><td>迟滞上沿。升档步频突变恒为动画两档速度比（约 1.5 倍），与阈值取值无关，阈值只影响 Sprint 段的慢动作感；560 为估值待手感定稿</td></tr>
+                <tr><td>Gait 降档阈值</td><td>480</td><td>迟滞下沿，与 560 拉开 80 防临界往复抖动</td></tr>
+                <tr><td>起步判定</td><td>未来速度 ≥ 当前 + 100</td><td>GASP 原生机制。副作用：0 → 650 加速全程判为起步，全程关在起步库里，这是误选 Reface 的场景来源</td></tr>
+                <tr><td>起步保护时长</td><td>1.3s</td><td>GASP 原生 ForceStartTimer</td></tr>
+                <tr class="group"><td colspan="3">动画数据</td></tr>
+                <tr><td>动画原生速度三档</td><td>200 / 500 / 750</td><td>GASP 标准；Sprint 巡航实测 756（播放速率 0.86 @ 角色 650 反推），速度失配的源头</td></tr>
+                <tr><td>过渡动画采样范围</td><td>[0, 0.5]</td><td>0.5 稳、0.8 乱，实测两点定界；起步完整与巡航无波浪在此维度天生冲突，无甜点值</td></tr>
+                <tr><td>持续姿势代价偏置</td><td>−0.01</td><td>GASP 默认。连环加码到 −0.5 的暴力实验已证伪回退</td></tr>
+                <tr class="group"><td colspan="3">库规模</td></tr>
+                <tr><td>Dense 移动四族</td><td>16 库 624 条</td><td>展示级全量</td></tr>
+                <tr><td>Sparse 移动四族</td><td>16 库 215 条</td><td>官方精简，−66%</td></tr>
+                <tr><td>MOBA-Lite</td><td>8 库 87 条</td><td>本案定稿；单库 ≤35 条的程序侧舒适区全部满足</td></tr>
+                <tr><td>起步库覆盖对比</td><td>Run 28 条 / Sprint 8 条</td><td>Sprint 起步库天然残缺，误选 Reface 的数据面</td></tr>
+                <tr class="group"><td colspan="3">切换开关</td></tr>
+                <tr><td>档位变量</td><td>DDCvar.MMDatabaseLOD，0=Dense / 1=Sparse</td><td>作弊位：不写配置、不持久化、重启回 Dense；进程级全局，UI 必须反读同步</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+
+        <section id="leftovers">
+          <h2>遗留与保险丝</h2>
+          <!-- 挂着的需求、兜底设计、已知妥协;验收局限(如未做多人盲测)也列在这里 -->
+          <details class="fold"><summary>展开清单</summary>
+            <ul>
+              <li><b>起步误选 Reface 未根治</b>（验收 #6）。已排除：轨迹朝向、骨骼、朝向模式、镜头转向速率、瞬时速度驱动。根因收窄为 Reface 后半段轨迹与直跑查询同貌且代价反超。下一步：编辑器手动设采样范围复测第 7 轮（绕开工具写入盲区）；Rewind Debugger 逐帧代价拆解，看哪个通道让 Reface 赢。</li>
+              <li>Run 起步同样存在 Reface 误选，全向库把它盖住了（战役四第 6 轮暴露）。</li>
+              <li>上一批补进 Sprint 起步库的两条过渡待正式撤回（实验已验证撤后顺畅，改动回退未提交，半成品不入库）。</li>
+              <li>Sparse 档未同步 Dense 侧的行序与限采样修复，切到 Sparse 会重现修复前的波浪。</li>
+              <li>起步爆发感的 StartBoost（CMC 扩展）已实现未启用：网络同步缺移动合并比较（CanCombineWith），起步帧被合并后客户端与服务器算不出同一份加速状态，会回弹。修复思路已给程序。</li>
+              <li>迟滞 560/480 未按手感定稿；buff 后实测移速 595 与配置 650 的差额未查清。</li>
+              <li>档位切换变量的读取每帧查找 500 次（仅开发版警告），可用 C++ 缓存指针消除，非必须。</li>
+              <li>MOBA-Lite 的 Chooser 删行（软改）方案留档未执行，等量产英雄第一次真正用到 87 条清单时一并落。</li>
+              <li>验收局限：无多人对局盲测、无真机。</li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="methodology">
+          <h2>方法论沉淀</h2>
+          <!-- 知识库钩子:候选元规则/反模式/检查清单,每条写适用边界。只收 3C 方法论,工具坑放附录。
+               入库时据此反哺 references/ -->
+          <details class="fold"><summary>展开沉淀条目</summary>
+            <p>候选元规则（M），入库时并入 references 并与本案建双向引用：</p>
+            <ul>
+              <li><b>三选一才留</b>：表现资产裁减的保留判据，能感知、做得出、影响命中判定。适用边界：任何动画/特效/表现类候选库的量产裁减；不适用于逻辑资产（逻辑缺一条就是功能缺失，不是保真度问题）。</li>
+              <li><b>档位由属性驱动，不由瞬时值驱动</b>：Gait、姿态档、任何"角色处于哪一档"的判断，依据是角色的能力属性（含 buff 的运行时值），不是当下的瞬时状态；暂态用迟滞吸收。适用边界：档位语义是"身份"时成立；档位语义本身就是"当前物理状态"（如空中/落地）时不适用。</li>
+              <li><b>验证工具先于数据决策</b>：要动数据档，先做实机 AB 开关。适用边界：一切可分档、可开关的数据资产调优；开关本身要做状态回读，否则开关会误导排查。</li>
+              <li><b>选后变形改不了选谁</b>：匹配代价用的是烘焙进索引的原始数据，Warping 类节点是选中之后的修饰。适用边界：一切"检索 + 修饰"结构的系统（MM、寻路平滑、目标选取后的表现修正），治选择问题要去数据和查询侧。</li>
+            </ul>
+            <p>候选反模式（AP）：</p>
+            <ul>
+              <li><b>无证据补库</b>：往候选库里加条目是回归源，不是安全操作（本案"进不了巡航"的元凶正是自己补进起步库的过渡动画）。补库前先证明缺的是数据，而不是路由或驱动。</li>
+              <li><b>连环调参代替单变量证伪</b>：cost bias 一路加码到 −0.5 的那一小时什么都没定位到；三次干净的单变量证伪（重选开关、朝向、转向速率）各自省了一条弯路。</li>
+              <li><b>修共享资产不摸引用链</b>："我以为在改的库"和"角色在用的库"可以不是同一个，改错目标白干一轮。</li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="appendix">
+          <h2>附录：未入正文的素材</h2>
+          <!-- 没进正文但可能有用的细节全倒进来,宁滥勿缺:数据、对话记录、资产/代码路径、内部编号(CL等只出现在这里)、中间结论 -->
+          <details class="fold"><summary>展开附录</summary>
+            <h3>提交记录（P4）</h3>
+            <table>
+              <thead><tr><th>CL</th><th>日期</th><th>内容</th></tr></thead>
+              <tbody>
+                <tr><td>5505016</td><td>06-24</td><td>Sprint 修复：Gait 驱动 + 迟滞 + 断原版覆盖 bug + Chooser 行序（两张表）+ 过渡限采样。其中"起步库补 2 条过渡"一项后被证明是回归源，已实验性撤回、待正式提交</td></tr>
+                <tr><td>5507768</td><td>06-24</td><td>Dense/Sparse 局内切换：C++ 变量注册 + 动画蓝图补调用 + GM 面板勾选</td></tr>
+                <tr><td>5508452</td><td>06-24</td><td>GM 面板勾选状态反读同步</td></tr>
+                <tr><td>5525796</td><td>06-26</td><td>专用服务器警告修复：切换函数只留档位支路</td></tr>
+              </tbody>
+            </table>
+            <h3>资产与代码路径</h3>
+            <ul>
+              <li>共享动画蓝图：<code>/Game/Heroes/ABP_HeroCharacter_MM</code>（父类 C++ HeroAnimInstanceBase；11 英雄继承且事件正确回父类，Narbash/Riktor 例外）</li>
+              <li>Sprint 库（插件共享，改前先认清这个目录才是在用的）：<code>/GASPALS/Characters/UEFN_Mannequin/Animations/MotionMatchingData/Databases/Dense/PSD_Dense_Stand_Sprint_*</code></li>
+              <li>路由表：<code>CHT_PoseSearchDatabases_Root</code>（按英雄 ID）→ <code>CHT_PoseSearchDatabases_Dense/_Sparse</code>；Steel/NormalCHT 下另有项目副本，注意区分</li>
+              <li>切换变量注册：<code>HeroAnimInstanceBase.cpp</code>；量产标准文档：<code>GameProject/Docs/motion-matching-locomotion-spec.md</code></li>
+            </ul>
+            <h3>工具工艺记录（AIK 编辑器自动化）</h3>
+            <ul>
+              <li>大事务（一次 spawn 多节点 + 连线 + 编译 + 保存）压崩编辑器 3 次；此后拆最小事务，保存成功只信 LogSavePackage 日志。崩溃会连带丢 p4 检出状态、pending 列表改号，崩后必须重查。</li>
+              <li>已知盲区：pin 的 connections 字段不可信（看 linked_to）；采样范围写后读不回，无法验证是否生效（战役四第 7 轮因此存疑）；引擎继承函数的本地化节点 spawn 不出，需人在编辑器手连。</li>
+              <li>p4 revert 会连带冲掉同文件上其他轮次的手动改动；同一文件不能拆在两个 pending CL。</li>
+            </ul>
+            <h3>未解之谜与中间数据</h3>
+            <ul>
+              <li>运行时实测移速 595，配置 650，差额来源未查（buff 数值链待对账）。</li>
+              <li>纯直跑不碰镜头的对照实验一度无 Reface，后同条件复现仍有，该对照未闭环。</li>
+              <li>调试绘制确认查询轨迹朝前正常，排除轨迹反向假设的关键证据。</li>
+            </ul>
+            <h3>素材来源</h3>
+            <p>本篇由三路考古材料写成：AI 会话记录（2026-06-02 起全程逐轮）、P4 提交历史（118 条移动相关）、项目文档与工作记忆。决策台账与逐轮证据：<code>knowledge-local/inbox/mm-archaeology/</code>（INDEX-总台账.md 及 00~05 分线文件，不入库）。</p>
+            <h3>修订记录</h3>
+            <table>
+              <thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead>
+              <tbody>
+                <tr><td>2026-07-13</td><td>v0.1</td><td>初稿：由考古台账整理成文，待作者过笔（亲笔位：标题/作者按/各节首句/结论）与内行嗅觉关（调研谱系）</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Motion Matching 调参手册 · 参数总查表</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:20px 60px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{border-bottom:none;}
+    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Movement · Doc MOV-REF</div>
+      <h1>Motion Matching 调参手册</h1>
+      <p class="lede">MM 的参数散在数据库、Schema、动画标记、动画蓝图节点、轨迹生成五个地方，出了问题不知道去哪层调，是这套系统最大的使用成本。本手册把项目路径上用得到的参数<b>全部收编</b>：每个参数标机制、标项目现值、标实战案例；配一张症状反查表，先定位、再验证、后动手。</p>
+      <!-- TL;DR:快读层。四行各一句,给只有 3 分钟的读者。分工行必须如实写明 人/AI/程序 各做了什么 -->
+      <div class="tldr">
+        <div><i>定位</i><span>MM 调参的单一查表：症状 → 先验证什么 → 动哪个参数 → 怎么确认生效。读者是调移动手感的策划、接手的同事，和以后被派来调参的 AI agent。</span></div>
+        <div><i>覆盖</i><span>项目实用档：<b>约 60 个参数与模块条目展开</b>（P0 手感必调 / P1 治病专用 / P2 性能量产 / P3 认知级），26 个实验参数只列名。</span></div>
+        <div><i>证据</i><span>四档分离：<b>【源码】</b>= 项目引擎 5.7.1 fork 逐行核实 /<b>【项目】</b>= 资产实读现值 /<b>【实战】</b>= 本项目战役记录 /<b>【推断】</b>= 待验证，全文不混档。</span></div>
+        <div><i>基线</i><span>UE 5.7.1（项目 fork）+ GASPALS 资产现值快照 2026-07-13。旧版教程差异见附录防雷清单。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>MOV-REF（调参手册）</b></div>
+        <div><i>版本 / 状态</i><b>v0.1 · 迭代中</b></div>
+        <div><i>维护方</i><b>战斗 3C 策划</b></div>
+        <div><i>编纂方式</i><b>策划定纲验收 + AI agent 源码盘点与资产实读</b></div>
+        <div class="wide"><i>配套文档</i><b>案例稿《三选一才留：MM 移动库的竞技化改造》（实战出处）；《MM 移动库精简规格（量产标准）》（项目仓库，团队内）。定稿后另出 Markdown 精简版进项目 Docs 供团队查表。</b></div>
+      </div>
+    </header>
+
+    <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
+    <div class="foreword">
+      <p>调了半年 Motion Matching，最大的感受不是参数难，是参数散。同一个"起步不对"，病根可能在库的行序、可能在采样范围、可能在驱动变量、也可能在轨迹预测，每次都要重新想一遍去哪找。这本手册就是把这半年翻过的地方一次性收编成查表，以后自己不用再考古，接手的人和 AI 也不用。</p>
+      <p>写法上有一条底线：不背旧教程。PoseSearch 这套插件在 UE 各版本间变动很大（5.7 删了 MirrorMismatchCostBias、废了 bShouldSearch 引脚、条目结构整个换了），网上资料大多停在 5.3 到 5.5。所以全部参数对着项目引擎的源码逐行核过，项目资产的现值也是编辑器里实读的，每条都标了证据档位，源码、项目、实战、推断分开写，不混。</p>
+      <p>用法建议从第 09 节症状反查表进：先按症状找到"先验证什么"，确认诊断了再动参数。直接从头读也行，第 01 节的两张图（数据流六层、cost 四项组成）把"病在哪层去哪层调"的地图画清楚了。</p>
+    </div>
+
+    <div style="margin-top:26px;padding:22px 30px 20px;border:1px solid var(--line);border-radius:6px;background:var(--paper);border-top:3px solid var(--accent);box-shadow:var(--shadow);">
+      <div style="font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--accent-text);margin-bottom:10px;">优化历程 · 手册背后的半年</div>
+      <p style="margin:0;color:var(--muted);font-size:13.5px;line-height:1.8;">这套参数不是一次配出来的。从 1 月接入到 7 月收官，移动手感按期推进，每期一篇过程记录（现象 → 根因 → 方案 → 效果，失败尝试保留）。手册管"参数是什么"，历程管"当时为什么这么调"：</p>
+      <table style="margin-top:14px;">
+        <thead><tr><th style="width:70px;">期</th><th style="width:110px;">周期</th><th>主题</th><th>这期干了什么</th></tr></thead>
+        <tbody>
+          <tr><td><b>一期</b></td><td>2026-01</td><td><a href="MM优化一期-数据流接入.html">数据流接入</a></td><td>45 个资产从零建起项目自持数据流：35 库 + 5 Schema + 双归一化集，CHT Root 路由奠定多英雄地基</td></tr>
+          <tr><td><b>二期</b></td><td>2026-02~03</td><td><a href="MM优化二期-起停手感.html">起停与折返手感</a></td><td>一天四连击治起步（保护窗 / 强制冲刺起步 / 动作裁剪 / 起步冲量），停步与折返链路同批打通，移速仲裁权收归 MCD</td></tr>
+          <tr><td><b>三期</b></td><td>2026-03~05</td><td><a href="MM优化三期-战斗上身与分层.html">战斗上身与分层</a></td><td>Overlay 体系逐英雄接入、spine 拧麻花、UpperBody 抖动根因（mesh-space）与 Slot 三件套定稿</td></tr>
+          <tr><td><b>四期</b></td><td>2026-06</td><td><a href="MM竞技化.html">竞技化改造</a></td><td>MOBA-Lite 裁库（624 → 87）、Sprint 战役、局内 Dense/Sparse 一键 AB（案例稿，含完整证伪链）</td></tr>
+          <tr><td><b>五期</b></td><td>2026-07</td><td><a href="MM优化五期-收官与全英雄治理.html">收官与全英雄治理</a></td><td>方向性移速衰减、310 蒙太奇重定向清理、半身分层终案；以"标准与差距"收尾，遗留如实</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">总览</div>
+        <a href="#goal"><i>01</i>一次匹配怎么发生</a>
+        <div class="grp">参数七层</div>
+        <a href="#research"><i>02</i>数据库层（PSDB）</a>
+        <a href="#decision"><i>03</i>Schema 层</a>
+        <a href="#implementation"><i>04</i>动画标记层</a>
+        <a href="#solution"><i>05</i>动画蓝图层（MM 节点）</a>
+        <a href="#modules"><i>06</i>修饰与分层模块地图</a>
+        <a href="#acceptance"><i>07</i>轨迹层</a>
+        <a href="#params"><i>08</i>路由与驱动层</a>
+        <div class="grp">速查</div>
+        <a href="#leftovers"><i>09</i>症状反查表</a>
+        <a href="#methodology"><i>10</i>调试工具箱</a>
+        <div class="grp">附录</div>
+        <a href="#appendix"><i>11</i>差异清单与待办</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>总览</b></div>
+
+        <section id="goal">
+          <h2>一次匹配怎么发生</h2>
+          <p>Motion Matching 每帧做一件事：拿"我现在的姿势 + 我接下来要去哪"当查询，去候选库里找 cost 最低的一帧动画跳过去播。所有调参都是在改这句话里的某个环节。项目里这条链共六层：</p>
+          <svg class="diagram" viewBox="0 0 940 360" role="img" aria-label="MM 数据流六层">
+            <defs>
+              <marker id="harr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+              </marker>
+            </defs>
+            <rect x="20" y="20" width="200" height="64" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="120" y="45" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">驱动变量（第 08 节）</text>
+            <text x="120" y="64" text-anchor="middle" fill="var(--muted)" font-size="11">Gait / IsStarting / LOD 档</text>
+            <rect x="270" y="20" width="200" height="64" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="370" y="45" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">Chooser 路由（08）</text>
+            <text x="370" y="64" text-anchor="middle" fill="var(--muted)" font-size="11">决定这帧搜哪些库</text>
+            <rect x="520" y="20" width="200" height="64" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="620" y="45" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">数据库 PSDB（02）</text>
+            <text x="620" y="64" text-anchor="middle" fill="var(--muted)" font-size="11">候选帧 + 各级 cost 偏置</text>
+            <rect x="20" y="120" width="200" height="64" rx="6" fill="none" stroke="var(--brass)" stroke-width="1.5"/>
+            <text x="120" y="145" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">Schema（03）</text>
+            <text x="120" y="164" text-anchor="middle" fill="var(--muted)" font-size="11">"像不像"用什么特征定义</text>
+            <rect x="270" y="120" width="200" height="64" rx="6" fill="none" stroke="var(--brass)" stroke-width="1.5"/>
+            <text x="370" y="145" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">动画标记（04）</text>
+            <text x="370" y="164" text-anchor="middle" fill="var(--muted)" font-size="11">帧级修饰：禁入/偏置/裁剪</text>
+            <rect x="520" y="120" width="200" height="64" rx="6" fill="none" stroke="var(--brass)" stroke-width="1.5"/>
+            <text x="620" y="145" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">轨迹层（07）</text>
+            <text x="620" y="164" text-anchor="middle" fill="var(--muted)" font-size="11">查询的另一半：预测去哪</text>
+            <rect x="270" y="230" width="200" height="64" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="370" y="255" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">MM 节点 + 混合栈（05）</text>
+            <text x="370" y="274" text-anchor="middle" fill="var(--muted)" font-size="11">搜索、跳转、过渡混合</text>
+            <rect x="520" y="230" width="200" height="64" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="620" y="255" text-anchor="middle" fill="var(--ink)" font-size="13" font-weight="600">修饰与分层（06）</text>
+            <text x="620" y="274" text-anchor="middle" fill="var(--muted)" font-size="11">OffsetRoot / 各类 Warping</text>
+            <line x1="220" y1="52" x2="262" y2="52" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#harr)"/>
+            <line x1="470" y1="52" x2="512" y2="52" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#harr)"/>
+            <line x1="620" y1="84" x2="620" y2="112" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#harr)"/>
+            <line x1="120" y1="184" x2="330 " y2="222" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#harr)"/>
+            <line x1="370" y1="184" x2="370" y2="222" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#harr)"/>
+            <line x1="620" y1="184" x2="420" y2="222" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#harr)"/>
+            <line x1="470" y1="262" x2="512" y2="262" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#harr)"/>
+            <text x="120" y="330" text-anchor="middle" fill="var(--brass)" font-size="11">索引期（改了要等重建）</text>
+            <text x="370" y="330" text-anchor="middle" fill="var(--brass)" font-size="11">运行期（改了立即生效）</text>
+            <text x="660" y="330" fill="var(--muted)" font-size="11">02/03/04 大多是索引期，05/06/07 是运行期</text>
+          </svg>
+          <h3>cost 怎么算【源码】</h3>
+          <p>一帧候选的总代价四项相加（PoseSearchCost.h）：</p>
+          <p><code>TotalCost = 特征差异（实时算）+ 帧级烘焙偏置 + 续接偏置 + 交互偏置（未用）</code></p>
+          <ul>
+            <li><b>特征差异</b> = Σ(（候选特征 − 查询特征） × 权重平方根）²。权重在 Schema 层定义，索引期烘焙。</li>
+            <li><b>帧级烘焙偏置</b>：起始值 = 库的 BaseCostBias → 若该帧被 ModifyCost 标记覆盖则<b>替换</b>（不是叠加）→ 可循环资产再加 LoopingCostBias。索引期烘进每帧元数据，半精度存储。</li>
+            <li><b>续接偏置</b>：只有"继续播当前这条"的那次评估会加 ContinuingPoseCostBias（负值 = 倾向不换）。运行期读取，改了立即生效。</li>
+          </ul>
+          <p>候选在算 cost 之前还要过三道黑名单：BlockTransition 标记（可顺播不可跳入）、同段邻域禁跳（PoseJumpThresholdTime）、近期已选禁重选（PoseReselectHistory）。另有一条整库跳过优化：已有结果的 cost 低于某库的理论下限时，那个库整个不搜。</p>
+          <div class="rule">
+            <h3>病在哪层去哪层</h3>
+            <p>选错动画：先查路由（08）和数据（02），再查轨迹（07）和 Schema 权重（03），bias 是最后的微调不是首选。选对了但过渡难看：混合（05）与修饰（06）。选对了但脚下滑：修饰层与数据速度对齐（06/02）。粘住不换或换太勤：bias 与重选抑制（02/05）。别上来就调 bias，它是天平上的小砝码，掩盖问题比解决问题快。</p>
+          </div>
+        </section>
+
+        <div class="part"><b>参数六层</b><span>P0 手感必调 · P1 治病专用 · P2 性能量产 · P3 认知级</span></div>
+
+        <section id="research">
+          <h2>数据库层（PSDB）</h2>
+          <p>数据库是候选帧的容器，也是三个 bias 的家。先记一条纪律再看参数：<b>动画原生速度必须覆盖角色移速档</b>。本项目 Sprint 战役的根因就是角色 650 对动画原生 756【实战】，这种失配任何 bias 都救不了，只能靠数据对齐或 PlayRate 吸收（见 05）。</p>
+          <h3>库级参数</h3>
+          <table>
+            <thead><tr><th>参数</th><th>级</th><th>默认 / 项目现值</th><th>机制与用法</th></tr></thead>
+            <tbody>
+              <tr><td><b>ContinuingPoseCostBias</b></td><td><span class="ok">P0</span></td><td>-0.01 / 巡航库 -0.01，起步与折返库 <b>-0.05</b>【项目】</td><td>粘滞度总闸：负得越多越不肯换动画。【源码】唯一免重建索引的运行时 bias，改了立刻生效，调参迭代永远从它开始。项目里过渡型库粘 5 倍是 GASP 原配，防起步/折返中途被抢</td></tr>
+              <tr><td>BaseCostBias</td><td><span class="later">P1</span></td><td>0 / 0【项目】</td><td>整库统一加减，用于库间竞争调势力。索引期烘焙，改了等重建；帧级 ModifyCost 标记会<b>覆盖</b>它（04）。调很负会干扰整库跳过优化的性能画像【源码】</td></tr>
+              <tr><td>LoopingCostBias</td><td><span class="later">P1</span></td><td>-0.005 / -0.005【项目】</td><td>给"可循环资产"的额外偏好。注意判定的是资产可循环性：条目裁了 SamplingRange 的循环资产不再按循环处理，也就吃不到这条【源码】</td></tr>
+              <tr><td><b>ExcludeFromDatabaseParameters</b></td><td><span class="later">P1</span></td><td>（0, -0.3) / 同【项目】</td><td>全库统一裁头裁尾。默认尾裁 0.3 秒："动画最后一段永远搜不到"是官方设计，留混出余量，不是 bug【源码】</td></tr>
+              <tr><td>NormalizationSet</td><td><span class="later">P1</span></td><td>无 / Run 系挂 PSN_*_All，<b>Sprint 四库全没挂</b>【项目】</td><td>多库共同归一化，保证跨库 cost 可比。项目现状：PSN_Dense_All 的 16 库清单不含任何 Sprint 库，Sprint 的 cost 在独立尺度上算，库切换瞬间续接与新候选不可比【推断】，Reface 案的新假设之一</td></tr>
+            </tbody>
+          </table>
+          <h3>条目级参数</h3>
+          <table>
+            <thead><tr><th>参数</th><th>级</th><th>机制与用法</th></tr></thead>
+            <tbody>
+              <tr><td><b>SamplingRange</b></td><td><span class="later">P1</span></td><td>条目级裁剪，治"过渡动画整段进搜索空间抢戏"：项目把 Run→Sprint 过渡限到 [0, 0.5] 后巡航稳定，放宽 [0, 0.8] 复乱【实战】。两个坑：裁循环资产丢 looping 待遇【源码】；经编辑器自动化写入后读不回、无法验证生效【实战】，改这个字段建议编辑器手动</td></tr>
+              <tr><td>bDisableReselection</td><td><span class="later">P1</span></td><td>按<b>源资产</b>整体禁止重选（含它的镜像段与 BlendSpace 采样段）。与 05 的 PoseJumpThresholdTime 是互斥的两条路，二选一不叠加【源码】</td></tr>
+              <tr><td>bEnabled</td><td><span class="later">P1</span></td><td>排查隔离专用：怀疑某条动画抢戏，关它重建索引对照，比猜快</td></tr>
+              <tr><td>MirrorOption</td><td><span class="later">P1</span></td><td>原始 / 镜像 / 两者。镜像需要 Schema 配 MirrorDataTable</td></tr>
+            </tbody>
+          </table>
+          <svg class="diagram" viewBox="0 0 940 170" role="img" aria-label="条目 SamplingRange 裁剪示意">
+            <text x="60" y="24" fill="var(--muted)" font-size="12">条目级 SamplingRange 实例：Run→Sprint 过渡动画（3.13s），限采样 [0, 0.5]【实战】</text>
+            <rect x="60" y="40" width="131" height="34" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="1"/>
+            <rect x="191" y="40" width="689" height="34" fill="var(--soft)" stroke="var(--line)" stroke-width="1" stroke-dasharray="4 3"/>
+            <text x="125" y="61" text-anchor="middle" fill="var(--ok)" font-size="11" font-weight="600">进搜索空间</text>
+            <text x="535" y="61" text-anchor="middle" fill="var(--muted)" font-size="11">被裁掉：后半段 ≈ 稳定 Sprint 姿态，整段进库会在巡航时抢戏</text>
+            <g fill="var(--muted)" font-size="10.5">
+              <text x="60" y="90" text-anchor="middle">0</text>
+              <text x="191" y="90" text-anchor="middle">0.5</text>
+              <text x="880" y="90" text-anchor="middle">3.13</text>
+            </g>
+            <text x="60" y="118" fill="var(--muted)" font-size="11">有效范围 = SamplingRange ∩ 库级尾裁（两者求交）【源码】。两个坑：裁了循环资产会丢 looping 待遇；</text>
+            <text x="60" y="136" fill="var(--muted)" font-size="11">自动化工具写入后读不回，改这个字段用编辑器手动【实战】。</text>
+          </svg>
+          <details class="fold"><summary>P2 性能与量产 · P3 列名</summary>
+            <table>
+              <thead><tr><th>参数</th><th>级</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td>PoseSearchMode</td><td>P2</td><td>PCAKDTree（项目在用）= PCA 投影 + kdtree 近似；BruteForce 全量精确，只用于对照验证（工具箱有对照 CVar）。VPTree / EventOnly 为实验模式，列名不展开</td></tr>
+                <tr><td>NumberOfPrincipalComponents / KDTreeQueryNumNeighbors / KDTreeMaxLeafSize</td><td>P2</td><td>项目现值 4 / 200 / 16，全库一致【项目】。邻居数 = 近似结果拿回来全量复算的候选量，大库搜索质量不稳先动它；邻居数 =1 时会丢弃原始值数组、完全信任近似结果【源码】</td></tr>
+                <tr><td>Pose / PCAValues 双去重阈值</td><td>P2</td><td>5.7 新增，相似姿势只存一份省内存；配套 KNNQueryNumNeighborsWithDuplicates 控制去重展开上限</td></tr>
+                <tr><td>Tags / AdditionalExtrapolationTime / ContinuingInteractionCostBias</td><td>P3</td><td>列名：库筛选标签 / 采样外推钳制 / 多人交互续接偏置（项目未用）</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+
+        <section id="decision">
+          <h2>Schema 层</h2>
+          <p>Schema 定义"像不像"这三个字：拿哪些特征、各占多重。调它之前先吃透权重管线的三条机制【源码】，不然会调出反效果：</p>
+          <div class="rule">
+            <h3>权重三机制</h3>
+            <p>一，<b>权重是相对量</b>：Normalize 系预处理会把全向量权重归一，调大轨迹权重等于自动稀释其余所有通道。二，<b>权重是索引期烘焙</b>：改了必须等索引重建才生效。三，权重对该通道 cost 贡献是<b>线性放大</b>（×2 权重 = ×2 误差贡献），且在 PCA 投影前就乘入，同样影响近似搜索阶段。</p>
+          </div>
+          <h3>项目实配（PSS_Default，实读）【项目】</h3>
+          <p>只有两个通道，比想象中朴素得多。SampleRate = 15（非引擎默认 30），预处理 = NormalizeWithCommonSchema（实验模式）。注意一个流传甚广的说法要修正：引擎构造器里 Trajectory 通道默认权重确实是 7（Pose 的 7 倍），<b>但 GASP 把它改回了 1</b>，靠逐样本权重精调：</p>
+          <table>
+            <thead><tr><th>通道</th><th>内容</th><th>权重</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="3">Trajectory（通道权重 1.0，5 个采样点）</td></tr>
+              <tr><td>-0.05s 历史点</td><td>水平位置</td><td>0.3</td></tr>
+              <tr><td>0s / 0.35s / 0.70s</td><td>朝向 + 位置/速度组合（水平面）</td><td>各 1.0</td></tr>
+              <tr><td><b>1.00s 远预测点</b></td><td>速度方向</td><td><b>1.5（全表最高）</b></td></tr>
+              <tr class="group"><td colspan="3">Group（GASP 真实的"姿势"定义，只有四件）</td></tr>
+              <tr><td>foot_l 相对 foot_r 位置</td><td>双脚相对构型（步态相位的几何表达）</td><td>1.0</td></tr>
+              <tr><td>foot_l / foot_r 速度</td><td>角色空间，共享 FeetVelZ 归一组（左右脚同尺度的标准做法）</td><td>各 0.3</td></tr>
+              <tr><td>pelvis 朝向 Y 轴</td><td>StripZ 只取水平面</td><td>0.1</td></tr>
+            </tbody>
+          </table>
+          <svg class="diagram" viewBox="0 0 940 320" role="img" aria-label="查询向量权重分布">
+            <text x="60" y="24" fill="var(--muted)" font-size="12">查询向量的"话语权"分布（条长 = 权重，项目实配）</text>
+            <text x="60" y="56" fill="var(--accent-text)" font-size="12" font-weight="700">轨迹（去哪）</text>
+            <g font-size="11.5">
+              <text x="238" y="86" text-anchor="end" fill="var(--muted)">-0.05s 位置（历史）</text>
+              <rect x="250" y="72" width="102" height="18" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="360" y="86" fill="var(--muted)">0.3</text>
+              <text x="238" y="114" text-anchor="end" fill="var(--muted)">0s 朝向 + 速度</text>
+              <rect x="250" y="100" width="340" height="18" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="598" y="114" fill="var(--muted)">1.0</text>
+              <text x="238" y="142" text-anchor="end" fill="var(--muted)">0.35s 朝向 + 位置</text>
+              <rect x="250" y="128" width="340" height="18" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="598" y="142" fill="var(--muted)">1.0</text>
+              <text x="238" y="170" text-anchor="end" fill="var(--muted)">0.70s 朝向 + 位置 + 速度</text>
+              <rect x="250" y="156" width="340" height="18" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="598" y="170" fill="var(--muted)">1.0</text>
+              <text x="238" y="198" text-anchor="end" fill="var(--ink)" font-weight="600">1.00s 速度方向</text>
+              <rect x="250" y="184" width="510" height="18" fill="var(--brass-soft)" stroke="var(--brass)" stroke-width="1.5"/>
+              <text x="768" y="198" fill="var(--brass)" font-weight="700">1.5 全表最高</text>
+            </g>
+            <text x="60" y="234" fill="var(--brass)" font-size="12" font-weight="700">姿势（现在什么样）</text>
+            <g font-size="11.5">
+              <text x="238" y="262" text-anchor="end" fill="var(--muted)">foot_l 相对 foot_r 位置</text>
+              <rect x="250" y="248" width="340" height="18" fill="var(--brass-soft)" stroke="var(--brass)"/>
+              <text x="598" y="262" fill="var(--muted)">1.0</text>
+              <text x="238" y="288" text-anchor="end" fill="var(--muted)">双脚速度 ×2（FeetVelZ 组）</text>
+              <rect x="250" y="274" width="102" height="18" fill="var(--brass-soft)" stroke="var(--brass)"/>
+              <text x="360" y="288" fill="var(--muted)">0.3 + 0.3</text>
+              <text x="700" y="288" text-anchor="end" fill="var(--muted)">骨盆水平朝向</text>
+              <rect x="712" y="274" width="34" height="18" fill="var(--brass-soft)" stroke="var(--brass)"/>
+              <text x="754" y="288" fill="var(--muted)">0.1</text>
+            </g>
+          </svg>
+          <p>读表的启示：匹配里说话最响的是 1 秒后的速度方向（1.5）和三个中程轨迹点，"姿势"只靠双脚。想让某类选择更看重姿态连贯，加的是脚部/骨盆侧权重；想更跟输入，加的是近程轨迹点。改完记得重建索引，而且因为归一化，另一侧被稀释是必然代价。</p>
+          <p>PSS_Default_Steel 与 UEFN 版逐字段一致，仅骨架不同【项目】，定性为同配置不同骨架，两套 Schema 并存不是配置分歧。</p>
+          <details class="fold"><summary>通道全类型清单与 P2/P3 项</summary>
+            <table>
+              <thead><tr><th>项</th><th>级</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td>SampleRate</td><td>P2</td><td>索引帧密度。项目 15：MOBA 拉远视角够用，内存减半；高频细腻动作（近景）才需要 30+</td></tr>
+                <tr><td>NormalizationGroup</td><td>P1</td><td>让"同类同维"的通道合并统计偏差。项目实例 FeetVelZ（双脚速度同尺度）；不可镜像动画的左右对称场景必配</td></tr>
+                <tr><td>FilterCrashingLegs</td><td>P1</td><td>大小腿交叉度参与匹配 + 硬过滤防剪刀腿（默认权重 0.2/容差 0.3）。项目未配，strafe 项目值得评估</td></tr>
+                <tr><td>InputQueryPose</td><td>P2</td><td>查询侧姿势来源：UseContinuingPose（默认，复用库内续接特征防查询噪声） vs UseCharacterPose（用角色实际姿势，受伤/被击飞后姿势差异大时考虑）</td></tr>
+                <tr><td>正式通道</td><td>—</td><td>Trajectory / Pose / Position / Velocity / Heading / Group / Padding / SamplingTime / TimeToEvent</td></tr>
+                <tr><td>实验通道（列名）</td><td>P3</td><td>Phase / Curve / Distance / FilterCrashingLegs（实验标） / PermutationTime;Position 的 MaxPositionDistanceSquared 硬过滤、bNormalizeDisplacement；排列三件套（NumberOfPermutations 等）</td></tr>
+                <tr><td>bAddDataPadding</td><td>P2</td><td>16 字节对齐换比较速度，代价内存</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+
+        <section id="implementation">
+          <h2>动画标记层</h2>
+          <p>标记是加在动画资产时间轴上的帧级修饰，索引期被烘进库（除了一个例外）。最常用的几件经常被混为一谈，先看一条动画被标记覆盖后，每一帧到底处于什么状态：</p>
+          <svg class="diagram" viewBox="0 0 940 310" role="img" aria-label="动画标记区间与帧状态示意">
+            <text x="60" y="28" fill="var(--muted)" font-size="12">示例：一条 2.0s 的动画在库里的真实可用面（时间轴，秒）</text>
+            <path d="M60 66 L60 56 L162 56 L162 66" fill="none" stroke="var(--danger)" stroke-width="1.5"/>
+            <text x="66" y="50" fill="var(--danger)" font-size="11">Exclude From Database [0, 0.25]</text>
+            <path d="M511 66 L511 56 L757 56 L757 66" fill="none" stroke="var(--warn)" stroke-width="1.5"/>
+            <text x="517" y="50" fill="var(--warn)" font-size="11">Block Transition In [1.1, 1.7]</text>
+            <rect x="60" y="70" width="102" height="34" fill="var(--danger-soft)" stroke="var(--danger)" stroke-width="1"/>
+            <rect x="162" y="70" width="349" height="34" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="1"/>
+            <rect x="511" y="70" width="246" height="34" fill="var(--warn-soft)" stroke="var(--warn)" stroke-width="1"/>
+            <rect x="757" y="70" width="123" height="34" fill="var(--danger-soft)" stroke="var(--danger)" stroke-width="1"/>
+            <text x="111" y="91" text-anchor="middle" fill="var(--danger)" font-size="11">不存在</text>
+            <text x="336" y="91" text-anchor="middle" fill="var(--ok)" font-size="11.5" font-weight="600">可跳入 · 可顺播</text>
+            <text x="634" y="91" text-anchor="middle" fill="var(--warn)" font-size="11.5" font-weight="600">只能顺播</text>
+            <text x="818" y="91" text-anchor="middle" fill="var(--danger)" font-size="11">不存在</text>
+            <g fill="var(--muted)" font-size="10.5">
+              <text x="60" y="120" text-anchor="middle">0</text>
+              <text x="265" y="120" text-anchor="middle">0.5</text>
+              <text x="470" y="120" text-anchor="middle">1.0</text>
+              <text x="675" y="120" text-anchor="middle">1.5</text>
+              <text x="880" y="120" text-anchor="middle">2.0</text>
+            </g>
+            <rect x="265" y="140" width="123" height="20" rx="3" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/>
+            <text x="396" y="155" fill="var(--accent-text)" font-size="11">Override Base Cost Bias [0.5, 0.8]：该段帧级偏置被替换（不叠加库值）</text>
+            <rect x="265" y="170" width="164" height="20" rx="3" fill="var(--brass-soft)" stroke="var(--brass)" stroke-width="1"/>
+            <text x="437" y="185" fill="var(--brass)" font-size="11">Override Continuing Pose Cost Bias [0.5, 0.9]：进了这段倾向播完（运行期，免重建）</text>
+            <path d="M757 205 L757 195 L880 195 L880 205" fill="none" stroke="var(--danger)" stroke-width="1.5"/>
+            <text x="490" y="222" fill="var(--danger)" font-size="11">库级尾裁 ExcludeFromDatabaseParameters (0, -0.3）：每条动画最后 0.3s 一律不存在【源码】</text>
+            <g font-size="11">
+              <rect x="60" y="255" width="14" height="14" fill="var(--ok-soft)" stroke="var(--ok)"/>
+              <text x="80" y="266" fill="var(--muted)">可被搜索选中，也可从前面播过来</text>
+              <rect x="330" y="255" width="14" height="14" fill="var(--warn-soft)" stroke="var(--warn)"/>
+              <text x="350" y="266" fill="var(--muted)">搜索永不落点，只能顺播进入</text>
+              <rect x="580" y="255" width="14" height="14" fill="var(--danger-soft)" stroke="var(--danger)"/>
+              <text x="600" y="266" fill="var(--muted)">对库而言不存在：搜不到也播不到</text>
+            </g>
+          </svg>
+          <table>
+            <thead><tr><th>标记</th><th>级</th><th>效果</th><th>典型用途</th></tr></thead>
+            <tbody>
+              <tr><td><b>Exclude From Database</b></td><td><span class="later">P1</span></td><td>覆盖段完全不进索引：搜不到，也<b>播不到</b></td><td>动画里的废段、起手前摇里不该被匹配的部分</td></tr>
+              <tr><td><b>Block Transition In</b></td><td><span class="later">P1</span></td><td>帧仍在库里、可以被<b>顺播进入</b>，但搜索永不把它当跳转落点。PCAKDTree 下这些帧构建时就剔出了 kdtree【源码】</td><td>"这段只能从前面播进来，不许半路空降"：起步后半段、落地恢复段</td></tr>
+              <tr><td><b>Override Base Cost Bias</b>（类名 ModifyCost）</td><td><span class="later">P1</span></td><td>帧级 cost 偏置，默认 -1。【源码】对库级 BaseCostBias 是<b>覆盖不是叠加</b>；烘焙为半精度，0.001 量级的差异会被精度吃掉</td><td>重点段拉偏好（如折返的关键帧段）</td></tr>
+              <tr><td><b>Override Continuing Pose Cost Bias</b></td><td><span class="later">P1</span></td><td>帧级"续播意愿"，默认 -1 = 强烈倾向播完该段。<b>运行期消费，免重建索引</b>【源码】</td><td>"进了这段就让它播完"：转身中段、起步蹬地段。想treat"动画被中途打断"先试它</td></tr>
+              <tr><td>Motion Matched Branch In</td><td><span class="ok">P2</span></td><td>从动画侧把片段"分支进"目标库：自动建条目、条目 SamplingRange 变只读跟随标记区间</td><td>GASP 原生动画在用（Sprint_Loop_F 上实测有 PoseSearchBranchIn【项目】）；删条目要去动画上删标记，直接删库里条目会被同步回来</td></tr>
+            </tbody>
+          </table>
+          <h3>GASP 的六条 MM 曲线</h3>
+          <p>GASP 每条移动动画带一组名字像参数的曲线：FootSpeed_L/R、Phase、MoveData_Speed、Enable_OrientationWarping、Enable_PlayRateWarping（Sprint_Loop_F 实测带前五条【项目】）。它们<b>不进匹配</b>：项目 Schema 没有曲线通道，权重管线碰不到它们；消费方是蓝图侧的 warping 开关与 FootPlacement。项目此前烘的重定向动画六条全缺，经源码逐条核实定性为纯装饰级损失（FootPlacement 退化为近直通、无故障）【实战】；但镜头贴近脚部、上斜坡地形之前要补烘，修复用 GASP 自带的 AnimModifier（注意脚骨名要重指向）。</p>
+          <details class="fold"><summary>P3 列名：实验与交互类标记</summary>
+            <ul>
+              <li>Sampling Event / Sampling Attribute：给通道打事件锚点或替换采样数据源（配 TimeToEvent 通道用，项目未用）。</li>
+              <li>IKWindow：多角色交互 IK 约束窗口（实验）。</li>
+              <li>Pose Search: Event（UAnimNotify_PoseSearchEvent）：GameplayTag 事件直达搜索（实验，EventOnly 模式的唯一入口）。</li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="solution">
+          <h2>动画蓝图层</h2>
+          <p>项目的 MM 节点在共享动画蓝图的 AnimGraph 里，结构是"蓝图每帧喂库 + 节点搜索"：节点的 UpdateFunction 指向 Update_MotionMatching 图，那里评估 Root Chooser 后 SetDatabasesToSearch【项目】。节点本身就是一个混合栈（继承 BlendStack），不是外接【源码】。</p>
+          <h3>MM 节点参数（含项目实配）</h3>
+          <table>
+            <thead><tr><th>参数</th><th>级</th><th>默认 / 项目现值</th><th>机制与用法</th></tr></thead>
+            <tbody>
+              <tr><td><b>BlendTime / BlendProfile / BlendOption</b></td><td><span class="ok">P0</span></td><td>0.2 / Linear / — → 项目：引脚 0.2 起、<b>FastFeet+Root_Weight</b> 骨骼 Profile、<b>HermiteCubic</b>【项目】</td><td>跳姿势的过渡三件套。Profile 让脚和根快到位、上身慢融合，是"过渡快但不硬"的正解，比一味缩短 BlendTime 高级</td></tr>
+              <tr><td><b>PlayRate 区间</b></td><td><span class="ok">P0</span></td><td>（1,1) / <b>（0.85, 1.10）</b>【项目】</td><td>【源码】既进搜索（按变速后的样子匹配）又钳制回放变速。吸收角色移速与动画原生速度失配的正路。实战注脚：Sprint 失配需要 0.86，恰好贴着下限，当时观察到的 playrate 0.86 是近钳制边缘；失配更大时先放宽这里，别去砍数据</td></tr>
+              <tr><td><b>PoseJumpThresholdTime</b></td><td><span class="ok">P0</span></td><td>（0,0)=关 / <b>（3,3）</b>【项目】</td><td>禁止跳到"同一段动画里、离当前播放点 ±3 秒内"的帧，治同段原地小跳。与条目级 bDisableReselection 互斥二选一【源码】</td></tr>
+              <tr><td><b>PoseReselectHistory</b></td><td><span class="ok">P0</span></td><td>0.3 / 0.3【项目】</td><td>0.3 秒内已选过的姿势（跨段）禁止重选，治来回横跳。5.7 起历史存进 PoseHistory，作用域是共享同一 History 的所有搜索【源码】</td></tr>
+              <tr><td>SearchThrottleTime</td><td><span class="later">P1</span></td><td>0 / 0（每帧搜）【项目】</td><td>搜索节流。⚠ 旧教程用 bShouldSearch 引脚做节流的做法在 5.7 已失效（节点路径不读它）【源码】，用这个或 InterruptMode</td></tr>
+              <tr><td>InterruptMode（SetInterruptMode）</td><td><span class="later">P1</span></td><td>DoNotInterrupt</td><td>换库时是否打断当前动画，五档枚举（含"作废续接姿势"变体）。下帧生效、单帧有效、用完自动复位【源码】。换库瞬间硬切或该切不切，都来这查</td></tr>
+              <tr><td>MaxActiveBlends / bUseInertialBlend</td><td><span class="later">P1</span></td><td>4 · false / 4 · false【项目】</td><td>二选一的过渡引擎：内部混合栈（栈深 4）或惯性化（需下游 Inertialization 节点）。栈深 0 = 栈禁用，必须配惯性【源码】</td></tr>
+              <tr><td>MaxBlendInTimeToOverrideAnimation / PlayerDepthBlendInTimeMultiplier</td><td><span class="ok">P2</span></td><td>0 · 1.0 / <b>0.03 · 1.1</b>【项目】</td><td>连搜堆栈治理：刚开始混（&lt;0.03s）就来新请求时直接顶替不压栈；越深的层混入计时越快加速淘汰</td></tr>
+              <tr><td>NotifyRecencyTimeOut / bShouldFilterNotifies</td><td><span class="ok">P2</span></td><td>0.2 · false / 引脚 0.5 · true【项目】</td><td>混合栈里多层动画同名 Notify 去重的时间窗，防跳姿势时脚步声等重复触发</td></tr>
+            </tbody>
+          </table>
+          <svg class="diagram" viewBox="0 0 940 240" role="img" aria-label="抖动抑制二人组示意">
+            <text x="60" y="24" fill="var(--muted)" font-size="12">抖动抑制二人组：管住"往哪跳"的两道禁区（项目实配）</text>
+            <text x="60" y="56" fill="var(--accent-text)" font-size="12" font-weight="700">① PoseJumpThresholdTime (3,3）：同段邻域禁跳</text>
+            <rect x="60" y="70" width="820" height="30" fill="var(--soft)" stroke="var(--line)"/>
+            <rect x="264" y="70" width="412" height="30" fill="var(--danger-soft)" stroke="var(--danger)" stroke-dasharray="4 3"/>
+            <circle cx="470" cy="85" r="6" fill="var(--accent)"/>
+            <text x="470" y="120" text-anchor="middle" fill="var(--accent-text)" font-size="11">当前播放点</text>
+            <text x="470" y="63" text-anchor="middle" fill="var(--danger)" font-size="11">±3s 内禁止跳入（防原地小跳）</text>
+            <text x="130" y="90" text-anchor="middle" fill="var(--muted)" font-size="11">可跳</text>
+            <text x="800" y="90" text-anchor="middle" fill="var(--muted)" font-size="11">可跳</text>
+            <text x="60" y="156" fill="var(--accent-text)" font-size="12" font-weight="700">② PoseReselectHistory 0.3s：跨段近期禁重选</text>
+            <g font-size="11">
+              <rect x="60" y="170" width="240" height="30" fill="var(--soft)" stroke="var(--line)"/>
+              <text x="180" y="190" text-anchor="middle" fill="var(--muted)">动画 A</text>
+              <rect x="330" y="170" width="240" height="30" fill="var(--soft)" stroke="var(--line)"/>
+              <text x="450" y="190" text-anchor="middle" fill="var(--muted)">动画 B</text>
+              <circle cx="150" cy="185" r="6" fill="var(--danger)"/>
+              <circle cx="420" cy="185" r="6" fill="var(--danger)"/>
+              <text x="640" y="190" fill="var(--muted)">● = 最近 0.3s 内选过的姿势，跨段拉黑（防 A↔B 来回横跳）</text>
+            </g>
+            <text x="60" y="228" fill="var(--muted)" font-size="11">与条目级 bDisableReselection（按源资产整体拉黑）互斥二选一，不叠加【源码】</text>
+          </svg>
+          <p>从 MM 输出到最终骨骼中间还有一串修饰与分层模块，单独成章（06 模块地图），这里不重讲。</p>
+          <details class="fold"><summary>P2/P3:BlendStack 细项与实验参数</summary>
+            <ul>
+              <li>bStoreBlendedPose(true)：超栈深把溢出层烘进存储姿势继续混，关掉省内存但可能 pop。</li>
+              <li>BlendParametersDeltaThreshold / BlendspaceUpdateMode:BlendSpace 条目专用，项目库以 Sequence 为主，列名。</li>
+              <li>同步组四件套（GroupName/GroupRole/Method/bOverridePositionWhenJoiningSyncGroupAsLeader)：项目 ExclusiveAlwaysLeader + DoNotSync【项目】。</li>
+              <li>实验列名：EventToSearch（事件搜索）、Stitch 三件（缝合库代替 crossfade）、交互 MM 全家（Availabilities/Warping*Ratio）、PlayRateMultiplier。</li>
+              <li>OnMotionMatchingStateUpdated 回调：项目挂了 OnStateExit【项目】，状态联动的口子。</li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="modules">
+          <h2>修饰与分层模块地图</h2>
+          <p>MM 选完动画只是半成品。从 MM 节点输出到最终骨骼，姿势还要过一串修饰与分层模块，每个模块管一件事。这一章是"模块 → 管什么 → 达到什么效果 → 坏了什么样"的地图：手感问题先对照最后一列认领，再进对应模块调开关。</p>
+          <h3>修饰链（按数据流顺序，含项目实配）【项目】</h3>
+          <table>
+            <thead><tr><th>模块</th><th>级</th><th>管什么 / 达到的效果</th><th>关键开关（项目实配）</th><th>误配 / 失效时的症状</th></tr></thead>
+            <tbody>
+              <tr><td>PoseSearchHistoryCollector</td><td><span class="ok">P2</span></td><td>记录姿势历史、接收轨迹，供出查询的"过去"半边</td><td>PoseCount=2、每帧采集、骨骼=双脚+双大腿+spine_05+pelvis、曲线=Phase</td><td>Schema 用到的骨骼不在采集清单：特征拿零值，匹配隐性变差，无报错【源码】</td></tr>
+              <tr><td><b>OffsetRootBone</b></td><td><span class="ok">P0</span></td><td>根骨相对胶囊的自由度：动画位移的表现力 vs 判定位置一致，一个旋钮两头</td><td>平移 Interpolate（半衰期 0.2）+ <b>MaxTranslationError=30</b>；旋转 <b>Accumulate</b>（不限误差，朝向全信动画、由 Steering 拉回）</td><td>太松 = 人壳分家、mesh 漂离胶囊；太紧 = 位移动画被掐死出滑步感。Marvel 直驱试验曾用 0 贴死【实战】</td></tr>
+              <tr><td>Steering ×2</td><td><span class="later">P1</span></td><td>把动画自带的根运动旋转缩放到目标朝向，残差用加性弹簧补，转身贴镜头/目标</td><td>Procedural 0.2 / Animated 2.0 / 缩放钳制 0.5~1.5</td><td>转身赖着不回正（缩放不足）或回正过冲（弹簧过硬）</td></tr>
+              <tr><td><b>OrientationWarping</b></td><td><span class="later">P1</span></td><td>strafe 扭身分配：下肢对准移动方向，脊柱反向补偿让上身继续看镜头</td><td>spine_01~05 分摊 0.5、RotationInterpSpeed=8、<b>DeltaThreshold=135</b>（默认 90）、WarpingSpace=RootBoneTransform（配 OffsetRootBone 的必选【源码】）</td><td>分摊失衡 = 拧麻花（下半身 spine 参与过多，三期战役实锤【实战】）；阈值过小 = 大角度反向过旋</td></tr>
+              <tr><td><b>StrideWarping</b></td><td><span class="later">P1</span></td><td>按实际速度/动画速度的比值缩放步幅，低速不滑步；裁掉 Walk 档后的关键代偿【实战】</td><td>Graph 模式自动取速比；双脚 IK/FK/大腿定义</td><td>低速脚滑 = 它没生效；注意它是选后变形，治不了"选错动画"</td></tr>
+              <tr><td>FootPlacement</td><td><span class="later">P1</span></td><td>脚部贴地与锁脚：斜坡台阶上脚踩实、不穿插</td><td>依赖动画的 footspeed 曲线；项目烘的动画缺曲线时按"脚未踩实"保守路径近似直通【源码】</td><td>与 MM 输出打架 = 移动整体晃动（二期第一战【实战】）；缺曲线在平地拉远视角基本无感</td></tr>
+            </tbody>
+          </table>
+          <h3>分层与切换（Overlay / Slot 体系）</h3>
+          <p>移动动画是底，战斗表达全靠往上叠层。项目的分层结构四件套，切换方式各不同：</p>
+          <table>
+            <thead><tr><th>层</th><th>管什么 / 效果</th><th>切换方式</th><th>误配症状与红线</th></tr></thead>
+            <tbody>
+              <tr><td><b>蒙太奇 Slot 三件套</b></td><td>战斗动作占用上身的三档表达强度：UpperBody 硬钉（上身完全归蒙太奇）/ UpperBodySoft（渐变过渡，pelvis 权重 0.15）/ UpperBodyAdditive（叠加不抢占）</td><td>蒙太奇选槽即选强度；分层混合开 Mesh Space Rotation Blend + 显式 BlendMask（BP_UpperBody_Hard）</td><td>空 BlendMask = slot 静默失效（权重不沿骨链继承）；local space 混合 = 上身跟骨盆晃（三期根因【实战】）。定稿见《蒙太奇slot使用说明》</td></tr>
+              <tr><td><b>原地 / 移动分支</b></td><td>原地放技能整段透传全身姿势（有位移表现力），移动中走上身遮罩分层（腿归 locomotion）</td><td>BlendListByBool（ActiveValue=HasVelocity）自动切</td><td>原地分支会把未重定向动画的骨盆高度差全暴露出来（五期 310 蒙太奇大清理的根因舞台【实战】）</td></tr>
+              <tr><td><b>FullBody 曲线分层</b></td><td>同一条全身蒙太奇内的时间分段：出手段全身、收招段腿部交还移动，上身继续收招</td><td>动画自带 FullBody 曲线驱动，0.1s 混合交接；未配曲线的动画保持原行为，零影响</td><td>别用"双 Slot 空尾"实现同一目标：DefaultSlot 空尾会保持最后一帧卡 Pose（五期翻车实录【实战】）</td></tr>
+              <tr><td><b>Combat Overlay 姿态层</b></td><td>roaming / combat 两种持械姿态的叠加（进战举枪举锤），叠在 locomotion 之上、Slot 之下</td><td>GASPALS ALI_OverlayPose 层 + 逐英雄子 Overlay ABP（bCanAim 桥 + Pose_*_Aim 槽），HAD 的 MontagePlay 标志驱动进出战</td><td>动画未先重定向到 UEFN 骨架就入层 = 比例错位；新英雄漏接 bCanAim 桥 = 姿态不切（接入清单见三期文档）</td></tr>
+            </tbody>
+          </table>
+          <p>这一章的故事版：分层体系怎么一步步立起来的在三期文档（spine 拧麻花 → mesh-space 根因 → 三件套定稿），FullBody 曲线终案在五期文档，都从手册封面的优化历程面板进。</p>
+        </section>
+
+        <section id="acceptance">
+          <h2>轨迹层</h2>
+          <p>查询向量的一半是姿势历史，另一半就是这条预测轨迹：它长什么形状，MM 就倾向选什么动画。项目走的是 GASP 标准做法：蓝图里 PoseSearchGenerateTransformTrajectory 生成，喂给 HistoryCollector 节点的轨迹引脚（默认采样：历史 0.04s×10 个、预测 0.2s×8 个，约看未来 1.6 秒）【源码】【项目】。</p>
+          <div class="rule">
+            <h3>移动参数就是动画参数</h3>
+            <p>预测积分是 CMC 刹车/加速逻辑的复刻：MaxSpeed（含 buff 与摇杆系数）、BrakingDeceleration、Friction 全部直接进轨迹形状【源码】。改移动组件的手感参数时，MM 的选择倾向会跟着变，反过来"动画怪"也可能是移动参数改了，两个工作台是同一个。</p>
+          </div>
+          <h3>预测形状五旋钮（FPoseSearchTrajectoryData）</h3>
+          <table>
+            <thead><tr><th>参数</th><th>级</th><th>默认 / 项目现值（_Idle · _Moving）</th><th>机制与用法</th></tr></thead>
+            <tbody>
+              <tr><td><b>BendVelocityTowardsAcceleration</b></td><td><span class="ok">P0</span></td><td>0 / <b>0 · 0（未使用）</b>【项目】</td><td>把当前速度方向向加速度方向弯折再预测，1 = 直接用输入方向。急转输入立即变成急弯轨迹、更快命中折返动画，这是急转手感的最大杠杆，项目一块没动过的空间【源码】</td></tr>
+              <tr><td><b>RotateTowardsMovementSpeed</b></td><td><span class="ok">P0</span></td><td>10 / <b>0 · 0</b>【项目】</td><td>预测朝向转向加速度方向的角速度，只对 bOrientRotationToMovement 角色生效；与角色 RotationRate 刻意解耦【源码】。本项目 strafe（朝镜头），置 0 语义正确</td></tr>
+              <tr><td>MaxControllerYawRate</td><td><span class="later">P1</span></td><td>70 / <b>100 · 0</b>【项目】</td><td>预测里外推镜头转动的角速度钳制，负值不钳。项目 _Moving = 0 即"移动中预测完全不外推镜头转动"，是刻意还是漏配待定【推断】，转镜头起步的 Reface 瞬态与此有关，值得实验。当年补 100 无效的实验【实战】测的是另一个问题（数据面），现在有源码语义可重新设计实验</td></tr>
+              <tr><td>历史/预测采样布局</td><td><span class="later">P1</span></td><td>0.04×10 / 0.2×8</td><td>Schema 轨迹采样点（-0.05 ~ 1.0s）必须落在这个覆盖范围内，改 Schema 采样先对这里；点更密 = 转弯细节更敏感、开销更大</td></tr>
+              <tr><td>Speed / AccelerationRemappingCurve</td><td><span class="ok">P2</span></td><td>未启用 / 未启用【项目】</td><td>移动组件速度 → 动画速度档的重映射曲线，治"角色速度档和动画档对不上"的另一条正路（第 02 节速度对齐纪律的工具化）</td></tr>
+              <tr><td>TrajectorySpeedMultiplier</td><td><span class="ok">P2</span></td><td>1.0【项目】</td><td>History 节点上对输入轨迹整体变速，&lt;1 选更慢的动画；连动 WantedPlayRate 计算</td></tr>
+            </tbody>
+          </table>
+          <svg class="diagram" viewBox="0 0 940 280" role="img" aria-label="预测轨迹弯折示意">
+            <defs>
+              <marker id="tarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+              </marker>
+            </defs>
+            <text x="60" y="24" fill="var(--muted)" font-size="12">俯视图：急转输入时，BendVelocityTowardsAcceleration 如何改变预测形状（进而改变 MM 选谁）</text>
+            <circle cx="230" cy="190" r="9" fill="var(--ink)"/>
+            <text x="230" y="222" text-anchor="middle" fill="var(--muted)" font-size="11">角色（t=0）</text>
+            <circle cx="180" cy="196" r="4" fill="var(--muted)"/>
+            <circle cx="135" cy="199" r="4" fill="var(--muted)"/>
+            <circle cx="95" cy="201" r="4" fill="var(--muted)"/>
+            <text x="120" y="226" fill="var(--muted)" font-size="11">历史样本（t&lt;0）</text>
+            <line x1="230" y1="190" x2="330" y2="188" stroke="var(--ink)" stroke-width="2" marker-end="url(#tarr)"/>
+            <text x="300" y="176" fill="var(--ink)" font-size="11">当前速度方向</text>
+            <line x1="230" y1="190" x2="300" y2="80" stroke="var(--brass)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#tarr)"/>
+            <text x="308" y="72" fill="var(--brass)" font-size="11">急转输入（加速度方向）</text>
+            <path d="M230 190 C 380 182, 560 176, 800 172" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+            <circle cx="420" cy="182" r="4" fill="var(--accent)"/><circle cx="580" cy="177" r="4" fill="var(--accent)"/><circle cx="740" cy="173" r="4" fill="var(--accent)"/>
+            <text x="620" y="200" fill="var(--accent-text)" font-size="11.5" font-weight="600">Bend=0（项目现状）：预测沿当前速度直走，</text>
+            <text x="620" y="217" fill="var(--accent-text)" font-size="11.5">折返要等速度真的转过来才被预测到</text>
+            <path d="M230 190 C 330 160, 430 90, 520 48" fill="none" stroke="var(--brass)" stroke-width="2.5"/>
+            <circle cx="330" cy="152" r="4" fill="var(--brass)"/><circle cx="420" cy="98" r="4" fill="var(--brass)"/><circle cx="490" cy="62" r="4" fill="var(--brass)"/>
+            <text x="540" y="46" fill="var(--brass)" font-size="11.5" font-weight="600">Bend→1：预测立即弯向输入，更快命中折返/急转动画</text>
+            <text x="60" y="262" fill="var(--muted)" font-size="11">同图适用 MaxControllerYawRate（_Moving 现值 0 = 预测不外推镜头转动）：转镜头类"预测跟不上意图"先看这两个旋钮【源码】【项目】</text>
+          </svg>
+          <details class="fold"><summary>P2：重力与落地后处理</summary>
+            <p>HandleTransformTrajectoryWorldCollisions：空中样本按抛物线下落、对地 trace 取 TimeToLand / LandSpeed，GASP 用它切下落与落地动画的时机。FloorCollisionsOffset &gt; 0 时每个预测点向下探地悬浮该偏移。跳跃落地"提前/迟到"来这查【源码】。</p>
+          </details>
+        </section>
+
+        <section id="params">
+          <h2>路由与驱动层</h2>
+          <p>严格说这层不是 MM 的参数，是喂给 MM 的变量，但一半的"病"出在这。全是项目 GASP 层的东西，纯【实战】。</p>
+          <h3>Chooser 路由</h3>
+          <ul>
+            <li><b>行序即优先级</b>：从上到下 first-match wins，条件填 Any 的兜底行必须垫底。Sprint 子表"巡航行（Any）排在起步行（True）之前被截胡"是 GASP 原始数据 bug，起步永远进不了起步库，修复只是挪一行【实战】。查路由走没走对，用 Rewind Debugger 的选择器评估轨道，别猜。</li>
+            <li>层级：Root（按英雄 ID） → LOD 列（Dense/Sparse） → 四列条件（模式/姿态/起停/Gait） → 库。嵌套子表编辑器手动看，自动化工具读不进【实战】。</li>
+            <li>Dense 侧修过的行序，Sparse 侧没同步，切 Sparse 会重现修复前症状，改路由要两档一起【实战】。</li>
+          </ul>
+          <h3>驱动变量</h3>
+          <table>
+            <thead><tr><th>变量</th><th>项目实现</th><th>要点</th></tr></thead>
+            <tbody>
+              <tr><td><b>Gait</b></td><td>移速属性驱动：EventGraph 每帧缓存 GetMaxSpeed（含 buff） → EffectiveMaxSpeed 变量 → 动画线程读；迟滞升 560 / 降 480</td><td>原则：档位由"能跑多快"定，不由"此刻多快"定；瞬时速度驱动实验过，临界抖动更糟【实战】。GASP 原版 Gait 无人写入、还每帧被覆盖回 Run，是接入期第一个根因</td></tr>
+              <tr><td>IsStarting</td><td>GASP 原生：未来速度 ≥ 当前速度 + 100（另有 1.3s 起步保护）</td><td>副作用要背下来：0→650 加速全程该条件恒真，角色整个加速期都被关在起步库里。起步库覆盖不全时（Sprint 8 条 vs Run 28 条）就是误选温床【实战】</td></tr>
+              <tr><td>MMDatabaseLOD</td><td>DDCvar.MMDatabaseLOD（0=Dense/1=Sparse，作弊位不持久化）+ F1 面板勾选</td><td>CVar 是进程级全局，PIE 重开不重置；调试 UI 必须做状态回读，否则开关撒谎误导排查【实战】。Narbash/Riktor 不走共享父蓝图，切换无效（已接受）</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="part"><b>速查</b><span>从症状进，先验证再动手</span></div>
+
+        <section id="leftovers">
+          <h2>症状反查表</h2>
+          <p>用法：对症状 → 先做"验证"列的动作确认诊断 → 再动参数。排序有意：多数病在数据与路由，bias 排最后。</p>
+          <table>
+            <thead><tr><th>症状</th><th>先验证什么</th><th>对应参数 / 操作</th><th>出处</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="4">选错动画</td></tr>
+              <tr><td>巡航反复切动画（波浪）</td><td>Blend Stack 面板看选中条目与 playrate；明显 ≠1 = 速度失配</td><td>02 条目 SamplingRange 限段；02 速度对齐纪律；05 PlayRate 区间放宽</td><td>【实战】650 vs 756</td></tr>
+              <tr><td>一直进不了某个库</td><td>Rewind Debugger 选择器评估轨道看实际路由</td><td>08 行序（Any 垫底）；08 驱动变量实值</td><td>【实战】行序截胡</td></tr>
+              <tr><td>起步/转向选到"不该选"的动画</td><td>DebugDrawQuery 确认查询轨迹形状；数库覆盖（方向×脚位）</td><td>02 补库要有证据；07 轨迹旋钮；03 权重倾向；10 逐帧 cost 拆解定案</td><td>【实战】Reface 七轮</td></tr>
+              <tr><td>动画最后一截永远搜不到</td><td>确认不是 bug：默认尾裁 0.3s</td><td>02 ExcludeFromDatabaseParameters</td><td>【源码】</td></tr>
+              <tr class="group"><td colspan="4">粘滞与抖动</td></tr>
+              <tr><td>选中后粘住不换</td><td>Rewind Debugger 看候选 cost 差值</td><td>02 ContinuingPoseCostBias（免重建，先调它）；04 帧级续接标记；02 bDisableReselection</td><td>【源码】【实战】</td></tr>
+              <tr><td>同段动画内原地小跳</td><td>确认跳转目标在同段邻域</td><td>05 PoseJumpThresholdTime</td><td>【源码】</td></tr>
+              <tr><td>跨段来回横跳（鬼畜）</td><td>Blend Stack 是否高频换同一批条目</td><td>05 PoseReselectHistory；循环条目 looping 待遇（02);05 SearchThrottleTime</td><td>【实战】Marvel loop=true</td></tr>
+              <tr><td>微小 bias 调整没反应</td><td>确认是烘焙型 bias（要等重建）</td><td>04 半精度吃掉 0.001 级；02 Base/Looping 重建索引；免重建的只有续接系</td><td>【源码】</td></tr>
+              <tr class="group"><td colspan="4">过渡与表现</td></tr>
+              <tr><td>切动作瞬间跳变/顿挫</td><td>确认选择正确、病在过渡（否则先治选择）</td><td>05 BlendTime/Profile/Option;05 InterruptMode（换库场景）</td><td>【项目】HermiteCubic</td></tr>
+              <tr><td>想让某段"播完别打断"</td><td>—</td><td>04 Override Continuing Pose Cost Bias 标记（运行时生效）</td><td>【源码】</td></tr>
+              <tr><td>mesh 漂离胶囊 / 位移打滑</td><td>运行期读 mesh 相对胶囊偏移</td><td>06 OffsetRootBone MaxError/半衰期；动画 bForceRootLock</td><td>【实战】Marvel 五招</td></tr>
+              <tr><td>低速走位脚滑</td><td>确认属裁库既定代偿</td><td>06 StrideWarping（记住：治不了选择问题）</td><td>【实战】裁库代偿</td></tr>
+              <tr><td>急转折返来得慢</td><td>DebugDrawTrajectory 看预测是否还是直线</td><td>07 BendVelocityTowardsAcceleration（项目未用，整块空间）</td><td>【源码】</td></tr>
+              <tr class="group"><td colspan="4">系统与工具</td></tr>
+              <tr><td>切库开关"失灵"</td><td>控制台直读 CVar 实值 vs UI 状态</td><td>08 进程级残留；UI 状态回读</td><td>【实战】勾选框撒谎</td></tr>
+              <tr><td>DS/打包端刷 MM 日志</td><td>分辨读取链来源</td><td>断开仅编辑器注册的调试 CVar 支路</td><td>【实战】</td></tr>
+              <tr><td>上半身蒙太奇跟着移动晃</td><td>确认 MM 输出正常、病在分层</td><td>非 MM 问题：LayerBlendPerBone 开 Mesh Space + BlendMask 显式覆盖（见半身分层案）</td><td>【实战】</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="methodology">
+          <h2>调试工具箱</h2>
+          <p>诊断优先级：先画图（CVar 绘制）定性，再上 Rewind Debugger 定量，最后才动参数。</p>
+          <h3>绘制 CVar（PIE 控制台）</h3>
+          <table>
+            <thead><tr><th>命令</th><th>画什么</th></tr></thead>
+            <tbody>
+              <tr><td><code>a.AnimNode.MotionMatching.DebugDrawQuery 1</code></td><td>查询特征（轨迹朝向反没反、形状对不对，一眼定案）</td></tr>
+              <tr><td><code>a.AnimNode.MotionMatching.DebugDrawCurResult 1</code></td><td>当前结果特征（旧版教程叫 DebugDrawMatch）</td></tr>
+              <tr><td><code>a.AnimNode.MotionMatching.DebugDrawInfo 1</code>（Verbose 默认开）</td><td>头顶文字：当前库/资产/InterruptMode + 待搜库列表 + 混合栈各层。<b>待搜库列表可直接回答"这帧到底在搜几个库"</b></td></tr>
+              <tr><td><code>a.AnimNode.MotionMatching.DebugPlayRateEnabled 2</code></td><td>变速嫌疑隔离：2 = 搜索按变速匹配但回放不变速，一格开关把"是不是 PlayRate 的锅"拆干净【源码】</td></tr>
+              <tr><td><code>a.AnimNode.PoseHistory.DebugDrawTrajectory 1</code>（配 DebugDrawPose）</td><td>轨迹与姿势历史；历史/预测样本数可另限</td></tr>
+              <tr><td><code>a.MotionMatch.CompareAgainstBruteForce 1</code></td><td>近似搜索质量对照：怀疑 PCA/KDTree 丢好结果时开，和全量搜索比差值</td></tr>
+            </tbody>
+          </table>
+          <h3>Rewind Debugger（定量终审）</h3>
+          <ul>
+            <li>轨道名 <b>Pose Search</b>：每个搜索实例一条子轨道，详情面板有各库 cost timeline 和 查询/候选特征逐维对比："哪个通道让它赢"只有这里能回答。Reface 案指定的下一步就是它【实战】。</li>
+            <li>混合权重轨道：逐帧看候选与权重（蓝色高亮 = 主选），抓起步瞬间比实时绘制稳。</li>
+            <li>选择器评估轨道：Chooser 每帧走了哪行，路由问题的终审。</li>
+          </ul>
+          <h3>面板与手法</h3>
+          <ul>
+            <li>Blend Stack 调试面板的 playrate 是侦探工具：playrate 0.86 反推出动画原生速度 756，速度失配一战定音【实战】。</li>
+            <li>单变量实验 + 明确证伪：一次只动一个参数，结论记下来再动下一个。连环打补丁（cost bias 一路加码那种）一小时定位不了任何东西【实战】。</li>
+            <li>移动是脉冲式输入的项目，抓运行时数据要持续按住方向键，否则常抓到 speed=0 的静止帧【实战】。</li>
+          </ul>
+        </section>
+
+        <div class="part"><b>附录</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="appendix">
+          <h2>差异清单、待办与来源</h2>
+          <details class="fold"><summary>展开附录</summary>
+            <h3>5.7 防雷清单（旧教程会教错的地方）【源码】</h3>
+            <ul>
+              <li>bShouldSearch 引脚已死：节点更新路径不读它，节流用 SearchThrottleTime / SetInterruptMode。</li>
+              <li>Schema 级 MirrorMismatchCostBias 已删除，镜像只剩 MirrorDataTable + 条目 MirrorOption。</li>
+              <li>数据库条目统一为单一结构 FPoseSearchDatabaseAnimationAsset,Sequence/BlendSpace/Montage 等五个旧条目类型全部弃用；条目上没有 bLooping 开关，循环性由资产与裁剪共同决定。</li>
+              <li>ModifyCost 标记对 BaseCostBias 是覆盖不是叠加（编辑器显示名已改为 Override Base Cost Bias）。</li>
+              <li>FMotionMatchingState 瘦身：WantedPlayRate 等移入 SearchResult；重选历史移入 PoseHistory（作用域变共享）。</li>
+              <li>轨迹类型迁移：FPoseSearchQueryTrajectory → 引擎级 FTransformTrajectory;t=0 是上一模拟帧不是本帧。</li>
+              <li>没有 bForceInterrupt 布尔，打断行为全在 EPoseSearchInterruptMode 五档枚举里。</li>
+              <li>KDTreeQueryNumNeighbors 编辑器显示名改为 KNNQueryNumNeighbors。</li>
+            </ul>
+            <h3>项目现值快照要点（2026-07-13 实读）</h3>
+            <ul>
+              <li>Schema:SampleRate 15；预处理 NormalizeWithCommonSchema;Trajectory 通道权重 1（引擎默认 7 被 GASP 改回）+ 5 采样点（1 秒点权重 1.5 最高）；姿势侧只有四件（双脚相对位置 1.0 / 双脚速度 0.3×2(FeetVelZ 组） / 骨盆水平朝向 0.1）。</li>
+              <li>库：续接偏置 巡航 -0.01、起步/折返 -0.05;BaseCostBias 全 0；尾裁 0.3s;PCAKDTree 4/200/16。<b>Dense Sprint 四库不在 PSN_Dense_All 归一化集内（16 库清单无 Sprint 无 Stand_Walk）。</b></li>
+              <li>MM 节点：BlendTime 引脚 0.2、FastFeet+Root_Weight、HermiteCubic;PoseJump=(3,3);Reselect 0.3；每帧搜；PlayRate(0.85,1.10)；混合栈 4 层；顶替阈值 0.03；深层加速 1.1。</li>
+              <li>轨迹：_Idle YawRate=100,_Moving 全零（RotateTowards 0/YawRate 0/Bend 0)；重映射曲线未启用；历史采集 = 双脚+双大腿+spine_05+pelvis+Phase 曲线，每帧，PoseCount 2。</li>
+              <li>修饰：OffsetRootBone 平移 Interpolate(0.2 半衰期，MaxError 30)/旋转 Accumulate 不限；OrientationWarping spine 5 节分摊 0.5、InterpSpeed 8、DeltaThreshold 135、RootBoneTransform 空间；Steering 0.2/2.0、缩放 0.5~1.5。</li>
+              <li>动画曲线（Sprint_Loop_F 抽查）：Enable_OrientationWarping / FootSpeed_L/R / MoveData_Speed / Phase，并带 PoseSearchBranchIn 标记。</li>
+            </ul>
+            <h3>待办与开放问题</h3>
+            <ul>
+              <li>同步标记清单：Python API 不可达，编辑器手查一条动画补录。</li>
+              <li>"一帧搜几个库":Update_MotionMatching 里 Chooser 结果进数组后 SetDatabasesToSearch，单库还是多库未实证，DebugDrawInfoVerbose 待搜库列表可一分钟定案。</li>
+              <li>Reface 未解案的三个新假设（本手册补测产出）：①Sprint 库挂进归一化集重建索引实测；②PlayRate 下限 0.85 放宽（失配吸收）；③_Moving 轨迹旋钮（YawRate/Bend）非零实验。验证结果回填本手册与竞技化案例稿。</li>
+              <li>Sparse 侧行序/限采样修复同步；FilterCrashingLegs 评估；Markdown 精简版蒸馏进项目 Docs（定稿后）。</li>
+            </ul>
+            <h3>素材来源与修订</h3>
+            <p>源码盘点两份（数据层/节点与轨迹层，均标 file:line）、项目资产实读记录、症状表底稿：<code>knowledge-local/inbox/mm-handbook/</code>；实战出处：MM 决策考古台账 <code>knowledge-local/inbox/mm-archaeology/</code> 与案例稿《三选一才留》。</p>
+            <table>
+              <thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead>
+              <tbody>
+                <tr><td>2026-07-13</td><td>v0.1</td><td>初稿：源码盘点 + 资产实读 + 六层结构成文，待作者过笔与实机验证回填</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

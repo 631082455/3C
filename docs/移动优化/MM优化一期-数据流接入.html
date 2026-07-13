@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>移动优化一期 · MM 数据流接入（2026-01） · 过程记录</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:20px 60px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{border-bottom:none;}
+    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Process Log · 移动优化 五篇之一</div>
+      <h1>移动优化一期：MM 数据流接入（2026-01）</h1>
+      <p class="lede">五篇分期过程记录的第一篇。2026 年 1 月下旬，项目把 Motion Matching 移动从<b>跑在插件演示资产上</b>改为<b>项目自持全套数据流</b>：以 Steel 为打样英雄，一次性建立 PSD／Schema／Chooser／归一化集四层资产共 45 个，随后完成一轮动画库重做与按 <code>Hero.ID</code> 路由的顶层选择器。本篇依据 P4 提交记录回溯整理，会话记录缺失的部分只做定性重构，不补测量数值。</p>
+      <div class="tldr">
+        <div><i>定位</i><span>五期中的<b>第一期</b>：把 MM 从插件演示改造成项目自持的正式数据流，单英雄（Steel）打样，为多英雄铺量打地基。</span></div>
+        <div><i>周期</i><span><b>2026-01-21 ～ 01-26</b>，核心为 4 个 CL：4735102 / 4741691 / 4748916 / 4748094。</span></div>
+        <div><i>成果</i><span>全套自持 MM 资产 <b>45 个</b>（35 PSD＋5 Schema＋3 Chooser＋2 归一化集）＋ 23 个二代重做库 ＋ <b>CHT Root 顶层路由</b>；这套地基后来支撑了 13 个英雄接入。</span></div>
+        <div><i>遗留</i><span>Steel／Steel1 <b>命名双轨</b>；插件库与项目库并存的引用链（6 月兑现为一次改错库乌龙）；Walk／Crouch 全族在 6 月裁库中被砍。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>MOV-01</b></div>
+        <div><i>版本 / 状态</i><b>v0.1 · 2026-07-13 回溯整理</b></div>
+        <div><i>角色</i><b>战斗 3C 策划（资产生产与提交）</b></div>
+        <div><i>证据源</i><b>P4 describe ×4 ＋ 资产现状</b></div>
+        <div class="wide"><i>系列</i><b>「移动优化历程」五篇之一（总入口见《<a href="MM调参手册.html">MM 调参手册</a>》）：二期 起停手感（02~03）· 三期 战斗上身与分层（03~05）· 四期 竞技化改造（06）· 五期 收官与全英雄治理（07）</b></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">总览</div>
+        <a href="#overview"><i>01</i>总览与阶段索引</a>
+        <a href="#context"><i>02</i>背景与一期定位</a>
+        <div class="grp">模块记录</div>
+        <a href="#assets"><i>03</i>数据资产：全套自持</a>
+        <a href="#library"><i>04</i>动画库：二代重做</a>
+        <a href="#routing"><i>05</i>路由：CHT Root</a>
+        <a href="#upperbody"><i>06</i>半身分层：最早记录</a>
+        <div class="grp">收束</div>
+        <a href="#legacy"><i>07</i>遗留问题清单</a>
+        <a href="#afterwards"><i>08</i>后记：后来怎样了</a>
+        <div class="grp">资料</div>
+        <a href="#appendix"><i>09</i>附录：CL 与文件清单</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>总览</b></div>
+
+        <section id="overview">
+          <h2>总览与阶段索引</h2>
+          <p>本篇覆盖 2026-01-21 至 01-26 的 MM 正式数据流接入过程，是移动系统半年优化线（2026-01～07）的起点。这一期的 AI 会话记录已失，内容全部由 P4 提交记录（文件清单可逐条回查）与资产现状回溯；凡属性质判断而非文件铁证之处，文中均已注明「推断」。</p>
+          <table>
+            <thead><tr><th>阶段</th><th>日期</th><th>模块</th><th>问题简述</th><th>结果</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>01-21～22</td><td>重定向</td><td>IK retarget 与 Steel retarget 动画准备（CL 4733442／4733756）</td><td><span class="ok">✔ 完成</span></td></tr>
+              <tr><td>2</td><td>01-22</td><td>数据资产</td><td>MM 跑在插件演示资产上，项目不持有数据流</td><td><span class="ok">✔ 45 个资产自持</span></td></tr>
+              <tr><td>3</td><td>01-23</td><td>动画库</td><td>首版 PSD 库次日即重做，产生 *_Steel1 二代库</td><td><span class="ok">✔ 23 个新库</span> <span class="later">⧗ 命名双轨</span></td></tr>
+              <tr><td>4</td><td>01-26</td><td>路由</td><td>多英雄接入缺统一入口</td><td><span class="ok">✔ CHT Root 建立</span></td></tr>
+              <tr><td>5</td><td>01-26</td><td>半身分层</td><td>攻击蒙太奇在 MM 移动身体上的半身表现问题</td><td><span class="ok">✔ 当次修复</span> <span class="later">⧗ 问题线延续</span></td></tr>
+            </tbody>
+          </table>
+          <h3>数据流的四层结构</h3>
+          <p>本期建立的资产链条自下而上分四层，后文按模块引用这些缩写：</p>
+          <ul>
+            <li><b>PSD</b>（PoseSearchDatabase）：动画库，按姿态族切库，如 <code>PSD_Dense_Stand_Run_Loops_Steel</code>；</li>
+            <li><b>PSS</b>（PoseSearchSchema）：特征定义，决定匹配时看哪些骨骼与轨迹通道，本期建 Default／Idle／Jump／Stop／Traversal 共 5 张；</li>
+            <li><b>PSN</b>（Normalization Set）：归一化集，Dense／Sparse 各一；</li>
+            <li><b>CHT</b>（Chooser Table）：选择器，决定当前用哪批 PSD，本期建 Dense／Sparse／总表 3 张，01-26 再加顶层 Root。</li>
+          </ul>
+        </section>
+
+        <section id="context">
+          <h2>背景与一期定位</h2>
+          <p>项目是 UE5 多人联机射击（MOBA 向），移动动画走 Motion Matching（PoseSearch 插件）＋ GASPALS 体系。一期开始前，MM 移动已经能跑，但跑在插件自带的演示资产上：动画库、Schema、选择器都在插件目录里，项目侧没有任何一层握在自己手中。</p>
+          <p>这带来的问题不是「效果不好」，而是「没法生产」：要给英雄换动画、裁动画族、调匹配特征，都得动别人的 demo 目录；多英雄铺量更无从谈起。所以一期的任务不是修 bug，是<b>建产线</b>。</p>
+          <div class="rule">
+            <h3>一期课题</h3>
+            <p>把「动画片段 → PSD → Schema／归一化 → Chooser」整条链在项目资产目录里立起来，以 Steel 单英雄打样跑通，验证这套数据流可以被项目自己生产、迭代和路由。</p>
+          </div>
+          <h3>分工与工作方式</h3>
+          <p>本期资产生产与提交由战斗 3C 策划本人完成（P4 提交人 projectm_design_01，提交说明前缀 [策划]／[keke]）；重定向管线（IK rig／RTG retargeter）资产在同批 CL 中一并修订。本篇文档为 2026-07 由 AI 辅助做 P4 考古后，由本人整理定稿。</p>
+        </section>
+
+        <div class="part"><b>模块记录</b><span>现象 → 分析 → 方案 → 效果</span></div>
+
+        <section id="assets">
+          <h2>数据资产模块：全套自持（CL 4735102 · 01-22）</h2>
+          <h3>现象与背景</h3>
+          <p>插件演示资产验证了「MM 这条路能走」，但演示库覆盖的是通用小白人移动，且资产归属在插件目录。项目要按英雄生产移动动画，第一步必须让数据流的每一层都变成项目自己的文件。</p>
+          <h3>方案</h3>
+          <p>CL 4735102（提交说明「按照 Motion Matching 的正式数据流生产移动」）一次性 add 了 Steel 全套自持资产，共 <b>45 个</b>，全部落在 <code>Content/Heroes/Steel/MotionMatchingData/</code> 下：</p>
+          <table>
+            <thead><tr><th>层</th><th>数量</th><th>内容</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="3">PSD 动画库 × 35（Dense 全族）</td></tr>
+              <tr><td>Crouch 族</td><td>6</td><td>Idles／TurnInPlace／Walk_Loops／Walk_Pivots／Walk_Starts／Walk_Stops</td></tr>
+              <tr><td>Jumps 族</td><td>3</td><td>Jumps／Jumps_Far／Jumps_FromTraversal</td></tr>
+              <tr><td>Stand Idle 类</td><td>3</td><td>Idles／Idle_Lands_Heavy／Idle_Lands_Light</td></tr>
+              <tr><td>Run 族</td><td>8</td><td>Loops／Starts／Stops／Pivots／SpinTransition／FromTraversal／Lands_Heavy／Lands_Light</td></tr>
+              <tr><td>Sprint 族</td><td>6</td><td>Loops／Starts／Stops／Pivots／Lands_Heavy／Lands_Light</td></tr>
+              <tr><td>Walk 族＋TIP</td><td>8＋1</td><td>Walk 与 Run 同构 8 库；Stand_TurnInPlace 1 库</td></tr>
+              <tr class="group"><td colspan="3">上层资产 × 10</td></tr>
+              <tr><td>Schema</td><td>5</td><td>PSS_Default／Idle／Jump／Stop／Traversal_Steel</td></tr>
+              <tr><td>Chooser</td><td>3</td><td>CHT_PoseSearchDatabases_Dense／Sparse／Steel（总表）</td></tr>
+              <tr><td>归一化集</td><td>2</td><td>PSN_Dense_Steel／PSN_Sparse_Steel</td></tr>
+            </tbody>
+          </table>
+          <div class="rule">
+            <h3>本期最重要的一个决策</h3>
+            <p><b>不直接用插件 demo 资产，项目自己持有全套数据流。</b>后续所有裁库、加库、调 Schema、多英雄复制，都在自己目录里发生，不受插件更新与目录权限约束。这个决策本身没有炫技成分，但它是后面五个月一切迭代的前提。</p>
+          </div>
+          <h3>效果</h3>
+          <p>MM 移动从这天起跑在项目资产上。另有一处从文件清单能读出的伏笔：Sparse 档的 Chooser 与归一化集<b>第一天就建了坑位</b>，但 35 个 PSD 命名全部是 <code>Dense</code> 前缀，Sparse 并没有独立库。Dense／Sparse 真正作为两档运营（局内 LOD 切换）是 6 月的事，一期只是把架子搭对了。</p>
+        </section>
+
+        <section id="library">
+          <h2>动画库模块：二代重做与命名双轨（CL 4741691 · 01-23）</h2>
+          <h3>现象</h3>
+          <p>首版库入库次日即开始第二轮迭代：CL 4741691（「MM 的 PSD 相关数据流」）新增 23 个 <code>*_Steel1</code> 后缀的重做库，同时修订了 7 个既有资产，其中包括 <code>IK_SKM_UEFN_Mannequin</code>、<code>RTG_NewRetargeter</code>、<code>IK_Steel_new</code> 三个重定向管线资产。</p>
+          <h3>分析</h3>
+          <p>会话记录已失，提交记录只留下结果。从文件构成做定性重构（推断）：三个重定向资产与 PSD 库在同一 CL 修订，指向的是<b>动画源经重定向管线重出了一版</b>，一代库质量不满足要求；重出后旧库未删，新库以 Steel1 后缀并存入库。范围上，Steel1 覆盖 Walk／Run／Sprint 三档移动族加 Jumps 与 TurnInPlace（各族的 Loops／Starts／Pivots 等主干），Crouch 全族与 Idle／Idle_Lands 类未重做，属于「先重做影响手感的高频移动族」的取舍。</p>
+          <p>另一处细节：一代库中的 <code>Run_Loops_Steel</code>、<code>Run_Pivots_Steel</code> 在本 CL 同时被 edit，且 <code>CHT_Dense</code> 与 <code>PSN_Dense</code> 同步修订。二代库当天就接进了选择器，不是搁置待验的半成品。</p>
+          <div class="note">
+            <h3>当天埋下的整理债：命名双轨</h3>
+            <p>Steel 与 Steel1 两套同名库自此并存于同一目录，哪一套在 Chooser 里实际生效，必须点开 CHT 才能确认。当时没有删旧库也没有做重命名收敛，这笔债之后一直背着，直到 7 月考古时两套库仍然并存。回头看，重做当天多花十分钟做删除或改名，能省掉后面每一次「这是哪套库」的确认成本。</p>
+          </div>
+          <h3>效果</h3>
+          <p>Steel 移动动画质量完成一轮换血，二代库接入 Chooser 生效；代价是目录里从此有了两套命名体系。</p>
+        </section>
+
+        <section id="routing">
+          <h2>路由模块：CHT Root 顶层选择器（CL 4748916 · 01-26）</h2>
+          <h3>现象与背景</h3>
+          <p>单英雄打样跑通后，下一个问题是第二个英雄怎么接。如果动画蓝图的 Chooser 入口写死 Steel 的总表，每接一个英雄都要动共享 ABP，铺量成本随英雄数线性上涨还互相踩。</p>
+          <h3>方案</h3>
+          <p>CL 4748916（「add cht root of mm」）新增 <code>CHT_PoseSearchDatabases_Root</code>：一个按 <code>Hero.ID</code> GameplayTag 路由的顶层选择器，入口只有这一个，各英雄的 Chooser 总表挂在它下面。整个 CL 只有这一个文件，是四个 CL 里最小的一笔提交。</p>
+          <h3>效果</h3>
+          <div class="rule">
+            <h3>多英雄接入的地基</h3>
+            <p>顶层路由建立后，新英雄接入 MM 的边际成本从「动共享入口」降为「复制一套数据流＋Root 表加一行 tag」。5 月 Murdock 接入时，「CHT root chooser 加行」已经是标准动作；这套地基最终支撑了 13 个英雄接入。按提交体量论，这是本期性价比最高的一个文件。</p>
+          </div>
+        </section>
+
+        <section id="upperbody">
+          <h2>半身分层：问题线的最早记录（CL 4748094 · 01-26）</h2>
+          <h3>现象</h3>
+          <p>Steel 的近战攻击蒙太奇在 MM 移动身体上出现半身表现问题。具体表象的原始记录已失；从修复对象（攻击蒙太奇＋重定向资产）推断，属于上半身攻击动画与下半身 MM 移动叠加处的姿态异常。</p>
+          <h3>方案</h3>
+          <p>CL 4748094（「半身攻击动画修复」）修订 <code>Steel_Attack_Melee_A_Montage</code>（第 12 版）与 <code>Steel_Attack_Melee_B_Montage</code>（第 11 版），同批修订 <code>RTG_NewRetargeter</code>、<code>HeroData_Twinblast</code>，并新增 <code>IK_TwinBlast_ActionHero</code>。两个蒙太奇的版本号说明此前它们已被高频迭代过，这不是第一次在这两个文件上打磨。</p>
+          <h3>分析：个案修复，根因未动</h3>
+          <p>当时的处理方式是按个案修蒙太奇与重定向资产，问题被压下去了，但产生问题的结构没变。事后看，这是「半身分层」问题线的<b>最早留痕</b>：同一条线在 5 月定位到根因（UpperBody 层未开 mesh-space 混合，CL 5306991），7 月才落终案（FullBody 曲线驱动的共享 ABP 分层，CL 5653247）。一期这次修复本身没有错误，错的是当时没有意识到它是一个系统性问题的第一次冒头。</p>
+          <h3>效果</h3>
+          <p>当次表现问题修复 <span class="ok">✔</span>；问题线跨度 1 月至 7 月，后续各期文档继续记录 <span class="later">⧗</span>。</p>
+        </section>
+
+        <div class="part"><b>收束</b></div>
+
+        <section id="legacy">
+          <h2>遗留问题清单</h2>
+          <p>一期收尾时挂账的问题如下，均如实列出；「后续」列写的是截至 2026-07 考古时的实际走向。</p>
+          <table>
+            <thead><tr><th>#</th><th>遗留</th><th>一期收尾状态</th><th>后续走向</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><b>Steel／Steel1 命名双轨</b>：一代二代库同目录并存，生效关系要点开 CHT 才知道</td><td><span class="later">⧗ 未整理</span></td><td>一直未做专项清理，7 月考古时仍并存</td></tr>
+              <tr><td>2</td><td><b>插件库与项目库并存的引用链</b>：项目自持数据流后，插件目录里的同名演示库没有隔离或标注</td><td><span class="later">⧗ 未隔离</span></td><td>6 月兑现为一次「改错库」乌龙：改动落在了插件目录的库上，项目侧无变化，排查后才发现改错了对象</td></tr>
+              <tr><td>3</td><td><b>Sparse 档只有坑位</b>：CHT／PSN 建好，无独立 PSD，两档实为一档</td><td><span class="later">⧗ 仅坑位</span></td><td>6 月 Dense/Sparse 剖析后才真正成为两档（局内 LOD 切换）</td></tr>
+              <tr><td>4</td><td><b>半身分层按个案修</b>：蒙太奇级修复，未触及分层结构</td><td><span class="later">⧗ 治标</span></td><td>5 月定位 mesh-space 根因，7 月 FullBody 曲线终案</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="afterwards">
+          <h2>后记：这期建的东西后来怎样了</h2>
+          <h3>被继承的</h3>
+          <p>四层数据流结构（PSD → PSS／PSN → CHT → Root）成为全项目标准。到 6 月摸底时，全项目共 <b>58 个 PSDB、14 张 Chooser</b>，累计 <b>13 个英雄</b>按「复制数据流＋Root 加一行」的配方接入。CHT Root 这个单文件 CL 是其中被复用最多的一笔。</p>
+          <h3>被砍的</h3>
+          <p>1 月建的 Walk 与 Crouch 全族（一期 35 库中占 14 库）在 6 月 MOBA-Lite 裁库时被砍：MOBA 视角下低速档与蹲行走不满足「能感知／做得出／影响命中判定」三选一的保留原则。建了再砍不等于白建，裁库这件事能发生，前提是一期把库握在了项目自己手里；跑在插件 demo 上时，连「裁」这个选项都不存在。</p>
+          <h3>暗坑兑现的</h3>
+          <p>遗留 #2 的引用链问题在 6 月如期爆了一次（改错库乌龙），排查成本花在了确认「哪个目录的库才是生效的那个」上。这属于一期埋的坑，记在这一篇账上。</p>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="appendix">
+          <h2>附录：CL 与文件清单</h2>
+          <details class="fold"><summary>展开 CL 台账与计数口径</summary>
+            <table>
+              <thead><tr><th>CL</th><th>日期</th><th>提交说明</th><th>文件构成</th></tr></thead>
+              <tbody>
+                <tr><td><b>4735102</b></td><td>01-22 11:36</td><td>[策划]按照Motion Matching的正式数据流生产移动</td><td>45 add：35 PSD＋5 PSS＋3 CHT＋2 PSN</td></tr>
+                <tr><td><b>4741691</b></td><td>01-23 14:10</td><td>【策划】MM的PSD相关数据流</td><td>23 add（*_Steel1）＋7 edit（IK_SKM_UEFN_Mannequin／CHT_Dense／PSN_Dense／Run_Loops_Steel／Run_Pivots_Steel／RTG_NewRetargeter／IK_Steel_new）</td></tr>
+                <tr><td><b>4748094</b></td><td>01-26 10:56</td><td>【策划】半身攻击动画修复</td><td>4 edit（攻击蒙太奇 A#12／B#11、RTG_NewRetargeter#4、HeroData_Twinblast#3）＋1 add（IK_TwinBlast_ActionHero）</td></tr>
+                <tr><td><b>4748916</b></td><td>01-26 14:00</td><td>[keke]add cht root of mm</td><td>1 add：CHT_PoseSearchDatabases_Root</td></tr>
+              </tbody>
+            </table>
+            <p><b>计数口径</b>：文中所有资产数量（35／23／45／7 等）均按 <code>p4 describe</code> 文件清单逐行清点，非估算。周边 CL：4733442（01-21，IK retarget）、4733756（01-22，Steel retarget 动画）为本期前置；4743649／4745060（01-23，MM 相关修复）、4748829（01-26，Twinblast auto retarget）为同期外围提交，不展开。</p>
+            <p><b>Steel1 覆盖明细</b>（23 库）：Jumps ×1；Run 族 ×8（FromTraversal／Lands_Heavy／Lands_Light／Loops／Pivots／SpinTransition／Starts／Stops）；Sprint 族 ×6（Lands_Heavy／Lands_Light／Loops／Pivots／Starts／Stops）；TurnInPlace ×1；Walk 族 ×7（FromTraversal／Lands_Heavy／Lands_Light／Loops／Pivots／SpinTransition／Starts，无 Stops）。</p>
+            <p><b>证据文件</b>：<code>p4_phase12_describe.txt</code>（四段 describe 原文）；<code>mm-archaeology/00-p4-timeline.md</code> 阶段一；<code>mm-archaeology/INDEX-总台账.md</code> 全局时间线。背景性事实（13 英雄／58 PSDB／14 Chooser／6 月裁库与乌龙）出自 6～7 月摸底与考古记录，均可回查。</p>
+          </details>
+          <p><small>本篇依据 P4 提交记录与资产现状回溯整理；会话记录缺失部分为定性重构，未补任何测量数值。</small></p>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

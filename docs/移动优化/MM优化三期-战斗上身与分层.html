@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>移动优化三期 · 战斗上身与分层体系（2026-03~05）</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:20px 60px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{border-bottom:none;}
+    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Process Record · MM 优化系列 3/5</div>
+      <h1>移动优化三期 · 战斗上身与分层体系（2026-03~05）</h1>
+      <p class="lede">Motion Matching 移动跑通之后，战斗动作要"穿"到这套移动上：举枪、持盾、拉弓、普攻，既要跟手，又不能被下半身的晃动污染。三期从 roaming-combat 状态定义起步，逐英雄铺 Overlay，再打完 UpperBody 抖动的根因战役，收束成 <b>Combat Overlay ＋ Slot 三件套</b>的半身分层体系。本篇为过程记录，所有错误尝试与被否方案完整保留。</p>
+      <div class="tldr">
+        <div><i>课题</i><span>MM 移动下战斗上半身动作发飘：UpperBody 蒙太奇随下半身晃动"晃晃悠悠"，战斗姿态（举枪/持弓）缺统一的进出机制。</span></div>
+        <div><i>终案</i><span><b>Combat Overlay</b>（roaming-combat 状态＋逐英雄 Overlay ABP）＋ UpperBody 层 <b>mesh-space 旋转混合</b> ＋ BlendMask 双档 ＋ Slot 三件套（UpperBody/Soft/Additive）。</span></div>
+        <div><i>结果</i><span>CL 5306991 入库，8 英雄共用主 ABP 生效；连锁暴露 Steel 普攻坏烘焙，以 AAT_NONE 兜底；Sparrow 下半身乱拧与 Soft 权重验收仍未终结。</span></div>
+        <div><i>分工</i><span>策划提出体验问题、录屏 A/B 验收、多次关键纠错拍板；AI 读 AnimGraph 定根因、经 AIK/Python 改资产并出 C++ patch；BlendProfile 创建只能编辑器 UI 手建，由策划手动操作。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>MOV-03</b></div>
+        <div><i>版本 / 状态</i><b>v0.1 · 迭代中</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>实现方</i><b>策划 ＋ AI（AIK MCP / Python / C++）</b></div>
+        <div class="wide"><i>系列</i><b>「移动优化历程」五篇之三（总入口见《<a href="MM调参手册.html">MM 调参手册</a>》）；前：二期·起停手感，后：四期·竞技化改造。配套：《Traversal_完整调试与功能文档》《蒙太奇slot使用说明》（团队内）</b></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">总览</div>
+        <a href="#overview"><i>01</i>总览与阶段索引</a>
+        <div class="grp">模块实录</div>
+        <a href="#overlay"><i>02</i>战斗姿态 Overlay 体系</a>
+        <a href="#boundary"><i>03</i>上身与下身的边界</a>
+        <a href="#jitter"><i>04</i>UpperBody 抖动根因战役</a>
+        <a href="#traversal"><i>05</i>攀爬线（指路）</a>
+        <div class="grp">定稿</div>
+        <a href="#system"><i>06</i>分层体系定稿</a>
+        <div class="grp">资料</div>
+        <a href="#leftovers"><i>07</i>遗留与未终结</a>
+        <a href="#appendix"><i>08</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>总览</b><span>2026-03 ~ 2026-05</span></div>
+
+        <section id="overview">
+          <h2>总览与阶段索引</h2>
+          <p>三期的主线是一句话：<b>让战斗动作骑上 MM 移动，而不是互相打架。</b>一期把 Motion Matching 数据流接进来，二期磨起步与停步的手感，都属于"下半身"的事。三期开始处理上半身：战斗姿态怎么进出（Overlay），上半身动作在移动中怎么保持稳定（Slot 分层），以及两者的边界骨骼（spine、root rotation、手指）归谁管。</p>
+          <p>时间跨度 2026-03-22 至 2026-05-19 入库为主，尾声（Slot 使用说明落库、Soft 权重返工）延伸到 05-28 与 06-03。按模块分为三条线，外加同期独立推进的攀爬线：</p>
+          <table>
+            <thead><tr><th>阶段</th><th>日期</th><th>模块</th><th>内容简述</th><th>证据</th><th>结果</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="6">A · 战斗姿态 Overlay 体系</td></tr>
+              <tr><td>A1</td><td>03-22</td><td>状态定义</td><td>举枪 Overlay 切换：roaming-combat 状态定义与过渡（Twinblast 首发，C++ ability 层同步扩展）</td><td>CL 4973642</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>A2</td><td>03-25</td><td>基类沉淀</td><td>Overlay BP 整理，改动下沉到 GASPALS <code>ABP_OverlayPose_Base</code></td><td>CL 4997669</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>A3</td><td>03-31~04-01</td><td>逐英雄接入</td><td>Steel overlay 接入与改造，旧 ABP 退役，普攻动画换代</td><td>CL 5031382 / 5039351 / 5042457</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>A4</td><td>04-03~04-09</td><td>逐英雄接入</td><td>Muriel（含普攻姿态资产）、Sevarog Overlay 铺开</td><td>CL 5061950 / 5095446</td><td><span class="ok">入库</span></td></tr>
+              <tr class="group"><td colspan="6">B · 上身与下身的边界</td></tr>
+              <tr><td>B1</td><td>05-08</td><td>spine 归属</td><td>上半身 Overlay 更跟手；解决下半身 spine 参与后拧成麻花</td><td>CL 5237275</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>B2</td><td>05-08</td><td>root rotation</td><td>Aiming 移动时 root rotation 释放，腿不再保持旧方向</td><td>CL 5240454</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>B3</td><td>05-13</td><td>覆盖粒度</td><td>弓箭手移动/持弓/释放状态优化，hand Overlay 覆盖到指头</td><td>CL 5267661</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>B4</td><td>05-14</td><td>普攻衔接</td><td>弓箭手普攻抖动优化（Release 截段接回持弓移动）</td><td>CL 5274260</td><td><span class="ok">入库</span></td></tr>
+              <tr class="group"><td colspan="6">C · UpperBody 抖动根因战役（本篇重头）</td></tr>
+              <tr><td>C1</td><td>05-19</td><td>根因</td><td>mesh-space 旋转混合缺省关闭 → 上半身随 pelvis 晃动</td><td>CL 5306991</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>C2</td><td>05-19</td><td>体系扩展</td><td>BlendMask 双档 ＋ Slot 三件套（UpperBody/Soft/Additive）</td><td>CL 5306991</td><td><span class="ok">入库</span></td></tr>
+              <tr><td>C3</td><td>05-19~20</td><td>连锁事故</td><td>Steel 普攻不可见：additive 坏烘焙现形，AAT_NONE 兜底</td><td>会话记录（p4 opened）</td><td><span class="later">未见入库 CL</span></td></tr>
+              <tr><td>C4</td><td>05-28</td><td>文档化</td><td>《蒙太奇slot使用说明》落库 design 仓</td><td>git 0fbe442→e7e69e4</td><td><span class="ok">落库</span></td></tr>
+              <tr><td>C5</td><td>06-03</td><td>返工</td><td>UpperBodySoft 权重梯度重写（名不副实被打回）</td><td>会话记录</td><td><span class="later">待验收</span></td></tr>
+              <tr class="group"><td colspan="6">D · 攀爬线（独立文档，本篇仅指路）</td></tr>
+              <tr><td>D</td><td>03-11~04-29</td><td>翻越攀爬</td><td>28 子阶段三阶段调通 ＋ 流畅度优化 ＋ 速率分档</td><td>CL 4916106 / 5202323 / 5209320 / 5209620</td><td><span class="ok">另见专篇</span></td></tr>
+            </tbody>
+          </table>
+          <h3>分工与工作方式</h3>
+          <p>本期延续系列惯例：策划不写代码，负责提出体验问题、逐轮 PIE 与录屏验收、在关键分岔处拍板与纠错；AI 负责读 AnimGraph 定位配置、经 AIK MCP 与 Python 批量改资产、必要处出 C++ patch。工具够不到的地方（BlendProfile 创建、部分节点属性）由策划在编辑器 UI 手动操作，AI 远程看截图校对。战役一节中多次关键转折来自策划的原话质疑，均按日期保留。</p>
+        </section>
+
+        <div class="part"><b>模块实录</b><span>现象 → 根因 → 方案 → 效果</span></div>
+
+        <section id="overlay">
+          <h2>战斗姿态 Overlay 体系</h2>
+          <p>MM 只负责"人往哪跑、腿怎么迈"。战斗中角色需要一层持续的姿态：举着枪、端着盾、搭着箭。这一层不能用蒙太奇硬顶（播完就没了），也不能焊死在移动数据里（脱战还得放下来）。三月下旬开始搭的就是这层：<b>roaming 与 combat 两种身体状态，加一条逐英雄的 Overlay 姿态通道。</b></p>
+
+          <h3>A1 · roaming-combat 状态定义与过渡（03-22，CL 4973642）</h3>
+          <p><b>现象</b>：Twinblast 普攻后仍是巡游姿态，举枪与收枪没有状态承载，过渡生硬。</p>
+          <p><b>方案</b>：定义 roaming-combat 双状态。从提交文件清单看，这一步同时动了三层：主 ABP <code>ABP_HeroCharacter_MM</code>、Twinblast 的 Overlay ABP 与蒙太奇资产、以及 C++ ability 层四组文件（<code>HeroAbility</code> / <code>HeroAbilityTags</code> / <code>HeroAbilityTypes</code>），即战斗状态的定义进入了代码层而非只在蓝图里。</p>
+          <p><b>过程留痕</b>：该 CL 里带着 <code>_BrokenBackup_20260321</code>、<code>_Clean</code>、<code>_EnterTempV2</code>、<code>_ExitTemp</code> 等六个中间资产与一个坏蒙太奇备份，说明进出战过渡当时反复试错、甚至改坏过一版 Overlay ABP 靠备份回退。这些中间产物随提交一并入了库。</p>
+          <p><b>机制链路</b>（依据后续机制梳理记录，运行时全链）：技能 HAD 的 <code>SkillModuleMontagePlay</code> 模块配 <code>bChangeCombatStateOnPlay / OnBlendOut</code>（Add/Remove）；保存 HAD 时 PreSave 反写到蒙太奇资产的 <code>UAbilityMontageData</code>；运行时 <code>HeroAbilitySystemComponent</code> 在蒙太奇播放与混出时调 <code>UHeroOverlayPose::Enter/ExitCombatState</code>，脱战有 3 秒延迟（<code>ExitCombatStateDelay</code>），<code>HeroAbility::EndAbility</code> 兜底退出。Steel 一类英雄只在普攻上开进出战，其他技能不开。</p>
+
+          <h3>A2 · Overlay 基类沉淀（03-25，CL 4997669）</h3>
+          <p>Twinblast 单英雄跑通后，把可复用部分下沉：本次提交除 Twinblast 自身资产外，改动了 GASPALS 插件内的 <code>ABP_OverlayPose_Base</code>。此后逐英雄接入的标准形态是：子 Overlay ABP 继承该基类（原生父类为 C++ <code>UHeroOverlayPose</code>），经 <code>ALI_OverlayPose</code> 接口以 Linked Anim Layer 挂进主 ABP；<code>HeroData.CombatOverlayPose</code> 配上后由 <code>MobaDataSubsystem</code> 在英雄数据加载时自动 Link，主 ABP 层节点不需要逐英雄改。</p>
+
+          <h3>A3 · Steel 接入与改造（03-31~04-01，CL 5031382 / 5039351 / 5042457）</h3>
+          <p><b>现象</b>：Steel 还挂着旧动画蓝图，无战斗姿态层。</p>
+          <p><b>方案与动作</b>：新增 <code>ABP_Overlay_SteelCombat_New</code>；把 Paragon 的 combat idle 重定向出 <code>rtgSteel_Idle_Combat</code>（这份资产两个月后成为战役一节里 additive 基准动画之争的核心）；删除旧 <code>Steel_AnimBlueprint</code>；次日的 5039351 顺手带出新一批普攻动画 <code>Steel_Attack_Melee_A/B_Normal_V1</code> 及其 Recovery 与蒙太奇（这批资产的 additive 烘焙问题当时无人察觉，五月才现形），同时把 Muriel 的 HeroData / ABP / MCD / RTG 基础盘一并建了出来。</p>
+          <p><b>效果</b>：Steel 进出战姿态走通，后续英雄照此模板铺开。</p>
+
+          <h3>A4 · Muriel 与 Sevarog 铺开（04-03~04-09，CL 5061950 / 5095446）</h3>
+          <p>Muriel 补上普攻姿态与射击资产（<code>UEFN_Primary_Pose</code>、快慢两档 Fire 动画）与飞行 Overlay；Sevarog 新增 <code>ABP_Overlay_SevarogCombat_New</code> 并整理基础移动动画与 AO。至此 Overlay 接入从"单英雄验证"进入"逐英雄例行公事"，每个英雄的接入面收敛为：一个子 Overlay ABP、一组战斗 idle 姿态动画、HeroData 一处引用。</p>
+          <div class="rule">
+            <p><b>这条线立住的原则</b>：战斗姿态是持续状态，归 Overlay（Linked Anim Layer）管；瞬时动作归 Slot 蒙太奇管。两者语义分开，五月战役里的分层决策全部建立在这个前提上。</p>
+          </div>
+        </section>
+
+        <section id="boundary">
+          <h2>上身与下身的边界</h2>
+          <p>Overlay 铺开后，问题转向边界骨骼：spine 让不让下半身参与？瞄准时 root 的朝向归谁？手指算上半身吗？五月上旬四个提交都在回答这类问题。这一段会话考古未覆盖，细节以提交说明与文件清单为准，不作超出证据的展开。</p>
+
+          <h3>B1 · spine 参与后拧成麻花（05-08，CL 5237275）</h3>
+          <p><b>现象</b>：为了让上半身 Overlay 更跟手，尝试让下半身 spine 参与联动，结果角色躯干被拧成麻花。</p>
+          <p><b>方案</b>：提交同时修改主 ABP <code>ABP_HeroCharacter_MM</code>、Twinblast Overlay ABP、AO 资产 <code>Idle_AO_CC_UEFN</code> 与瞄准移动姿态 <code>Pose_Twinblast_Pistol2H_Stand_Aim_Move</code>，在"更跟手"与"不拧麻花"之间同一天内调平。</p>
+          <p><b>效果</b>：提交说明记为两个问题同时解决；这也是后来"上半身跟镜头其实是整身 Strafe ＋ Warping ＋ AO 的合成，不是脊柱独立旋转"这一认知（见战役一节）的前置实践。</p>
+
+          <h3>B2 · Aiming 移动的 root rotation 释放（05-08，CL 5240454）</h3>
+          <p><b>现象</b>：Aiming 状态下移动，腿保持进入瞄准时的旧朝向，不随移动方向更新。</p>
+          <p><b>方案</b>：释放 Aiming 移动时的 root rotation。文件清单为主 ABP 加 Twinblast Overlay 及其 Enter/Exit 过渡资产，即改动落在状态过渡链路上而非单个姿态。</p>
+          <p><b>效果</b>：腿部朝向交还给移动系统。与 B1 合起来，当天定下的边界是：<b>瞄准姿态管上半身与手臂，root 与腿归移动。</b></p>
+
+          <h3>B3 · hand Overlay 覆盖到指头（05-13，CL 5267661）</h3>
+          <p><b>现象</b>：弓箭手（Sparrow）持弓与释放时，hand Overlay 覆盖不到手指骨，指头仍走底层动画。</p>
+          <p><b>方案</b>：这是三期单次体量最大的资产提交之一：DrawOne / DrawThree / ShootOne / ShootThree 全套 UEFN 重定向动画，每套配九方向 AO（CC/CD/CU/LC/LD/LU/RC/RD/RU），加 MT 拆段与蒙太奇，同时改主 ABP 与 <code>ABP_Overlay_SparrowBow</code> 把覆盖范围扩到指骨。</p>
+          <p><b>效果</b>：持弓、搭箭、释放三态在移动中成立，手型不再穿帮。</p>
+
+          <h3>B4 · 弓箭手普攻抖动（05-14，CL 5274260）</h3>
+          <p><b>现象</b>：Sparrow 普攻（放箭）在移动中抖动。</p>
+          <p><b>方案</b>：从资产命名判断，做法是在 <code>UEFN_Sparrow_Attack_Release</code> 的 0.36 秒处截出一段过渡动画 <code>UEFN_Sparrow_Attack_Release_0p36_To_Bow_Aim_Move</code>，让放箭动作在该点接回持弓移动姿态，而不是播完整段再硬切；配套改了 ACD / HAD / MCD 三份配置。</p>
+          <p><b>效果</b>：提交说明记为抖动优化完成。值得注意的是五天后（05-19）UpperBody 抖动仍以 Sparrow 的 <code>BladeShower_Start_Montage</code> 为复现用例被重新提出，说明这次是治了普攻衔接这一处症状，蒙太奇随下半身晃动的共性根因当时尚未触及。</p>
+        </section>
+
+        <section id="jitter">
+          <h2>UpperBody 抖动根因战役</h2>
+          <p>三期的重头戏。起点是一个描述性极强的体验问题，终点是一次架构级定稿加一场连锁事故。会话跨 05-19 至 06-03，394 条有效消息，全程留痕。</p>
+
+          <h3>问题定义与复现（05-19 上午）</h3>
+          <div class="note">
+            <p><b>问题定义（整理稿，05-19）</b>：UpperBody Slot 蒙太奇与 MM 移动叠加播放时，移动层的骨盆运动传导进上半身，角色整体晃动。复现示例：BladeShower_Start_Montage、UEFN_Steel_Ability_Shield_Hold_Montage。预期行为：移动中上半身保持稳定。</p>
+          </div>
+          <p>复现条件：主 ABP <code>ABP_HeroCharacter_MM</code>（GASPALS/GASP 模板迁移而来，Steel / Sevarog / Sparrow / Twinblast / Muriel / Phase / Gideon / Kallari 八英雄子类继承）；MM 移动中播 UpperBody Slot 蒙太奇，"静态 hold"类最明显。pelvis 走 MM 路径，跑步的摇摆与颠簸沿骨链带动 spine，slot 里写死的举盾、拉弓姿势无力补偿。</p>
+
+          <h3>根因：一个被忽略的默认值（05-19 10:00~10:09）</h3>
+          <p>AI 读 AnimGraph 后锁定 UpperBody 链的 Layered Blend Per Bone 节点实际配置：</p>
+          <ul>
+            <li><code>LayerSetup = ((BranchFilters=((BoneName="spine_01")))）</code>，过滤起点 spine_01，pelvis 有意留给 MM，避免髋部僵死；</li>
+            <li><code>bBlendRootMotionBasedOnRootBone = True</code>；</li>
+            <li><code>bMeshSpaceRotationBlend</code> 未出现，即为 UE 默认值 <b>False</b>。这就是根因。</li>
+          </ul>
+          <p>推理链：local-space 混合下，spine_01 的世界朝向等于 pelvis 世界朝向乘其局部旋转，LBPB 只覆盖局部旋转，pelvis 一晃整条 spine 链跟着抡；mesh-space 旋转混合则用 slot pose 的 component-space 朝向反算局部旋转，每帧动态抵消 pelvis 晃动，上身钉稳。佐证：Lyra 与 Game Animation Sample 的 UpperBody 层此项默认开启，本项目迁移时正好是关的。次要嫌疑 SpineRotation 的六节 ModifyBone 链被列出但排除：那是全时段影响，与"仅 slot 期间晃"的症状不符。</p>
+          <p>策划确认修复方向后先要求回滚："你的改动是正确的 不过我想改回去先 录个屏"，改前改后各录一版 A/B 对比再定稿。</p>
+
+          <h3>体系化扩展：从修一个开关到定一套分层（05-19 11:17~12:45）</h3>
+          <p>开关修完先做负面影响评估：失去上身随髋部甩动的 follow-through；只修旋转不修平移，跑步上下颠簸保留（通常是想要的）；大幅度 spine 动作的攻击蒙太奇可能变硬，处理方向是延长混合时间而不是回退 mesh-space。随后策划提出关键架构判断：</p>
+          <blockquote>"upperbody Slot的用意就该如此吧，如果想保持一些下半身带来的传导 应该用OVERLAY Pose 或者其它？"<br /><i>[05-19 11:21 策划原话]</i></blockquote>
+          <p>由此定调分层心智模型：<b>Slot 是瞬时强占语义，Overlay 是持续姿态语义</b>，与第二节的 Overlay 体系互为表里。在此之上扩展两件事：</p>
+          <ul>
+            <li><b>BlendMask 双档</b>：<code>BP_UpperBody_Hard</code>（全 1.0，持盾/瞄准/蓄力）与 <code>BP_UpperBody_Soft</code>（spine 链渐变权重，挥砍类保留下身惯性传导）；</li>
+            <li><b>UpperBodyAdditive Slot</b>：Additive Identity Pose 经 Slot 走 ApplyMeshSpaceAdditive，插在 PostUpperBody 与 DefaultSlot 之间，作受击 flinch、后坐力、呼吸类的叠加通道，与 Lyra/GASP 同构。</li>
+          </ul>
+          <p><b>途中一次自我纠错</b>：最初方案想靠蒙太奇上配 Blend Profile 换档，AI 随后主动收回该说法，因为蒙太奇上的 Blend Profile 只影响混入混出过渡、不影响稳态权重。改走平行双 Slot 方案：新增 <code>UpperBodySoft</code> slot 加第二条 LBPB 链，蒙太奇作者直接选 slot 名换档，零运行时逻辑。策划拍板"方案 A吧"。</p>
+
+          <h3>被否与被救回的路径</h3>
+          <ul>
+            <li><b>程序化创建 BlendProfile：失败。</b><code>BlendProfiles</code> 属性 protected 且无 UFUNCTION，AIK 与 Python 全路径走不通，只能编辑器 UI 手建，由策划手动操作、AI 看截图校对。</li>
+            <li><b>删七个"没人用"的 Slot：被策划一句话救回。</b>AI 首轮扫描认为 Curves / Arm R / Arm L / Head / Spine / Pelvis / Legs 七个 slot 无人引用可删，策划质疑"该不会是用到的吧"；补扫发现它们全部被 GASPALS <code>ABP_LayerBlending</code>（OverlaySystem 层混合中心，经 Linked Anim Layer 接入主 ABP）占用。七个全保留。AI 承认首次扫描只查了蒙太奇、没查 AnimBP，是偏见结论。</li>
+          </ul>
+
+          <h3>实施途中的坑（全部当场纠正）</h3>
+          <table>
+            <thead><tr><th>坑</th><th>事实</th><th>出处</th></tr></thead>
+            <tbody>
+              <tr><td><b>BlendMask 权重不沿骨链继承</b></td><td>曾以为填 clavicle 就够，导致 Hard 档整条手臂权重为 0、slot 完全出不来；实际每根骨独立，八根 twist 骨与 neck/head 都要显式填 1.0</td><td>05-19 12:54 AI 认错</td></tr>
+              <tr><td><b>一帧蒙太奇不能当验收用例</b></td><td>Shield 系列全是 0.033s 快照式蒙太奇，播完即消失；"没生效"是测试方法的锅，AnimGraph 从第一次改完就是对的</td><td>05-19 13:13</td></tr>
+              <tr><td><b>蒙太奇编辑器预览不走 AnimBP</b></td><td>LBPB / BlendMask / mesh-space 全不参与，必须 ABP 预览或 PIE</td><td>05-19 12:55</td></tr>
+              <tr><td><b>父 ABP 编译不自动下发</b></td><td>八个子 ABP 需强制重编译；PIE 不热重载 AnimInstance，必须 Stop 后重新 Play</td><td>05-19 12:59</td></tr>
+              <tr><td><b>AIK 写特定属性会崩编辑器</b></td><td><code>set_node_property</code> 碰 LBPB 的数组属性（LayerSetup）或 ApplyAdditive 的 alpha bool 触发序列化崩溃，编辑器崩了三次；结论是这类属性只能编辑器 UI 改</td><td>05-19 13:03 / 13:36、05-20 02:55</td></tr>
+            </tbody>
+          </table>
+          <p><b>入库</b>：CL 5306991，<code>ABP_HeroCharacter_MM.uasset</code>（rev#29，LBPB mesh-space ＋ BlendMask 双档 ＋ UpperBodyAdditive/UpperBodySoft 双链）与 <code>SK_UEFN_Mannequin.uasset</code>（rev#3，新 slot 注册与两个 BlendMask）。</p>
+
+          <h3>连锁事故：Steel 普攻不可见（05-19 13:35 → 05-20 03:11）</h3>
+          <p><b>现象</b>：主线修复入库前后，Steel 普攻动画两次完全消失。第一次是排查"combat 上半身不跟手"时给 <code>rtgSteel_Idle_Combat</code> 加了六条 Layering_* 曲线所致，回滚后恢复；第二次在回退 AO 绑定后再次消失。策划给出关键定位："HAD_SteelAttack 普攻都在这里面。其它半身动作是OK的，普攻完全没动作"。</p>
+          <p><b>真根因</b>：Steel 四个普攻动画（<code>Steel_Attack_Melee_A/B_Normal_V1</code> 及 Recovery，即 A3 阶段 3 月底入库的那批）是 <code>AAT_ROTATION_OFFSET_MESH_SPACE</code> additive，但 <code>RefPoseSeq=None</code>。Paragon 重定向历史遗留的坏烘焙，此前一直被当绝对 pose 塞进 UpperBody slot 播。旧的 local-space ＋ BranchFilter 恰好"容忍"了这个破损；开启 mesh-space 后 slot 输出的解释方式变了，接近零的 delta 旋转被直接设为 spine 最终朝向，动作因此不可见。<b>修复暴露了潜伏 bug，根因在数据不在修复。</b></p>
+          <p><b>方案 B（additive 正路）的尝试与失败</b>：策划判断"之前标ADDITIVE似乎是有意为之的"，先走恢复 additive ＋ 蒙太奇 slot 改 UpperBodyAdditive 的正路，其间策划两次补齐 AI 漏掉的配置（BasePose 应选 Overlay 里的 Pose；RefPoseSeq 应指 <code>rtgSteel_Idle_Combat</code>）。<code>showdebug animation</code> 实锤链路百分之百工作（slot weight 与 Alpha 都满）但视觉纹丝不动，卡在两层死结：</p>
+          <ul>
+            <li>Python 改 <code>RefPoseSeq</code> 不触发 re-bake（绕过 PostEditChangeProperty），手动 re-bake 后仍不对；</li>
+            <li><b>runtime base 不等于 bake-time base</b>：Steel 的 pose 缺 <code>Layering_Spine</code> 曲线，overlay 的 combat idle 根本没叠到 spine 上，运行时基座还是 locomotion pose，delta 加在了错误的基上。</li>
+          </ul>
+          <p><b>终案退回方案 A</b>：四个动画改 <code>AdditiveAnimType=AAT_NONE</code>，两个蒙太奇 slot 回 UpperBody。代价是失去"挥砍随相机俯仰弯曲"。要走通 additive 正路需要美术与程序三步联合（统一 base、补 Layering 曲线、重烘 delta），单做任何一步都不成立。防范建议随之沉淀：批量扫描 <code>AdditiveAnimType != NONE 且 RefPoseSeq == None</code> 的动画列给美术。</p>
+          <p><b>顺手修掉的独立 bug</b>：<code>HeroAbility.h</code> 的 <code>OnAbilitySpecPostRelicatedChange</code> 拼写错误在 UE5.7 严格 override 校验下炸编译（策划选择删 override 保留 dead code）；<code>HeroAbility.cpp</code> 的 <code>TargetAbilityReport</code> 空指针崩溃补了 null check。</p>
+
+          <h3>验证陷阱三则与验收手段</h3>
+          <p>这场战役里"看起来没生效"的假象多过真故障，三个陷阱值得单列：一帧蒙太奇当用例（播完即消失）；蒙太奇编辑器预览不走 ABP；p4 revert 后文件只读导致配置只写进内存、PIE 用的还是盘上旧文件（靠核对 <code>LogSavePackage</code> 行号抓出来）。有效的验收手段汇总：</p>
+          <table>
+            <thead><tr><th>手段</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><b>PIE 跑动中触发蒙太奇</b></td><td>主验收路径；必须 Stop 后重新 Play</td></tr>
+              <tr><td><b>录屏 A/B 对比</b></td><td>改前改后各录一次，策划验收纪律</td></tr>
+              <tr><td><b><code>showdebug animation</code></b></td><td>实锤 slot weight / 蒙太奇播放 / Alpha，定案"链路通但视觉为零"</td></tr>
+              <tr><td><b><code>LogSavePackage</code> 行号核验</b></td><td>每次保存后确认真的写了盘</td></tr>
+              <tr><td><b>AnimInsights / 截图</b></td><td>MM BlendStack 动画堆叠观察</td></tr>
+            </tbody>
+          </table>
+
+          <h3>尾声：Soft 权重名不副实的返工（06-03）</h3>
+          <blockquote>"upperbody soft的slot 并没有达到我预期的 下半身屁股会有轻微的跟随上半身的表现，看起来和upperbody差不多。"<br /><i>[06-03 05:48 策划验收打回]</i></blockquote>
+          <p>诊断：<code>BP_UpperBody_Soft</code> 的十六条 entry 权重不可读（protected），大概率没填渐变值、与 Hard 无差别；且原设计 pelvis=0 本就达不到"轻微跟随"。重写权重梯度：pelvis 0.15 / spine_01 0.35 / spine_02 0.65 / spine_03 0.85 / spine_04 至 head 1.0 / clavicle 与双臂 1.0（递归）。其间发生一次<b>改错文件事故</b>：先写到了 Characters_Test 目录下的同名骨架，策划抓住"你好像改错了 我用的插件目录下的"，revert 错件后重写到 GASPALS 插件下的 <code>SK_UEFN_Mannequin</code>，以 <code>LogSavePackage</code> 确认落盘。pelvis 0.15 的体感验收在会话结束时未见回报，状态见第七节。</p>
+        </section>
+
+        <section id="traversal">
+          <h2>攀爬线（指路）</h2>
+          <p>与 Overlay 线同期，翻越攀爬系统（Hurdle / Vault / Mantle / Climb）从 03-11 起在另一条线上推进：三个会话阶段、28 个子阶段，从零搭建到 TwinBlast / Sparrow / Steel 三角色全面调通（CL 4916106 接入起点），四月末继续做整体流畅度优化（CL 5202323）与 vault/hurdle/climb/mantle 速率分档（CL 5209320 / 5209620）。该线已有独立专篇，含完整调用链、决策树与全部失败尝试，本篇不重写，请移步<b>《翻越攀爬系统 · 完整调试与功能文档（三阶段综述）》</b>。</p>
+        </section>
+
+        <div class="part"><b>定稿</b><span>体系全貌</span></div>
+
+        <section id="system">
+          <h2>分层体系定稿</h2>
+          <p>战役收尾后（05-28），把整套半身分层写成了给蒙太奇作者查表用的使用说明，落库 design 仓（git 0fbe442，rebase 后 e7e69e4）。定稿的 Slot 语义表：</p>
+          <table>
+            <thead><tr><th>Slot</th><th>用途</th><th>混合模式</th><th>BlendMask</th><th>MeshSpaceRot</th></tr></thead>
+            <tbody>
+              <tr><td><b>DefaultSlot（FullBody）</b></td><td>整体替换：mantle / 大招 / 过场</td><td>不走 LBPB 直接覆盖</td><td>无</td><td>无</td></tr>
+              <tr><td><b>UpperBody</b></td><td>强语义上半身：持盾 / 瞄准 / 起手</td><td>LBPB</td><td><code>BP_UpperBody_Hard</code></td><td>开</td></tr>
+              <tr><td><b>UpperBodySoft</b></td><td>随下半身协调：普攻 release / 跑动中释放</td><td>LBPB</td><td><code>BP_UpperBody_Soft</code></td><td>开</td></tr>
+              <tr><td><b>UpperBodyAdditive</b></td><td>叠加不替换：受击 / 呼吸 / 反馈</td><td>ApplyMeshSpaceAdditive（不走 LBPB）</td><td>无</td><td>无</td></tr>
+              <tr><td><b>PreAO_UpperBody / Transition</b></td><td>GASPALS 与状态机自用</td><td>业务侧别动</td><td>无</td><td>无</td></tr>
+            </tbody>
+          </table>
+          <p>蒙太奇作者的选择决策树：整身替换选 DefaultSlot；叠加选 UpperBodyAdditive；定身瞄准选 UpperBody；边跑边放选 UpperBodySoft。换档只靠选 slot 名，没有运行时逻辑。</p>
+          <svg class="diagram" viewBox="0 0 940 240" role="img" aria-label="半身分层管线示意：MM 移动基座经两条 LBPB 链与叠加通道汇入最终姿态，Overlay 以 Linked Anim Layer 提供持续战斗姿态">
+            <g font-family="Consolas,monospace" font-size="12.5">
+              <rect x="14" y="88" width="150" height="52" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="89" y="110" text-anchor="middle" fill="var(--ink)">MM 移动</text>
+              <text x="89" y="128" text-anchor="middle" fill="var(--muted)">BlendStack 基座</text>
+              <rect x="200" y="88" width="166" height="52" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="283" y="110" text-anchor="middle" fill="var(--ink)">LBPB · mesh-space</text>
+              <text x="283" y="128" text-anchor="middle" fill="var(--muted)">Mask: Hard</text>
+              <rect x="216" y="16" width="134" height="34" rx="6" fill="none" stroke="var(--brass)" stroke-width="1.5"/>
+              <text x="283" y="38" text-anchor="middle" fill="var(--ink)">Slot UpperBody</text>
+              <line x1="283" y1="50" x2="283" y2="86" stroke="var(--brass)" stroke-width="1.5"/>
+              <rect x="402" y="88" width="166" height="52" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="485" y="110" text-anchor="middle" fill="var(--ink)">LBPB · mesh-space</text>
+              <text x="485" y="128" text-anchor="middle" fill="var(--muted)">Mask: Soft（pelvis 0.15 起）</text>
+              <rect x="404" y="16" width="162" height="34" rx="6" fill="none" stroke="var(--brass)" stroke-width="1.5"/>
+              <text x="485" y="38" text-anchor="middle" fill="var(--ink)">Slot UpperBodySoft</text>
+              <line x1="485" y1="50" x2="485" y2="86" stroke="var(--brass)" stroke-width="1.5"/>
+              <rect x="604" y="88" width="180" height="52" rx="6" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="694" y="110" text-anchor="middle" fill="var(--ink)">ApplyMeshSpaceAdditive</text>
+              <text x="694" y="128" text-anchor="middle" fill="var(--muted)">叠加通道</text>
+              <rect x="602" y="16" width="184" height="34" rx="6" fill="none" stroke="var(--brass)" stroke-width="1.5"/>
+              <text x="694" y="38" text-anchor="middle" fill="var(--ink)">Slot UpperBodyAdditive</text>
+              <line x1="694" y1="50" x2="694" y2="86" stroke="var(--brass)" stroke-width="1.5"/>
+              <rect x="820" y="88" width="106" height="52" rx="6" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
+              <text x="873" y="110" text-anchor="middle" fill="var(--ink)">DefaultSlot</text>
+              <text x="873" y="128" text-anchor="middle" fill="var(--muted)">→ 最终姿态</text>
+              <line x1="164" y1="114" x2="198" y2="114" stroke="var(--muted)" stroke-width="1.5"/>
+              <line x1="366" y1="114" x2="400" y2="114" stroke="var(--muted)" stroke-width="1.5"/>
+              <line x1="568" y1="114" x2="602" y2="114" stroke="var(--muted)" stroke-width="1.5"/>
+              <line x1="784" y1="114" x2="818" y2="114" stroke="var(--muted)" stroke-width="1.5"/>
+              <rect x="14" y="176" width="912" height="46" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="5 4"/>
+              <text x="30" y="204" fill="var(--muted)">Combat Overlay（Linked Anim Layer，持续姿态）：HAD 进出战标志 → HeroOverlayPose Enter/Exit（脱战延迟 3s）→ 逐英雄 Overlay ABP 的 Relax↔Aim 姿态，作用于基座层</text>
+            </g>
+          </svg>
+          <p>这套体系的判断标准回到最初那句：Slot 强占是瞬时的，Overlay 姿态是持续的，两者各有一条通道且互不越界。三期入库的所有改动，最终都能塞回这张图里的某一格。</p>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="leftovers">
+          <h2>遗留与未终结</h2>
+          <details class="fold" open><summary>展开清单</summary>
+            <table>
+              <thead><tr><th>#</th><th>事项</th><th>状态</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td><b>Sparrow 下半身乱拧</b></td><td><span class="no">未终结</span></td><td>与 UpperBody 主线正交的平行支线。四种 actor 旋转策略实验（HardSnap / SmoothFollow -1 / 720°每秒 / 阈值 45°）全部失败，摘 Pelvis ModifyBone 也无效，actor 旋转策略被证伪为根因；症状重定性为 combat 进出瞬间 MM 在 forward 与 strafe 数据集切换时 BlendStack 插值打架。策划最终收敛需求为"进 combat 时整体 rotation 完全跟镜头、分角色配置、改动面要小"，对应的 <code>bHardSnapYawInCombat</code> 约十五行方案设计完成，会话内未见实施回报；且该方案只解决跟手，不解决 MM 层双腿打架。</td></tr>
+                <tr><td>2</td><td><b>UpperBodySoft 权重体感验收</b></td><td><span class="later">未回报</span></td><td>06-03 重写的梯度（pelvis 0.15 起）待策划体感验收：偏弱调 0.25~0.3，偏强调 0.08~0.1。会话结束时未见回报。另 configure 是 merge 不是 replace，若旧条目含 thigh_* 高权重会锁腿，待自查。</td></tr>
+                <tr><td>3</td><td><b>Steel AAT_NONE 兜底等 pending 改动</b></td><td><span class="later">未见入库 CL</span></td><td>Steel 四动画 AAT_NONE ＋ 两蒙太奇 slot 回 UpperBody、C++ CombatRotationMode 六文件 patch（数据闸门关停，行为等同旧版）、06-03 的 Soft 权重梯度，会话内均停留在 p4 opened 或待验收状态。</td></tr>
+                <tr><td>4</td><td><b>Steel additive 正路未走通</b></td><td><span class="later">需三方联合</span></td><td>兜底方案的代价是失去挥砍随相机俯仰弯曲。正路需要美术＋程序三步联合（统一 base / 补 Layering 曲线 / 重烘 delta）。坏烘焙批量扫描（<code>AdditiveAnimType != NONE 且 RefPoseSeq == None</code>）建议已提，执行情况本篇证据未覆盖。</td></tr>
+                <tr><td>5</td><td><b>改错骨架的残留清理</b></td><td><span class="later">待清理</span></td><td>06-03 误改的 Characters_Test 下同名 SK_UEFN_Mannequin 已 revert，需关编辑器后 <code>p4 sync -f</code> 清残留。</td></tr>
+                <tr><td>6</td><td><b>Steel 专属 AO 缺位</b></td><td><span class="later">待美术</span></td><td>借 Pistol1H / Bow / Twinblast 的 AO 均"会跟但不是特别跟"且全部回退。结论是需要 Steel 专属的 UEFN 骨架 AO（或用 IK Retargeter 转制），三期内未解决。</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+
+        <section id="appendix">
+          <h2>附录</h2>
+          <details class="fold"><summary>展开 CL 与提交清单</summary>
+            <table>
+              <thead><tr><th>CL / 提交</th><th>日期</th><th>提交说明（摘）</th><th>文件要点</th></tr></thead>
+              <tbody>
+                <tr><td><b>4973642</b></td><td>03-22</td><td>举枪 overlay 切换，roaming-combat 状态定义与过渡</td><td>主 ABP、Twinblast Overlay 与蒙太奇、HAD/IPD、C++ HeroAbility/Tags/Types 四组；含六个 Temp/BrokenBackup 中间资产</td></tr>
+                <tr><td><b>4997669</b></td><td>03-25</td><td>overlay bp</td><td>GASPALS <code>ABP_OverlayPose_Base</code> ＋ Twinblast overlay</td></tr>
+                <tr><td><b>5031382</b></td><td>03-31</td><td>steel overlay</td><td><code>ABP_Overlay_SteelCombat_New</code> 与 <code>rtgSteel_Idle_Combat</code> 新增、旧 <code>Steel_AnimBlueprint</code> 删除</td></tr>
+                <tr><td><b>5039351</b></td><td>03-31</td><td>steel overlay 改造 &amp； 新角色基础动画</td><td>Steel 普攻 V1 动画批（后被查出坏烘焙）、Muriel 基础盘、CHT root 表</td></tr>
+                <tr><td><b>5042457</b></td><td>04-01</td><td>steel attack overlay</td><td>单蒙太奇调整</td></tr>
+                <tr><td><b>5061950</b></td><td>04-03</td><td>双枪数值接入 &amp; MUR overlay</td><td>Muriel <code>UEFN_Primary_*</code> 姿态与射击动画、飞行 Overlay</td></tr>
+                <tr><td><b>5095446</b></td><td>04-09</td><td>overlay</td><td><code>ABP_Overlay_SevarogCombat_New</code> ＋ Sevarog 基础动画与 HeroData</td></tr>
+                <tr><td><b>5237275</b></td><td>05-08</td><td>上半身 overlay 更跟手，解决下半身 spine 参与后拧成麻花</td><td>主 ABP、Twinblast Overlay、<code>Idle_AO_CC_UEFN</code>、Aim Move 姿态</td></tr>
+                <tr><td><b>5240454</b></td><td>05-08</td><td>Aiming 移动时 root rotation 释放，不再让腿保持旧方向</td><td>主 ABP ＋ Twinblast Overlay Enter/Exit 过渡资产</td></tr>
+                <tr><td><b>5267661</b></td><td>05-13</td><td>弓箭手移动/持弓/释放状态优化，hand Overlay 覆盖到指头</td><td>Sparrow DrawOne/DrawThree/ShootOne/ShootThree 全套 ＋ 九方向 AO ＋ <code>ABP_Overlay_SparrowBow</code></td></tr>
+                <tr><td><b>5274260</b></td><td>05-14</td><td>弓箭手普攻抖动优化</td><td><code>UEFN_Sparrow_Attack_Release_0p36_To_Bow_Aim_Move</code> 新增，ACD/HAD/MCD 配套</td></tr>
+                <tr><td><b>5306991</b></td><td>05-19</td><td>UpperBody 抖动修复 ＋ Slot 层级扩展</td><td><code>ABP_HeroCharacter_MM</code> rev#29 ＋ <code>SK_UEFN_Mannequin</code> rev#3</td></tr>
+                <tr><td><b>git 0fbe442→e7e69e4</b></td><td>05-28</td><td>《蒙太奇slot使用说明.md》</td><td>design 仓，135 行</td></tr>
+              </tbody>
+            </table>
+          </details>
+          <details class="fold"><summary>展开策划关键原话索引（战役期）</summary>
+            <table>
+              <thead><tr><th>日期</th><th>原话（摘）</th><th>性质</th></tr></thead>
+              <tbody>
+                <tr><td>05-19</td><td>"你的改动是正确的 不过我想改回去先 录个屏"</td><td>验收纪律：A/B 录屏</td></tr>
+                <tr><td>05-19</td><td>"upperbody Slot的用意就该如此吧，如果想保持一些下半身带来的传导 应该用OVERLAY Pose 或者其它？"</td><td>架构定调：Slot 与 Overlay 语义分离</td></tr>
+                <tr><td>05-19</td><td>"该不会是用到的吧"</td><td>质疑救回七个 GASPALS slot</td></tr>
+                <tr><td>05-19</td><td>"帮我把Steel这个上半身旋转相关的调试都回退吧 目前没看到理想方案"</td><td>及时止损</td></tr>
+                <tr><td>05-20</td><td>"HAD_SteelAttack 普攻都在这里面。其它半身动作是OK的，普攻完全没动作"</td><td>关键定位信息</td></tr>
+                <tr><td>05-20</td><td>"是这个原因 不过之前标ADDITIVE似乎是有意为之的 你觉得呢"</td><td>识破数据兜底背后的设计意图</td></tr>
+                <tr><td>05-20</td><td>"这里你似乎漏了选择的动画帧配置 应该是OVERLAY里的POSE"</td><td>补齐 AI 遗漏的 additive base 配置</td></tr>
+                <tr><td>05-20</td><td>"我都revert掉了……现在我只想要一个东西……改动面不要太大"</td><td>需求收敛拍板</td></tr>
+                <tr><td>06-03</td><td>"upperbody soft的slot 并没有达到我预期的……看起来和upperbody差不多"</td><td>验收打回，触发 Soft 返工</td></tr>
+                <tr><td>06-03</td><td>"你好像改错了 我用的插件目录下的"</td><td>抓住改错资产路径</td></tr>
+              </tbody>
+            </table>
+          </details>
+          <details class="fold"><summary>展开可复用经验（沉淀条目）</summary>
+            <ul>
+              <li>UpperBody 层 LBPB 必开 Mesh Space Rotation Blend（Lyra/GASP 默认开），从 GASP 类模板迁移时优先核对这个默认值。</li>
+              <li>切 blend 空间前先扫坏烘焙：<code>AdditiveAnimType != NONE 且 RefPoseSeq == None</code> 的动画在 local-space 下被"宽容"，mesh-space 一开就现形。</li>
+              <li>BlendMask 权重不沿骨链继承，twist 骨（八根）与 neck/head 必须显式填；空 mask 等于 slot 完全失效。</li>
+              <li>Slot 语义三件套定型：UpperBody（硬钉）/ UpperBodySoft（渐变传导，pelvis 0.15 起）/ UpperBodyAdditive（叠加）；换档靠选 slot 名，不靠运行时逻辑。</li>
+              <li>AIK 红线：<code>set_node_property</code> 碰 LBPB 数组属性或 ApplyAdditive 的 alpha bool 必崩编辑器；Python 改 RefPoseSeq 不触发 re-bake；BlendProfile 创建与删除只能 UI。</li>
+              <li>验收纪律：别用一帧蒙太奇验 slot；蒙太奇编辑器预览不走 ABP；PIE 必须重启；保存后必须核 <code>LogSavePackage</code>，防"内存已改、盘上没改"的假象。</li>
+              <li>"上半身跟镜头"的真实实现是整身 Strafe ＋ Warping ＋ AO 的合成，不是脊柱独立旋转；跟手差异主要来自 AO 资产质量。</li>
+            </ul>
+          </details>
+          <p>本篇依据会话考古记录与 P4 提交记录整理；未被上述证据覆盖的细节一律未写入。</p>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
