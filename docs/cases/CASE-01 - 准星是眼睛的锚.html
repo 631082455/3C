@@ -23,6 +23,7 @@
       --code:#2f5573; --code-bg:#eaeeee;
       --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
       --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
       --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
       --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
     }
@@ -37,9 +38,14 @@
       --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
       --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
       --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
     }
     *{box-sizing:border-box;} html{scroll-behavior:smooth;}
-    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
       -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
     ::selection{background:var(--accent);color:#fff;}
     ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
@@ -55,7 +61,7 @@
       .page{width:min(1480px,calc(100vw - 64px));}
       .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
       section{padding:38px 60px;}
-      .part{padding:20px 60px;}
+      .part{padding:24px 8px 14px;}
     }
     @media(min-width:2800px){
       body{font-size:19px;}
@@ -70,7 +76,7 @@
     .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
       letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
     .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
-    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
       letter-spacing:.01em;color:#f3efe6;}
     .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
     .hero .lede b{color:#dbe0e7;}
@@ -107,21 +113,21 @@
     nav a:hover{color:var(--ink);background:var(--soft);}
     nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
     nav a.active i{color:var(--accent-text);opacity:1;}
-    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
-      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    main{counter-reset:sec;}
     /* ---- 篇章分隔条:故事的幕间页 ---- */
-    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
-      background:var(--soft);border-bottom:1px solid var(--line);}
-    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
-    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
-    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
-    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
-    section:last-child{border-bottom:none;}
-    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
     h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
-      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
       border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
-    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
       display:flex;align-items:center;gap:9px;}
     h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
     .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
@@ -289,7 +295,10 @@
             <h3>两个正确目标的几何冲突</h3>
             <p>环绕感需要真旋转——世界在画面里流动，只有视线真的转过去才有；准星诚实需要中心射线不动——视线转 1°，屏幕中心与世界的对应就平移 1°。这是三维投影的数学，不是实现取舍：<b>不存在"转了视线但准星映射不变"的解</b>。出路只有三条：不转（阉割演出）、转但骗人（阉割信任）、把"转"的定义换掉（本案走的路）。</p>
           </div>
-          <p>不解决的代价：演出侧，环绕被压到 2.6°（实测偏移勉强可忍的量）仍不满足，演出预算被扣押了四分之三；信任侧，蓄力期正是玩家最后瞄准精修的窗口，每局上百次施放的 skillshot 在这里被准星欺骗，轻则命中率，重则玩家不再相信准星。</p>
+          <div class="grid">
+            <div class="box"><h3>不解决：演出这头</h3><p>环绕被压到 2.6°（实测偏移勉强可忍的量）仍不满足，演出预算被扣押了四分之三。</p></div>
+            <div class="box"><h3>不解决：信任那头</h3><p>蓄力期正是玩家最后瞄准精修的窗口，每局上百次施放的 skillshot 在这里被准星欺骗，轻则命中率，重则玩家不再相信准星。</p></div>
+          </div>
           <h3>分工与工作方式</h3>
           <p>本案由三方完成，如实记录：作者（战斗 3C 策划）——体验判断、方向决策、逐档验收、参数拍板、业界案例取舍；AI agent（作者指挥）——C++ 实现、对抗性代码审查、web 调研执行、逐帧记录仪搭建；战斗程序——动效层一期框架、遗留 P0 需求承接。工作方式本身是本案的一部分：策划用 AI agent 打通了原本需要排程序档期的"假设 → 实现 → 实测 → 证伪 → 换方案"实验闭环，三次方案迭代发生在两天之内。</p>
         </section>
