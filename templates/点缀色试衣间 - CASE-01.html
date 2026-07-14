@@ -41,15 +41,6 @@
       --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
     }
     :root{--sec-hero:#c8a96a;--sec-hero-line:rgba(200,169,106,.45);--sec-hero-bd:rgba(200,169,106,.35);--sec-hero-bg:rgba(200,169,106,.05);}
-    /* 灰绿 */
-    html.sec-sage{--brass:#5e7d6c;--brass-soft:#e7efe9;--sec-hero:#9dbfab;--sec-hero-line:rgba(157,191,171,.45);--sec-hero-bd:rgba(157,191,171,.35);--sec-hero-bg:rgba(157,191,171,.05);}
-    html.sec-sage[data-theme="dark"]{--brass:#8fb3a0;--brass-soft:rgba(143,179,160,.12);}
-    /* 蓝灰 */
-    html.sec-steel{--brass:#6f8aa5;--brass-soft:#e9eff5;--sec-hero:#9db4c8;--sec-hero-line:rgba(157,180,200,.45);--sec-hero-bd:rgba(157,180,200,.35);--sec-hero-bg:rgba(157,180,200,.05);}
-    html.sec-steel[data-theme="dark"]{--brass:#8fa9c0;--brass-soft:rgba(143,169,192,.12);}
-    /* 石墨(去色) */
-    html.sec-mono{--brass:#7a756c;--brass-soft:#eceae4;--sec-hero:#a8a49b;--sec-hero-line:rgba(168,164,155,.4);--sec-hero-bd:rgba(168,164,155,.3);--sec-hero-bg:rgba(168,164,155,.05);}
-    html.sec-mono[data-theme="dark"]{--brass:#9a938a;--brass-soft:rgba(154,147,138,.12);}
     .fitting{position:fixed;right:22px;bottom:80px;z-index:99;display:flex;flex-direction:column;gap:6px;}
     .fitting button{padding:7px 14px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
       color:var(--ink);font:600 12px/1 var(--mono);cursor:pointer;box-shadow:var(--shadow);}
@@ -260,16 +251,6 @@
       <p>先说这篇在干嘛。技能蓄力的时候想让镜头绕着角色转一圈，有点演出感。但镜头一转，准星指的地方就不对了，这是个 skillshot，准星骗人是大忌。两个都想要。</p>
       <p>解法其实是老手艺。射击游戏里 FPP 切 TPP、开镜，都要处理机位变了但世界瞄准点不能变这件事，只不过人家是切换瞬间算一次，我们把它改成持续的：机位照常绕弧，视线每帧重新对回原来的瞄准点，然后做成资产上的一个选项，策划想用就选。</p>
       <p>结果准星不动了，环绕从被压着的 2.6° 放开到 10.4°。中间试过一版让准星跟着真实弹道走的方案，证伪了，逻辑上完全诚实，看起来却像准星在乱飘，为什么错第 4 节细讲，这条歧路可能比终案还值钱。</p>
-      <div class="grid">
-        <figure>
-          <video autoplay loop muted playsinline src="CASE-01-crosshair-before.mp4"></video>
-          <figcaption><b>优化前：</b>蓄力环绕期间，屏幕中心被镜头旋转带走，准星指向的世界点在漂移——准星在骗人。</figcaption>
-        </figure>
-        <figure>
-          <video autoplay loop muted playsinline src="CASE-01-crosshair-after.mp4"></video>
-          <figcaption><b>优化后：</b>同样的环绕，视线逐帧反解回瞄准点，准星底下的世界点纹丝不动。</figcaption>
-        </figure>
-      </div>
     </div>
 
     <div class="layout">
@@ -607,40 +588,60 @@
   </div>
   <button id="topBtn" title="回到顶部">↑</button>
   <div class="fitting" id="fit">
-    <button onclick="PICK(this,'')">黄铜(现状)</button>
-    <button onclick="PICK(this,'sec-sage')">灰绿</button>
-    <button onclick="PICK(this,'sec-steel')">蓝灰</button>
-    <button onclick="PICK(this,'sec-mono')">石墨</button>
+    <div style="font:700 10px/1.6 var(--mono);color:var(--muted);text-align:right">点缀色</div>
+    <button onclick="PICKA(this,'brass')">黄铜(现状)</button>
+    <button onclick="PICKA(this,'sage')">灰绿</button>
+    <button onclick="PICKA(this,'steel')">蓝灰</button>
+    <button onclick="PICKA(this,'mono')">石墨</button>
+    <div style="font:700 10px/1.6 var(--mono);color:var(--muted);text-align:right;margin-top:8px">底色(亮色模式)</div>
+    <button onclick="PICKB(this,'warm')">暖纸(现状)</button>
+    <button onclick="PICKB(this,'cool')">冷纸(中性)</button>
   </div>
   <script>
-  var PALS={
-    '':        {b:'#a98a4e',bd:'#cbaa6e',bs:'#f4eddc',bsd:'rgba(203,170,110,.12)',h:'#c8a96a'},
-    'sec-sage':{b:'#5e7d6c',bd:'#8fb3a0',bs:'#e7efe9',bsd:'rgba(143,179,160,.12)',h:'#9dbfab'},
-    'sec-steel':{b:'#6f8aa5',bd:'#8fa9c0',bs:'#e9eff5',bsd:'rgba(143,169,192,.12)',h:'#9db4c8'},
-    'sec-mono':{b:'#7a756c',bd:'#9a938a',bs:'#eceae4',bsd:'rgba(154,147,138,.12)',h:'#a8a49b'}
+  var ACC={
+    brass:{L:{b:'#a98a4e',s:'#f4eddc'}, D:{b:'#cbaa6e',s:'rgba(203,170,110,.12)'}, h:'#c8a96a'},
+    sage: {L:{b:'#4e7d62',s:'#e2efe7'}, D:{b:'#7ec9a2',s:'rgba(126,201,162,.14)'}, h:'#8fd4ad'},
+    steel:{L:{b:'#4477a3',s:'#e3edf6'}, D:{b:'#7db8e8',s:'rgba(125,184,232,.14)'}, h:'#8cc4f0'},
+    mono: {L:{b:'#6d675d',s:'#eae7e0'}, D:{b:'#b8b2a8',s:'rgba(184,178,168,.12)'}, h:'#c4beb2'}
   };
-  function PICK(btn,key){
-    var el=document.documentElement, pal=PALS[key];
-    el.classList.remove('sec-sage','sec-steel','sec-mono');
-    if(key)el.classList.add(key);
-    var dark = el.dataset.theme==='dark';
-    el.style.setProperty('--brass', dark?pal.bd:pal.b);
-    el.style.setProperty('--brass-soft', dark?pal.bsd:pal.bs);
-    el.style.setProperty('--sec-hero', pal.h);
-    el.style.setProperty('--sec-hero-line', pal.h.replace(')','').replace('#','')&&'rgba(200,200,200,0)'||'');
-    el.style.setProperty('--sec-hero-line', 'color-mix(in srgb,'+pal.h+' 45%,transparent)');
-    el.style.setProperty('--sec-hero-bd', 'color-mix(in srgb,'+pal.h+' 35%,transparent)');
-    el.style.setProperty('--sec-hero-bg', 'color-mix(in srgb,'+pal.h+' 5%,transparent)');
-    var bs=document.querySelectorAll('#fit button');
-    for(var i=0;i<bs.length;i++){bs[i].classList.remove('on');bs[i].textContent=bs[i].textContent.replace(' ✓','');}
-    btn.classList.add('on');btn.textContent+=' ✓';
-    el.dataset.pal=key;
+  var BASE={
+    warm:{bg:'#f1eee7',paper:'#fbfaf6',soft:'#edeade',line:'#ddd7c9',deep:'#ece8da',ink:'#211f1a',muted:'#6a655c'},
+    cool:{bg:'#eef0f3',paper:'#fbfcfd',soft:'#e8ebef',line:'#d6dbe2',deep:'#e5e8ee',ink:'#1d2025',muted:'#5f6672'}
+  };
+  var A='brass', B='warm';
+  function APPLY(){
+    var el=document.documentElement, p=ACC[A], base=BASE[B];
+    var dark=(el.dataset.theme==='dark');
+    var m=dark?p.D:p.L;
+    el.style.setProperty('--brass',m.b);
+    el.style.setProperty('--brass-soft',m.s);
+    el.style.setProperty('--sec-hero',p.h);
+    el.style.setProperty('--sec-hero-line','color-mix(in srgb,'+p.h+' 50%,transparent)');
+    el.style.setProperty('--sec-hero-bd','color-mix(in srgb,'+p.h+' 40%,transparent)');
+    el.style.setProperty('--sec-hero-bg','color-mix(in srgb,'+p.h+' 6%,transparent)');
+    if(dark){ ['--bg','--paper','--soft','--line','--bgdeep','--ink','--muted'].forEach(function(k){el.style.removeProperty(k);}); }
+    else{
+      el.style.setProperty('--bg',base.bg); el.style.setProperty('--paper',base.paper);
+      el.style.setProperty('--soft',base.soft); el.style.setProperty('--line',base.line);
+      el.style.setProperty('--bgdeep',base.deep); el.style.setProperty('--ink',base.ink);
+      el.style.setProperty('--muted',base.muted);
+    }
   }
-  // 切亮暗后保持所选点缀色
-  new MutationObserver(function(){
-    var k=document.documentElement.dataset.pal;
-    if(k!==undefined){var b=[...document.querySelectorAll('#fit button')].find(function(x){return x.textContent.indexOf('✓')>=0;}); if(b)PICK(b,k);}
-  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  function mark(btn,group){
+    var bs=btn.parentNode.querySelectorAll('button');
+    for(var i=0;i<bs.length;i++){bs[i].classList.remove('on');bs[i].textContent=bs[i].textContent.replace(' ✓','');}
+    btn.classList.add('on'); btn.textContent+=' ✓';
+  }
+  function PICKA(btn,k){A=k;APPLY();markRow(btn);}
+  function PICKB(btn,k){B=k;APPLY();markRow(btn);}
+  function markRow(btn){
+    // 只清同组:点缀组=前4钮,底色组=后2钮
+    var all=[...document.querySelectorAll('#fit button')];
+    var idx=all.indexOf(btn), grp = idx<4? all.slice(0,4): all.slice(4);
+    grp.forEach(function(b){b.classList.remove('on');b.textContent=b.textContent.replace(' ✓','');});
+    btn.classList.add('on'); btn.textContent+=' ✓';
+  }
+  new MutationObserver(APPLY).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   </script>
 
   <script>

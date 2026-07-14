@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>移动优化五期 · MM 竞技化手感改造 V2（2026-06~07） · 过程记录</title>
+<style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+      pre{margin:12px 0 0;padding:14px 16px;overflow:auto;background:var(--code-bg);
+      border:1px solid var(--line);border-radius:var(--radius);font:13px/1.65 var(--mono);color:var(--code);}
+    pre code{background:none;padding:0;color:inherit;}
+    section>h2:first-child{margin-top:0;}
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Movement · MM 系列 · 分期五</div>
+      <h1>移动优化五期：MM 竞技化手感改造 V2（2026-06~07）</h1>
+      <p class="lede">把"自然探索移动"调整成"高响应、可控、可量产"的竞技移动体系。不是把速度调快，而是重新定义 MM 在竞技移动里的职责：输入意图优先、真实位移可信、表现不破碎。</p>
+      <div class="docinfo">
+        <div><i>文档定位</i><b>移动优化分期记录 · 六之五</b></div>
+        <div><i>周期</i><b>2026-06 ~ 2026-07</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>实现方</i><b>战斗 3C 策划 × AI agent（实现）</b></div>
+        <div class="wide"><i>系列</i><b>「移动优化历程」六篇之五（总入口见《<a href="MM调参手册.html">MM 调参手册</a>》）；前：四期 · 竞技化手感改造 V1，后：六期 · 收官与全英雄治理</b></div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <a href="#stance"><i>01</i>定位：重新定义 MM 在竞…</a>
+        <a href="#arch"><i>02</i>三层拆解：CMC、MM 选…</a>
+        <a href="#review"><i>03</i>问题现象 → 处理结论：移…</a>
+        <a href="#params"><i>04</i>按问题类型建立可复用的移动…</a>
+        <a href="#accept"><i>05</i>固定输入序列验收</a>
+      </nav>
+      <main>
+        <section id="stance"><h2>定位：重新定义 MM 在竞技移动里的职责</h2><p>竞技化移动的核心不是单纯提高加速度或最大速度，而是让玩家每次输入都能被系统尽早承认。Motion Matching 仍然负责连续、自然和姿态可信，但不能让动画惯性压过操作意图。</p>
+      
+      
+        
+          
+            <h3>输入意图优先</h3>
+            <p>起步、折返、急停、转镜头时，系统先确认玩家想做什么，再决定用哪段动画表现，而不是让当前姿态惯性决定一切。</p>
+          
+          
+            <h3>真实位移可信</h3>
+            <p>胶囊体的真实移动必须和 Mesh 表现保持一致。移动可以更利落，但不能出现角色被服务器修正、动画被胶囊体拖走的拉扯感。</p>
+          
+          
+            <h3>表现不破碎</h3>
+            <p>竞技手感不是牺牲动画质量。调优目标是在响应变快的同时保留重心变化、脚步方向、转身节奏和起停动作辨识度。</p>
+          
+        
+        一句话定位：把 Motion Matching 从“优先展示自然运动片段”的系统，调成“以输入意图驱动动画选择，并用后处理保证运动可信”的竞技移动框架。
+      
+    
+
+    02 / Architecture
+    
+      
+        实现拆解</section>
+        <section id="arch"><h2>三层拆解：CMC、MM 选帧与动画后处理</h2><p>移动手感问题很容易被描述成“慢”“飘”“不跟手”，但落地时需要拆到具体系统。我的调优方式是先判断问题属于真实运动、动画选择还是表现修正，再决定该改移动参数、PoseSearch 权重、动画数据还是 ABP 后处理。</p>
+      
+      
+        
+          
+            <h3>运行时链路</h3>
+            <ul>
+              <li>输入层：读取移动输入、镜头方向、上帧速度、当前加速度，判断起步、停止、折返和持续移动。</li>
+              <li>CMC 层：负责真实速度、加速度、制动、摩擦、最大速度和网络预测，是玩家实际位移的权威基础。</li>
+              <li>MM 层：根据当前 Pose、Velocity、Trajectory、Facing 等特征在数据库里选最合适的下一帧。</li>
+              <li>ABP 后处理：通过 RootYawOffset、Orientation Warping、Stride Warping、Turn In Place 等修正表现。</li>
+            </ul>
+          
+          
+            <h3>策划调优抓手</h3>
+            <ul>
+              <li>移动配置：最大速度、加速度、制动、摩擦、起步 / 折返信号窗口、Boost 持续与取消规则。</li>
+              <li>PoseSearch 权重：当前姿态、未来轨迹、速度方向、朝向、脚步相位、连续性惩罚。</li>
+              <li>动画资产：Start / Stop / Pivot / Loop 的覆盖范围、速度档、角度档和不良片段剔除。</li>
+              <li>验收 Metric：输入到位移响应、折返角度、Pivot 命中率、停止距离、滑步量、镜头转身体感。</li>
+            </ul>
+          
+        
+        <table>
+          <thead>
+            <tr><th>层级</th><th>负责什么</th><th>不该负责什么</th><th>典型问题</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CMC</td>
+              <td>真实移动、预测同步、速度和制动</td>
+              <td>不负责生成 Pivot 动画表现</td>
+              <td>速度改快后网络修正、胶囊体和 Mesh 拉扯</td>
+            </tr>
+            <tr>
+              <td>Motion Matching</td>
+              <td>选择最符合当前运动意图的动画片段</td>
+              <td>不负责替代所有运动规则</td>
+              <td>起步选慢、折返不进 Pivot、停止仍选 Loop</td>
+            </tr>
+            <tr>
+              <td>ABP 后处理</td>
+              <td>修正朝向、步幅、根骨骼偏移和转身表现</td>
+              <td>不应该掩盖错误的选帧和移动参数</td>
+              <td>RootYawOffset 回正慢、Warping 过度、转身发飘</td>
+            </tr>
+            <tr>
+              <td>动画数据</td>
+              <td>提供足够覆盖的 Start / Pivot / Stop / Loop 资源</td>
+              <td>不应该用后处理硬补缺失动作</td>
+              <td>角度档缺失、速度档不齐、脚步相位不稳定</td>
+            </tr>
+          </tbody>
+        </table>
+      
+    
+
+    03 / Tuning Records
+    
+      
+        调优问题解决记录</section>
+        <section id="review"><h2>问题现象 → 处理结论：移动专项复盘</h2><p>条目中的「实例」均取自本系列一～四期与相关案例的实测记录；个别标注 ※ 的为示意值，非实测。</p><p>以下记录按工程调试口径整理：现象、定位、处理、验证口径。重点体现 3C 策划如何把移动体验问题拆到 CMC、PoseSearch、ABP 后处理、动画资产和网络预测等具体环节，再收敛成可复用的调优结论。</p>
+      
+      
+        
+          
+            
+              MM-01
+              <h3>静止起步响应滞后，Start 片段进入过晚</h3>
+              Start Response
+            
+            
+              <strong>现象</strong><p>从静止到移动时，CharacterMovement 已产生加速度，但 MM 仍维持站立附近 Pose，Start 动画进入滞后。</p>
+              <strong>定位</strong><p>PoseSearch 对当前站立姿态连续性保护过高，未来轨迹和输入方向权重不足；部分 Start 片段有效起跑帧偏后。</p>
+              <strong>处理</strong><p>建立起步响应窗口，提高输入方向、预测轨迹和加速度特征权重；让 ABP 感知 <code>StartBoostAlpha</code>，剔除有效位移过晚的起步片段。</p>
+              <strong>验证</strong><p>静止起步首帧即出现明确移动意图，Mesh 与胶囊体加速趋势一致，保留脚步启动和重心转移。</p>
+            
+          
+
+          
+            
+              MM-02
+              <p><b>实例：</b>本系列二期的同源病例——高速起步匹配不到冲刺起步，根因是角色移速与动画原生速度失配（后经脚锁法反烘校准，动画原生速度 361 → 565 cm/s）、起步库覆盖残缺、Gait 无驱动三件事叠加。二期的"保护 + 裁剪"只救了表现，根治发生在竞技化战役（四期 V1）。</p><h3>180 度折返经常绕弧线，不稳定进入 Pivot</h3>
+              Pivot Selection
+            
+            
+              <strong>现象</strong><p>高速跑动时反打方向，角色有时能做 Pivot，有时只是大弧线转向；竞技场景下反馈不稳定。</p>
+              <strong>定位</strong><p>Pivot 判定只看输入角度不够，需要结合速度、上一帧移动方向、减速状态和最小触发窗口；MM 成本仍偏向连续跑步。</p>
+              <strong>处理</strong><p>增加折返角度与速度阈值，加入短暂 Pivot 锁定窗口；提高反向轨迹权重，降低当前 Pose 对折返的过度保护。</p>
+              <strong>结果</strong><p>120-180 度变向更稳定触发 Pivot，小角度转向仍保持自然过渡。</p>
+            
+          
+
+          
+            
+              MM-03
+              <p><b>实例：</b>GASP 的 Run 折返库 34 条覆盖全向，而 Sprint 折返库只有 4 条——高速折返"绕弧"很大程度是库覆盖残缺，系统只能拿近似片段凑。补库之前，任何连续性成本调参都治不了根。</p><h3>Pivot 误触发：小幅方向修正被识别为大角度折返</h3>
+              False Positive
+            
+            
+              <strong>现象</strong><p>提升折返响应后，玩家微调方向或贴边移动时也容易打出 Pivot，角色表现过重。</p>
+              <strong>定位</strong><p>缺少输入稳定时间和最小位移速度限制，方向变化一过阈值就立即承认为折返。</p>
+              <strong>处理</strong><p>增加方向保持帧数、最小速度、触发冷却和小角度死区；把“强 Pivot”和“快速转向”分成两档。</p>
+              <strong>验证</strong><p>ADAD、贴边移动和小角度修正不再频繁触发 Pivot，大角度反打仍能稳定进入折返表现。</p>
+            
+          
+
+          
+            
+              MM-04
+              <h3>急停滑步：真实速度已下降，Loop / Stop 片段仍持续向前</h3>
+              Stop / Braking
+            
+            
+              <strong>现象</strong><p>松开输入后真实速度下降较快，但 MM 仍选中 Loop 或长 Stop 片段，Root 位移趋势与制动曲线不一致。</p>
+              <strong>定位</strong><p>制动参数和停止动画 Root 位移不匹配；停止瞬间 Velocity 特征下降，但 PoseSearch 仍偏向上一段跑步连续性。</p>
+              <strong>处理</strong><p>建立 Stop 触发窗口，提升速度下降特征权重；调整制动曲线和 Stop 动画选择，必要时用 Stride Warping 收脚。</p>
+              <strong>验证</strong><p>停止距离可控，脚步相位与胶囊体制动趋势一致，松开输入后不会继续产生明显前向滑移。</p>
+            
+          
+
+          
+            
+              MM-05
+              <p><b>实例：</b>二期停步排查的通用教训——停步库完好躺在库里，是路由与驱动变量的链断了。MM 里"某类动画不出"优先查路由行序，其次才怀疑动画数据本身。</p><h3>镜头相对移动方向更新滞后，角色朝向回正慢</h3>
+              Camera-relative Move
+            
+            
+              <strong>现象</strong><p>玩家快速转镜头并继续移动时，输入方向已经随镜头变化，但角色朝向和移动动画仍沿用旧方向。</p>
+              <strong>定位</strong><p>镜头方向、期望移动方向、角色朝向和 RootYawOffset 的更新速率不一致，MM 继续选旧朝向片段。</p>
+              <strong>处理</strong><p>拆分“真实移动方向”和“表现朝向”，缩短高输入期 RootYawOffset 回正；提升未来轨迹方向对选帧的影响。</p>
+              <strong>验证</strong><p>转镜头后的移动方向能在下一段轨迹采样中被识别，身体朝向保留惯性但不阻塞移动方向更新。</p>
+            
+          
+
+          
+            
+              MM-06
+              <h3>移动速度调快后，网络下角色出现拉扯和修正感</h3>
+              Network Feel
+            
+            
+              <strong>现象</strong><p>为了让起步和折返更灵敏，尝试阶段性提高最大速度，但联机下 Mesh 和胶囊体更容易出现拉扯。</p>
+              <strong>定位</strong><p>直接改 MaxSpeed 会同时影响真实运动、预测和服务器权威校正；动画层并不一定知道当前处于操作强化期。</p>
+              <strong>处理</strong><p>将速度增强收敛为可预测的起步 / 折返信号，并通过 SavedMove、配置表和 ABP 参数同步给动画表现层。</p>
+              <strong>验证</strong><p>起步 / 折返增强在客户端预测与服务器权威结果之间保持一致，减少 Mesh 与胶囊体的修正差异。</p>
+            
+          
+
+          
+            
+              MM-07
+              <p><b>实例：</b>移动侧配置未进 SavedMove 重放时，客户端预测与服务器结算必然分叉；本项目 StartBoost 曾缺 CanCombineWith 处理，DS 侧告警验证被列入遗留清单——预测一致是竞技化验收的一票否决项。</p><h3>MM 选帧偶发抽动，同一段移动里步态不稳定</h3>
+              Pose Cost
+            
+            
+              <strong>现象</strong><p>持续跑动或斜向移动时，角色偶尔切到相位不合适的片段，出现上半身顿一下或脚步突然换节奏。</p>
+              <strong>定位</strong><p>数据库中存在质量不稳定片段，部分 Start / Loop / Turn 动作标签边界不清；连续性惩罚不足。</p>
+              <strong>处理</strong><p>清理异常片段，补齐动作元数据；调整 Pose、Velocity、Trajectory、Continuity 的权重关系。</p>
+              <strong>结果</strong><p>移动中步态连续性提升，少数极端输入下仍可被 Pivot / Stop 明确打断。</p>
+            
+          
+
+          
+            
+              MM-08
+              <h3>斜向移动姿态辨识不足，八方向输入差异被削弱</h3>
+              Direction Readability
+            
+            
+              <strong>现象</strong><p>W+A / W+D 等斜向输入在实机中姿态差异不明显，动作表现更接近前向 Loop 的方向修正结果。</p>
+              <strong>定位</strong><p>斜向动作覆盖不足，PoseSearch 更偏正向 Loop；Orientation Warping 修正了方向但没有提供足够姿态差异。</p>
+              <strong>处理</strong><p>补齐斜向移动片段或提高斜向轨迹匹配权重；限制 Warping 过度替代真实方向资产。</p>
+              <strong>验证</strong><p>斜向输入在肩线、骨盆、脚步方向上有更稳定的姿态差异，八方向移动辨识度提升。</p>
+            
+          
+
+          
+            
+              MM-09
+              <p><b>实例：</b>与方向性移速衰减（前快侧后慢，MCD 双系数、默认 1.0 逐英雄开启）配套调校——速度模型给了八方向差异之后，姿态层跟不上就会"数值有差、画面没差"。</p><h3>停下后身体朝向回正慢，下一次起步方向不干净</h3>
+              RootYawOffset
+            
+            
+              <strong>现象</strong><p>角色停止后仍保留上一段移动产生的身体扭转，下一次起步前 RootYawOffset 先回正再进入移动。</p>
+              <strong>定位</strong><p>RootYawOffset 半衰期统一配置，不区分高速移动、停止、重新起步等状态。</p>
+              <strong>处理</strong><p>为 Stop / Start / Pivot 设置不同回正速率；停止阶段允许更快消化旧方向偏移。</p>
+              <strong>验证</strong><p>停止后的待机朝向稳定，重新起步时不受上一段移动方向残留影响。</p>
+            
+          
+
+          
+            
+              MM-10
+              <h3>高速连续变向时脚步贴地性不足</h3>
+              Grounded Feel
+            
+            
+              <strong>现象</strong><p>快速蛇形走位时，真实轨迹能跟随输入，但脚步接触、重心切换和地面反馈不足。</p>
+              <strong>定位</strong><p>真实运动响应增强后，动画资源和步幅修正未同步；Stride Warping 过强时会弱化脚步重量。</p>
+              <strong>处理</strong><p>降低极端步幅修正，增加方向变化时的姿态成本；优先选择重心变化明确的转向片段。</p>
+              <strong>验证</strong><p>连续走位保持响应速度，同时脚步接触点、骨盆重心和方向切换之间的关系更稳定。</p>
+            
+          
+
+          
+            
+              MM-11
+              <h3>低速转向响应不足，角色仍沿用前向 Loop</h3>
+              Low-speed Turn
+            
+            
+              <strong>现象</strong><p>低速移动或轻推摇杆时，角色方向已发生变化，但动画仍选择前向慢跑 / 行走 Loop，转向姿态不足。</p>
+              <strong>定位</strong><p>低速区间速度特征过弱，PoseSearch 更容易维持当前 Pose 连续性；低速转向片段覆盖不足。</p>
+              <strong>处理</strong><p>为低速区间单独提高 Facing / Trajectory 角度权重，补充 Walk Turn / Jog Turn 标签，并限制前向 Loop 在大角度低速下的命中。</p>
+              <strong>验证</strong><p>低速转向时肩线、骨盆和脚步方向能够随输入变化，小幅走位不再长期保持前向姿态。</p>
+            
+          
+
+          
+            
+              MM-12
+              <h3>短按移动导致 Start / Stop 在临界区反复切换</h3>
+              State Hysteresis
+            
+            
+              <strong>现象</strong><p>玩家短按方向键或轻微修正输入时，Start、Loop、Stop 状态在低速临界区快速切换，表现为步态抖动。</p>
+              <strong>定位</strong><p>Start 与 Stop 使用同一速度阈值，缺少滞回区间；输入释放后的速度衰减与动画状态退出条件不一致。</p>
+              <strong>处理</strong><p>拆分 StartEnter、StartExit、StopEnter 阈值，加入最短保持时间和低速输入缓冲，避免同一帧内反复改判。</p>
+              <strong>验证</strong><p>短按输入可稳定完成一次起停表现，低速临界区不再出现连续状态抖动。</p>
+            
+          
+
+          
+            
+              MM-13
+              <h3>起步强化持续时间与输入释放规则不一致</h3>
+              Boost Window
+            
+            
+              <strong>现象</strong><p>起步强化用于提升初段响应，但在玩家快速松开输入或方向变化时仍可能残留，造成停止距离和下一次选帧异常。</p>
+              <strong>定位</strong><p>起步强化只按计时结束，未充分绑定输入释放、速度变化和方向反转；ABP 与 CMC 对强化期理解不一致。</p>
+              <strong>处理</strong><p>明确强化窗口最大持续时间、刷新规则和取消规则；松开输入立即清除强化，折返可刷新但不可叠加。</p>
+              <strong>验证</strong><p>起步响应保持增强，但停止、短按和连续折返不会继承上一段强化残留。</p>
+            
+          
+
+          
+            
+              MM-14
+              <p><b>实例：</b>StartBoost 的折返触发网络化在系列内被显式挂为遗留（见六期清单）——触发窗口与输入释放规则没对齐之前，这个爆发不敢放开到网络环境。</p><h3>Trajectory 预测窗口过长，转向目标被过度平滑</h3>
+              Trajectory Horizon
+            
+            
+              <strong>现象</strong><p>玩家快速变向时，未来轨迹采样仍保留较多旧方向点，MM 选择偏连续转弯而非即时转向片段。</p>
+              <strong>定位</strong><p>Trajectory 预测时间跨度过长，历史速度对未来点影响过大；短时间强输入没有足够权重覆盖旧轨迹。</p>
+              <strong>处理</strong><p>缩短高响应状态下的预测窗口，提高近端采样点权重；在 Pivot / Start 期间优先使用输入方向生成近期轨迹。</p>
+              <strong>验证</strong><p>快速变向时近期轨迹能更快反映输入，角色不再沿旧方向继续平滑过渡。</p>
+            
+          
+
+          
+            
+              MM-15
+              <h3>Trajectory 预测窗口过短，运动趋势识别不足</h3>
+              Trajectory Sampling
+            
+            
+              <strong>现象</strong><p>缩短预测窗口后，小角度转向较灵敏，但长弧线跑动和持续斜向移动容易选到过于局部的片段。</p>
+              <strong>定位</strong><p>近端轨迹权重过高导致系统只关注当前输入瞬间，忽略后续运动趋势，Loop 连续性下降。</p>
+              <strong>处理</strong><p>按状态使用不同采样策略：Start / Pivot 重近端，Loop 重中远端，Stop 结合速度下降趋势。</p>
+              <strong>验证</strong><p>起步和折返保持响应，持续移动时仍能选择稳定、趋势正确的 Loop 片段。</p>
+            
+          
+
+          
+            
+              MM-16
+              <h3>Velocity 与 Acceleration 方向冲突导致选帧不稳定</h3>
+              Feature Conflict
+            
+            
+              <strong>现象</strong><p>高速反打瞬间，速度方向仍指向旧移动方向，加速度方向已指向新输入，MM 在旧 Loop 与 Pivot 之间摆动。</p>
+              <strong>定位</strong><p>Velocity 特征和 Acceleration / Input 特征权重没有按状态切换，导致折返初期两个方向互相抵消。</p>
+              <strong>处理</strong><p>折返窗口内提高 Acceleration / Input 权重，降低旧 Velocity 的连续性保护；普通 Loop 再恢复 Velocity 主导。</p>
+              <strong>验证</strong><p>反打瞬间能稳定承认新输入方向，持续移动阶段仍保持速度方向一致性。</p>
+            
+          
+
+          
+            
+              MM-17
+              <h3>RootYawOffset 累积过量导致身体朝向超调</h3>
+              RootYawOffset Clamp
+            
+            
+              <strong>现象</strong><p>连续转镜头或反复变向后，RootYawOffset 累积较大，角色身体朝向在回正时出现超调或滞后。</p>
+              <strong>定位</strong><p>Offset 累积、回正半衰期和最大夹角没有按移动状态区分；高速移动和低速待机共用同一回正策略。</p>
+              <strong>处理</strong><p>增加不同状态下的 Offset Clamp 和回正速率：高速移动保留惯性，停止 / 起步 / 折返时更快消化旧偏移。</p>
+              <strong>验证</strong><p>多次变向后身体朝向不会持续残留旧方向，回正过程不产生明显超调。</p>
+            
+          
+
+          
+            
+              MM-18
+              <h3>Orientation Warping 过强导致脚尖与膝盖方向异常</h3>
+              Orientation Warping
+            
+            
+              <strong>现象</strong><p>大角度转向时角色移动方向正确，但下肢骨骼被 Warping 拉到过大角度，脚尖、膝盖和骨盆关系异常。</p>
+              <strong>定位</strong><p>Warping 承担了本应由转向 / Pivot 动画资产负责的角度差，超过合理修正范围。</p>
+              <strong>处理</strong><p>为 Warping 设置角度上限和状态条件，大角度转向优先选转向资产，小角度偏差才交给 Orientation Warping。</p>
+              <strong>验证</strong><p>大角度转向由动画姿态承担，Warping 只做小范围修正，下肢骨骼方向稳定。</p>
+            
+          
+
+          
+            
+              MM-19
+              <h3>Stride Warping 补偿过度导致步幅拉伸</h3>
+              Stride Warping
+            
+            
+              <strong>现象</strong><p>速度调整后，角色脚步能跟上位移，但腿部步幅被拉长，慢速和高速切换时比例不稳定。</p>
+              <strong>定位</strong><p>真实速度与动画原始速度差距过大，Stride Warping 长期承担速度匹配，掩盖了动画速度档不匹配。</p>
+              <strong>处理</strong><p>限制 Stride Warping 修正范围，按速度档匹配更接近的 Loop 资产；必要时调整移动速度档与动画库速度标签。</p>
+              <strong>验证</strong><p>脚步能跟随真实速度，腿部比例不再明显拉伸，速度切换时步幅变化连续。</p>
+            
+          
+
+          
+            
+              MM-20
+              <h3>动画库速度档混用，Jog / Run / Sprint 片段边界不清</h3>
+              Database Hygiene
+            
+            
+              <strong>现象</strong><p>同一移动速度下偶尔选到不同速度档片段，导致步频突然变化，角色移动节奏不一致。</p>
+              <strong>定位</strong><p>动画库中 Jog、Run、Sprint 的速度标签和实际 Root 速度不完全一致，部分片段跨档命中。</p>
+              <strong>处理</strong><p>按实际位移速度复核动画标签，清理跨档片段，建立速度档边界和过渡区间。</p>
+              <strong>验证</strong><p>同一速度区间内步频稳定，进入速度过渡区时变化可预期，不再随机切换节奏。</p>
+            
+          
+
+          
+            
+              MM-21
+              <p><b>实例：</b>四期 V1 的库治理判据（三选一才留）就是为这一条立的：速度档边界不清的片段宁可清出库，也不留给选帧去赌。</p><h3>Start / Stop / Pivot 元数据边界不清，状态选帧互相污染</h3>
+              Animation Metadata
+            
+            
+              <strong>现象</strong><p>起步阶段偶尔选到过早进入 Loop 的片段，停止阶段偶尔选到仍带加速趋势的片段。</p>
+              <strong>定位</strong><p>动作切片边界、标签和可命中阶段没有明确区分；部分片段同时满足 Start 与 Loop 特征。</p>
+              <strong>处理</strong><p>重划动画切片边界，补充 StartOnly、LoopOnly、StopOnly、PivotOnly 等命中约束，避免状态互相污染。</p>
+              <strong>验证</strong><p>起步、循环、停止、折返各阶段选帧更稳定，状态切换不再随机命中相邻阶段片段。</p>
+            
+          
+
+          
+            
+              MM-22
+              <h3>连续性成本过高，系统拒绝进入 Start / Pivot / Stop</h3>
+              Continuity Cost
+            
+            
+              <strong>现象</strong><p>移动很平顺，但起步、折返、急停等关键操作表现不明显，系统长期选择连续 Loop。</p>
+              <strong>定位</strong><p>Pose 连续性权重和切换惩罚过高，强操作输入无法压过当前动画惯性。</p>
+              <strong>处理</strong><p>按状态动态调整连续性成本：普通移动保护连续性，强输入窗口降低保护，允许 Start / Pivot / Stop 进入。</p>
+              <strong>验证</strong><p>普通跑动保持自然，强操作节点能稳定进入对应表现，不再被 Loop 长时间吸附。</p>
+            
+          
+
+          
+            
+              MM-23
+              <h3>连续性成本过低，移动中出现片段跳变</h3>
+              Pose Stability
+            
+            
+              <strong>现象</strong><p>降低连续性保护后，响应提高，但持续移动中更容易跨片段跳转，脚步相位和身体姿态出现突变。</p>
+              <strong>定位</strong><p>强输入窗口的权重配置泄漏到普通 Loop 状态，导致系统过度追逐瞬时特征。</p>
+              <strong>处理</strong><p>将响应增强限定在 Start / Pivot / Stop 窗口内，Loop 状态恢复连续性保护和相位约束。</p>
+              <strong>验证</strong><p>操作节点响应明确，持续移动阶段姿态连续，不再出现无操作原因的片段跳变。</p>
+            
+          
+
+          
+            
+              MM-24
+              <h3>移动配置未进入 SavedMove，客户端预测与服务器结果不一致</h3>
+              SavedMove Sync
+            
+            
+              <strong>现象</strong><p>单机测试移动响应正常，联机测试中起步 / 折返会出现服务器修正，表现为位置回拉或 Mesh 瞬间校正。</p>
+              <strong>定位</strong><p>部分移动配置、速度强化或状态标记只在本地生效，未完整进入预测移动保存与回放链路。</p>
+              <strong>处理</strong><p>把起步强化、速度 Buff、配置覆盖、摩擦 / 加速度相关字段纳入 SavedMove 缓存和合并规则。</p>
+              <strong>验证</strong><p>客户端预测、服务器校验和动画表现使用同一套移动状态，位置修正和表现拉扯减少。</p>
+            
+          
+        
+      
+    
+
+    04 / Params
+    
+      
+        参数框架<p><b>实例：</b>与上文网络拉扯条同根因的另一种表象；处理原则一致——移动手感相关的每个配置字段，进 SavedMove 是默认项，不进才需要说明理由。</p></section>
+        <section id="params"><h2>按问题类型建立可复用的移动参数组</h2><p>MM 调优需要先判断问题归属，再进入对应参数组：真实位移、PoseSearch 选帧、RootYawOffset、Warping、动画库标签或网络预测。每次修改都通过固定输入序列、录屏对比和调试数据确认变化是否符合目标。</p>
+      
+      
+        <table>
+          <thead>
+            <tr><th>参数组</th><th>关注问题</th><th>调优方向</th><th>风险</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>起步响应组</td>
+              <td>按下方向后多久能看到角色承认输入</td>
+              <td>Start 窗口、初段加速、未来轨迹权重、Start 片段筛选</td>
+              <td>过强会导致角色弹、动画前摇消失、网络修正感增加</td>
+            </tr>
+            <tr>
+              <td>折返 Pivot 组</td>
+              <td>大角度反打是否稳定进入 Pivot</td>
+              <td>角度阈值、最小速度、输入保持时间、Pivot 锁定窗口、反向轨迹权重</td>
+              <td>过强会导致小角度微操也触发大动作</td>
+            </tr>
+            <tr>
+              <td>急停组</td>
+              <td>松开输入后停止距离和滑步量</td>
+              <td>Braking、Friction、Stop 选帧、脚步相位、Stride Warping 强度</td>
+              <td>过强会导致停止过硬，动作重量不足</td>
+            </tr>
+            <tr>
+              <td>镜头方向组</td>
+              <td>转镜头后移动方向和身体朝向是否跟手</td>
+              <td>Control Rotation / Move Direction 关系、RootYawOffset 回正、Facing Cost</td>
+              <td>过强会牺牲身体惯性，导致朝向变化机械化</td>
+            </tr>
+            <tr>
+              <td>选帧稳定组</td>
+              <td>持续移动中是否抽帧或步态跳变</td>
+              <td>Pose Cost、Continuity Bias、数据库清理、动作标签边界</td>
+              <td>过强会让系统不愿意进入 Start / Pivot / Stop</td>
+            </tr>
+          </tbody>
+        </table>
+        调参顺序建议：先确定真实移动目标，再调 MM 选帧，最后用 ABP 后处理修表现。反过来做，容易用 Warping 或 RootYawOffset 掩盖底层问题，后续越调越乱。
+      
+    
+
+    05 / Acceptance
+    
+      
+        验收方法</section>
+        <section id="accept"><h2>固定输入序列验收</h2><p>MM 移动调优需要固定测试序列，否则某次普通跑动表现正常并不能证明起步、折返、急停和镜头转向都稳定。每次修改后按同一组输入、速度和镜头条件复测，确认是否引入新的边界问题。</p>
+      
+      
+        
+          
+            <h3>基础输入组</h3><p><b>示意序列※：</b>前进 1s → 松键急停 → 180° 折返 → 斜后方向打断（各步间隔 0.5s，固定脚本回放）。※ 为示意流程，实际验收以录制脚本为准。</p>
+            <p>原地起步、短按起步、松开急停、低速转向、高速转向，用来确认移动系统的基础响应和动画衔接。</p>
+          
+          
+            <h3>竞技走位组</h3>
+            <p>ADAD 微操、WASD 斜向、120 度变向、180 度折返、连续蛇形走位，用来判断 Pivot 和方向可读性。</p>
+          
+          
+            <h3>镜头耦合组</h3>
+            <p>移动中快速转镜头、转镜头后立刻反打、镜头与移动方向背离，用来确认身体朝向不会拖输入。</p>
+          
+          
+            <h3>稳定性组</h3>
+            <p>联机测试、低帧率、连续切状态、边界速度，用来排查拉扯、抽帧、滑步和状态误触发。</p>
+          
+        
+        <table>
+          <thead>
+            <tr><th>验收项</th><th>合格表现</th><th>不合格表现</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>起步</td>
+              <td>输入后角色立即有明确移动意图，动作仍有重心启动</td>
+              <td>输入已产生但 Start 选帧滞后，胶囊体与 Mesh 初段不同步</td>
+            </tr>
+            <tr>
+              <td>折返</td>
+              <td>大角度反打稳定 Pivot，小角度调整自然转向</td>
+              <td>180 度绕圈、Pivot 误触发、转身后方向不干净</td>
+            </tr>
+            <tr>
+              <td>急停</td>
+              <td>真实停止和脚步停止趋势一致，停止距离可预期</td>
+              <td>胶囊体与脚步停止趋势不一致，或制动过硬导致动作重量不足</td>
+            </tr>
+            <tr>
+              <td>镜头转向</td>
+              <td>转镜头后移动方向快速被承认，身体表现有惯性但不拖手</td>
+              <td>镜头方向已变化，但 MM 仍维持旧方向片段或 RootYawOffset 回正滞后</td>
+            </tr>
+          </tbody>
+        </table>
+      
+    
+
+    ｜Motion Matching 竞技向移动手感专项样张
+  </main></section>
+      </main>
+    </div>
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+<script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
