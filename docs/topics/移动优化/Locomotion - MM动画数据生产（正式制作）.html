@@ -247,8 +247,12 @@
     <!-- 成果先看:实录视频置于篇首,3 分钟读者连正文都不用进 -->
     <figure>
       <video controls playsinline src="漫威MM-PIE实录.mp4"></video>
-      <figcaption><b>成果先看 · PIE 实录：</b>漫威骨架跑项目 MM。六向 strafe（角色始终面朝镜头方向平移）、急停、贴镜头转向。验收细节见 06。</figcaption>
+            <figcaption><b>成果先看 · PIE 实录：</b>六向 strafe（角色始终面朝镜头方向平移）、急停、贴镜头转向。验收细节见 06。</figcaption>
     </figure>
+    <div class="rule" style="margin-top:18px;">
+      <h3>这段视频在证明什么</h3>
+      <p>画面里跑动的是<b>漫威争锋的原生骨架</b>（SK_1043_1043001，全程不经我们的驱动小白人、零重定向），而它用的动画素材来自<b>一套完全没有为 Motion Matching 准备过的项目</b>：拆包实证，对方的 locomotion 全部是原地动画（root 位移 = 0）加传统 blendspace，<b>不存在任何 MM 移动动画资产</b>。这些"非 MM"素材经本篇的动画数据生产管线（锁脚烘根运动 → 建库入 Schema → 接入项目 MM 框架）转化后，在我们的 MM 上原生跑通。所以这条管线的结论不限于漫威：<b>任意来源、任意骨架的非 MM 动画，都能走这条线变成可用的 MM 数据</b>。</p>
+    </div>
 
     <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
     <div class="foreword">
