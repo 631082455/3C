@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>竞技移动手感量化标准 · 验收锚点</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:20px 60px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{border-bottom:none;}
+    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Acceptance Standard · Doc STD-XX</div>
+      <h1>竞技移动手感量化标准</h1>
+      <p class="lede">"竞技级手感"这四个字如果不能被测量，就只能被争论。本标准把它拆成<b>五组可测指标</b>：每项给定义、测法、当前值、目标区间：测得出的填实测，测不出的标待测，不达标的直接亮红。以后每一次移动调优，前后各跑一遍记分卡，好坏由数字说话。</p>
+      <div class="tldr">
+        <div><i>定位</i><span>移动手感的<b>验收锚点</b>：调参手册管"参数是什么"，优化历程管"当时怎么调的"，本标准管"怎么算调好了"。</span></div>
+        <div><i>用法</i><span>三个场景：调优前后跑记分卡对比；新英雄移动接入的出厂检验；争论手感时先对表，指标都过了还觉得不对，再谈主观。</span></div>
+        <div><i>现状</i><span>v0.1 记分卡：<b>达标 13 · 待实测 7 · 红灯 4</b>。红灯归并后是三件事：起步误选 Reface、StartBoost 网络同步（含折返爆发）、多人盲测未做，这就是下一期的工作清单。</span></div>
+        <div><i>基线</i><span>测量环境：PIE 单机 60fps、基准英雄 650 移速档；目标区间标注为 v0.1 建议值，待基线实测后由需求方定稿。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>STD-XX（入库时分配）</b></div>
+        <div><i>版本 / 状态</i><b>v0.1 · 建议稿，目标值待定稿</b></div>
+        <div><i>维护方</i><b>战斗 3C 策划</b></div>
+        <div><i>编纂方式</i><b>策划定纲 + AI 汇编（指标定义与测法基于调参手册工具箱）</b></div>
+        <div class="wide"><i>配套</i><b>《<a href="MM调参手册.html">MM 调参手册</a>》（参数与工具箱）· 优化历程五篇（当前值的出处）· 《技能释放关系系统》（互斥语义，团队仓库，本标准只收指标不重讲机制）</b></div>
+      </div>
+    </header>
+
+    <div class="foreword">
+      <p>写这份标准的直接原因：调了半年移动，每次说"手感好多了"其实都是在凭当天的手指投票。同一个起步，今天觉得跟手，明天换个英雄又觉得肉，到底是它变了还是我变了，没有对表的地方。</p>
+      <p>做法不新鲜，就是把射击游戏圈用输入延迟、开镜时间做验收的老办法搬到移动上：每个手感形容词背后找出那个可测的数（"跟手"是按键到位移的帧数，"干脆"是松键到静止的距离，"利索"是反打到掉头的耗时），配上测法和目标区间。目标区间这版是建议值，标了理由，等基线实测完再定稿，不拍脑袋。</p>
+      <p>写完最大的收获是记分卡本身：23 项细项里 4 项红着，归并后就是三件事（起步误选、起步与折返爆发的网络同步、多人盲测）。标准不是用来证明做完了的，是用来知道还差多少的。</p>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">总则</div>
+        <a href="#goal"><i>01</i>原则与测量环境</a>
+        <div class="grp">指标五组</div>
+        <a href="#research"><i>02</i>瞬时响应组</a>
+        <a href="#decision"><i>03</i>巡航与转向组</a>
+        <a href="#implementation"><i>04</i>技能期间的移动</a>
+        <a href="#solution"><i>05</i>多人一致性组</a>
+        <div class="grp">执行</div>
+        <a href="#acceptance"><i>06</i>测量方法速查</a>
+        <a href="#params"><i>07</i>记分卡 v0.1</a>
+        <a href="#appendix"><i>08</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>总则</b></div>
+
+        <section id="goal">
+          <h2>原则与测量环境</h2>
+          <p>项目是 UE5 多人 MOBA 射击，移动层为 GASPALS Motion Matching。本标准约束的是"手感"这一层的验收，不管数值平衡（移速多少归数值，移速兑现得干不干脆归这里）。</p>
+          <div class="rule">
+            <h3>三条原则（所有指标由此推导）</h3>
+            <p>一，<b>响应即正义</b>：玩家输入到可感反馈的延迟是第一优先级，表现让位于响应。二，<b>表现不骗人</b>：播出来的动作与角色实际运动一致，动画不许暗示不存在的位移或速度。三，<b>多人一致</b>：本地手感必须在网络下成立，客户端预测与服务器结算一致，单机爽多人回弹等于没做。</p>
+          </div>
+          <h3>测量环境规范</h3>
+          <ul>
+            <li>基准场景：PIE 单机，60fps 锁帧（帧数指标按 60fps 换算，1 帧 ≈ 16.7ms）；多人组指标另加局域网双端环境。</li>
+            <li>基准英雄与移速档：650 移速档（Sprint 区间）为主测档，Run 档抽测；被测英雄需为共享父 ABP 继承链上的标准接入英雄。</li>
+            <li>输入方式：持续按住方向键测稳态类指标，脉冲输入只用于响应类指标（项目输入是脉冲式，抓帧时容易采到静止帧，测法速查里逐项写明）。</li>
+            <li>记录手段：Rewind Debugger 录制为准（可逐帧回放），实时 Debug 绘制只做定性初筛。</li>
+          </ul>
+          <h3>目标区间的口径</h3>
+          <p>本版目标区间是<b>建议值</b>，每项都附推导理由（人类感知阈值、既有项目实数、本项目已定案的参数），标注为"v0.1 建议"。基线实测跑完一轮后，由需求方逐项拍板定稿，此后目标值变更走修订记录。凭据优先级：本项目实测 &gt; 本项目已定案参数 &gt; 从业经验实数 &gt; 感知阈值文献。</p>
+        </section>
+
+        <div class="part"><b>指标五组</b><span>定义 · 测法 · 当前值 · 目标区间（v0.1 建议）</span></div>
+
+        <section id="research">
+          <h2>瞬时响应组（起步 / 急停 / 折返）</h2>
+          <p>竞技移动的胜负手。三个瞬间对应三问：按下去多快动、松开多快停、反打多快掉头。</p>
+          <table>
+            <thead><tr><th>指标</th><th>定义与测法</th><th>当前值</th><th>目标区间（v0.1 建议）与理由</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="4">起步</td></tr>
+              <tr><td><b>起步响应</b></td><td>按下方向键 → 首帧可感位移（胶囊位移 ≥1cm）的帧数。Rewind 逐帧读胶囊位置</td><td><span class="later">待实测</span>（起步冲量已配，体感即时）</td><td>≤3 帧（50ms）。理由：既有项目实数 50ms 垫步窗口；100ms 是普遍可感知延迟阈值，留一半余量</td></tr>
+              <tr><td>起步动画完整性</td><td>起步动画被重选打断的比例（正向直跑起步 20 次）</td><td><span class="ok">达标</span> 保护窗 1.3s（二期）</td><td>0 打断。已由 ForceStartTimer 机制保证</td></tr>
+              <tr><td>起步动画正确性</td><td>正向直跑起步命中正向起步动画的比例（20 次）</td><td><span class="no">未达标</span> Sprint 档偶发误选反身 180°（Reface，四期未解）</td><td>100%。当前主红灯，新假设三条待验（见记分卡）</td></tr>
+              <tr><td>起步 → 巡航交接</td><td>起步动画结束进入巡航 loop 是否卡过渡（Blend Stack 观察 10 次）</td><td><span class="ok">达标</span>（Dense 档，四期）；<span class="later">Sparse 未同步修复</span></td><td>0 卡滞，两档一致</td></tr>
+              <tr class="group"><td colspan="4">急停</td></tr>
+              <tr><td><b>急停距离</b></td><td>650 满速直跑松键 → 胶囊静止的位移（cm）。Rewind 读位置差</td><td><span class="later">待实测</span></td><td>基线实测后定稿。约束条件先立两条：全英雄同档移速停距一致（公平）；停步动画完整播出不被裁（表现）</td></tr>
+              <tr><td>停步动画命中</td><td>松键出停步动画（而非巡航渐停）的比例</td><td><span class="ok">达标</span>（二期恢复停步链路）</td><td>100%</td></tr>
+              <tr class="group"><td colspan="4">折返</td></tr>
+              <tr><td><b>折返耗时</b></td><td>满速直跑反打方向 → 速度分量反向的耗时（ms），及折返动画命中率</td><td><span class="later">待实测</span>（链路已通，二期）</td><td>基线实测后定稿；动画命中 100%。注意 Sprint 折返库仅 4 条的覆盖限制</td></tr>
+              <tr><td>折返爆发</td><td>折返瞬间速度曲线是否有确认感（对比无 boost 曲线）</td><td><span class="no">未达标</span> StartBoost 折返触发未启用（网络同步缺口，五期遗留）</td><td>启用后单独验收，多人一致性组联测</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="decision">
+          <h2>巡航与转向组</h2>
+          <table>
+            <thead><tr><th>指标</th><th>定义与测法</th><th>当前值</th><th>目标区间（v0.1 建议）与理由</th></tr></thead>
+            <tbody>
+              <tr><td><b>巡航稳定性</b></td><td>满速直跑 10 秒内 Blend Stack 跳姿势次数（loop 自然循环不计）</td><td><span class="ok">达标</span>（四期限采样后"现在稳了"）；量化基线待补测</td><td>0 次。巡航期任何重选都是波浪的种子</td></tr>
+              <tr><td>躯干稳定性</td><td>直跑时躯干横向摆动幅度（目测定性 + 必要时录屏逐帧）</td><td><span class="ok">达标</span>（二期 FootPlacement 战役清零）</td><td>无可感晃动。回归项：改 FootPlacement 链路或补烘 footspeed 曲线后必须复测</td></tr>
+              <tr><td><b>低速滑步</b></td><td>低速走位（&lt;200cm/s，补刀卡位场景）脚部与地面的相对滑动，脚速曲线与位移速度比对</td><td><span class="later">待实测</span>（StrideWarping 已配，MOBA-Lite 裁 Walk 后的既定代偿）</td><td>拉远视角无可感滑步。这是裁库决策的验收承诺，必须盯</td></tr>
+              <tr><td>变速跟随</td><td>移速 buff 生效瞬间（如 650→595 或反向）动画档位切换正确性与播放速率平滑</td><td><span class="ok">达标</span> Gait 移速属性驱动 + 迟滞 560/480（四期）；PlayRate (0.85,1.10) 吸收失配</td><td>无临界抖动；playrate 不贴钳制边缘（贴边 = 数据失配预警，见手册 05）</td></tr>
+              <tr><td>转向表现</td><td>strafe 模式下快转镜头：下肢对移动向、上身对镜头的扭身分配是否自然，无拧麻花</td><td><span class="ok">达标</span>（三期 OrientationWarping 定案：spine 分摊 0.5、135 阈值）</td><td>无反向过旋、无麻花；大角度反身有转身动作（保留 Reface 的设计承诺）</td></tr>
+              <tr><td>方向性移速</td><td>前 / 侧 / 后移速比例与过渡连续性（斜向无突变）</td><td><span class="ok">达标</span> 前 1.0 / 侧 0.9 / 后 0.8，余弦缓入连续插值（五期）</td><td>比例为数值层决策；手感验收只管连续性：任意方向摇杆画圆，速度无跳变</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="implementation">
+          <h2>技能期间的移动（与技能系统的接缝）</h2>
+          <p>互斥语义（谁挡谁、谁断谁）已由《技能释放关系系统》管辖，本节不重讲机制，只收<b>移动侧的手感指标</b>：位移的权限、惯性与恢复。</p>
+          <table>
+            <thead><tr><th>指标</th><th>定义与测法</th><th>当前值</th><th>目标区间（v0.1 建议）与理由</th></tr></thead>
+            <tbody>
+              <tr><td><b>位移收尾惯性</b></td><td>位移技能（冲锋类）结束瞬间的速度曲线：是否继承残余速度滑行收束，还是原地急停</td><td><span class="ok">达标</span>（Steel 冲撞收尾继承残余速度前滑，MaintainLastRootMotionVelocity 先例）</td><td>位移结束不许急停砸地，残速平滑衰减。这是"位移手感原则"，新位移技能出厂检验项</td></tr>
+              <tr><td><b>蒙太奇期间移动</b></td><td>可移动的全身攻击：收招段腿部交还 locomotion 的时点与平滑度（Rewind 看 Slot 权重与腿部姿势来源）</td><td><span class="ok">达标</span> Kallari 案：0.543s 起交接、0.1s 混合、结束权重归零无卡 Pose（五期终案）</td><td>交接点 = 动画 FullBody 曲线归零点 ±3 帧；无卡 Pose、无腰胯跳变。新的可移动攻击照此验收</td></tr>
+              <tr><td>位移期间输入权</td><td>RMS 位移期间移动输入被压制与恢复的帧数（位移结束 → 输入重新生效）</td><td><span class="later">待实测</span>（规则已有，恢复帧数未量化）</td><td>恢复 ≤2 帧。位移结束后输入被吞是投诉高发区</td></tr>
+              <tr><td>3C 动作与技能互斥</td><td>翻越/攀爬期间技能封锁与解锁时点的一致性（关系表 DT 行为抽测）</td><td><span class="ok">达标</span>（关系表 DT 化，编辑即生效；翻越挡技能已配）</td><td>封锁解锁与动画窗口一致，无"动作结束了还锁着"的死区。配置改动后跑抽测</td></tr>
+              <tr><td>受控恢复</td><td>眩晕/定身解除瞬间移动恢复的帧数与姿势衔接（不 T-pose、不滑行）</td><td><span class="ok">达标</span>（Lissandra 案修复后：解冻瞬间蒙太奇停止、混回 locomotion）</td><td>解除 ≤2 帧恢复输入；定格类蒙太奇必须配 Hold 循环段防孤儿（Lissandra 案沉淀的红线）</td></tr>
+            </tbody>
+          </table>
+          <div class="note">
+            <p>接缝类指标的通用红线：任何"技能占用移动"的状态，都必须有确定的归还路径（正常结束、被打断、网络回滚三条路都要还）。Lissandra 案和卡 Pose 案的共同根因都是"占用有路、归还没路"。</p>
+          </div>
+        </section>
+
+        <section id="solution">
+          <h2>多人一致性组</h2>
+          <p>三原则的第三条。单机指标全过之后，同一批指标要在网络下重跑，另加下面四项网络专属。</p>
+          <table>
+            <thead><tr><th>指标</th><th>定义与测法</th><th>当前值</th><th>目标区间（v0.1 建议）与理由</th></tr></thead>
+            <tbody>
+              <tr><td><b>预测一致性</b></td><td>本地预测与服务器结算的位置修正幅度（Rewind 看回滚事件与修正距离），重点场景：起步、折返、方向切换、buff 变速瞬间</td><td><span class="ok">部分达标</span> 方向衰减取 Acceleration（重放数据）预测安全（五期）；<span class="no">StartBoost 未过</span>（瞬时帧被移动合并吃掉 → 回弹，缺 CanCombineWith）</td><td>常规移动 0 可感回弹；瞬时状态（起步/折返 boost）启用前必须过合并比较补全</td></tr>
+              <tr><td>远端表现</td><td>simulated proxy 视角下他人移动的动画正确性（起步/急停/折返是否与本人视角一致）</td><td><span class="later">待实测</span>（StartBoostTimer 对远端的复制待核，交接遗留项）</td><td>远端与本端动作语义一致，允许细节降级不允许语义错位（本端折返远端滑移 = 不合格）</td></tr>
+              <tr><td>DS 干净度</td><td>专用服务器上移动/动画链路的日志与开销（warning 清零、无每帧高频查找）</td><td><span class="later">待验证</span>（调试 CVar 支路已断，等 DS 侧同步确认）</td><td>0 warning；编辑器专属调试链路不进 DS</td></tr>
+              <tr><td><b>多人盲测</b></td><td>局内多人对局的手感盲测（参与者不知改动内容，前后版本对比打分）</td><td><span class="no">未做</span></td><td>标准定稿前至少一轮。单人 PIE 的"跟手"在 100ms 网络下可能完全是另一回事，这是全表最诚实的一行</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="part"><b>执行</b><span>怎么测 · 现在什么分</span></div>
+
+        <section id="acceptance">
+          <h2>测量方法速查</h2>
+          <p>工具细节在《调参手册》第 10 节工具箱，这里只列"指标 → 用什么测"的对应：</p>
+          <table>
+            <thead><tr><th>指标类型</th><th>工具与手法</th><th>注意</th></tr></thead>
+            <tbody>
+              <tr><td>帧数 / 耗时类（起步响应、折返耗时、恢复帧数）</td><td>Rewind Debugger 录制 → 逐帧读胶囊位置与速度；输入时刻以增强输入事件帧为零点</td><td>项目输入是脉冲式，测响应必须录制回放，实时抓帧会采到静止帧</td></tr>
+              <tr><td>距离类（急停距离）</td><td>Rewind 读松键帧与静止帧的胶囊位置差；同英雄测 5 次取中位数</td><td>坡面与平地分开测，先只立平地基线</td></tr>
+              <tr><td>动画命中类（起步/停步/折返命中、误选率）</td><td>Blend Stack 调试面板 + Rewind 混合权重轨道，蓝色高亮为主选</td><td>命中率类每项 ≥20 次采样；playrate 贴钳制边缘要单独记录（数据失配预警）</td></tr>
+              <tr><td>滑步类</td><td>脚部骨骼速度曲线与胶囊位移速度比对；拉远至实战镜头距离做可感性终判</td><td>可感性以实战镜头为准，别在特写镜头下追求绝对零滑</td></tr>
+              <tr><td>网络类（回弹、远端表现）</td><td>局域网双端 + 模拟延迟（100ms 起）；Rewind 双端各录一份对比；p.NetShowCorrections 看修正</td><td>先关 StartBoost 类瞬时逻辑测基线，再开测增量</td></tr>
+              <tr><td>逐帧移动记录（待建）</td><td>参照镜头侧 camera_trace.py 的做法出一个 movement_trace 脚本：逐帧记录 位置/速度/加速度/当前动画/playrate 落 CSV</td><td>建成后上面多数手测项可以脚本化，回归成本降一个量级</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="params">
+          <h2>记分卡 v0.1（2026-07-13）</h2>
+          <p>18 项汇总。这张卡的用法：每次移动侧改动合入前后各跑一遍，红灯项清零之前不宣布"竞技级"。</p>
+          <table>
+            <thead><tr><th>组</th><th>达标</th><th>待实测 / 待验证</th><th>未达标（红灯）</th></tr></thead>
+            <tbody>
+              <tr><td>瞬时响应</td><td>起步完整性 · 起步交接（Dense）· 停步命中</td><td>起步响应帧数 · 急停距离 · 折返耗时</td><td><b>起步误选 Reface</b> · <b>折返爆发未启用</b></td></tr>
+              <tr><td>巡航与转向</td><td>巡航稳定 · 躯干稳定 · 变速跟随 · 转向表现 · 方向性移速</td><td>低速滑步量化（巡航重选基线随测）</td><td>—</td></tr>
+              <tr><td>技能接缝</td><td>位移收尾惯性 · 蒙太奇期间移动 · 3C 互斥 · 受控恢复</td><td>位移输入恢复帧数</td><td>—</td></tr>
+              <tr><td>多人一致</td><td>常规移动预测（方向衰减）</td><td>远端表现 · DS 干净度</td><td><b>StartBoost 同步</b> · <b>多人盲测未做</b></td></tr>
+            </tbody>
+          </table>
+          <p>合计：<b>达标 13 · 待测 7 · 红灯 4</b>（按细项计，预测一致性一行拆常规/瞬时两计）。四个红灯的去处都已明确：Reface 走三条新假设实验（归一化集 / PlayRate 下限 / 轨迹旋钮），StartBoost 走 CanCombineWith 补全（程序侧方案已交），多人盲测排期即测。红灯清零 + 待测转实测，本标准从 v0.1 建议稿转正。</p>
+        </section>
+
+        <section id="appendix">
+          <h2>附录</h2>
+          <details class="fold"><summary>展开附录</summary>
+            <h3>与其他文档的分工</h3>
+            <ul>
+              <li>《MM 调参手册》：指标不达标时"去哪调"的地图；本标准的测法全部依赖其工具箱。</li>
+              <li>优化历程五篇：记分卡"当前值"列的出处与故事版。</li>
+              <li>《技能释放关系系统》（团队仓库）：互斥语义机制的权威文档；本标准第 04 节只做移动侧验收，不重复其内容。</li>
+              <li>《MM 移动库精简规格》：低速滑步项是该文档裁库决策的验收承诺，两处互为契约。</li>
+            </ul>
+            <h3>待办</h3>
+            <ul>
+              <li>基线实测一轮（待测 8 项），随后目标区间逐项定稿。</li>
+              <li>movement_trace 逐帧记录脚本（测量自动化）。</li>
+              <li>建议在团队侧《技能释放关系系统》文档补一小节：3C 全局关系表（翻越/攀爬挡技能）的设计理由，正文当前零提及。</li>
+            </ul>
+            <h3>修订记录</h3>
+            <table>
+              <thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead>
+              <tbody>
+                <tr><td>2026-07-13</td><td>v0.1</td><td>初稿：五组 18 项指标框架、测法、记分卡；目标区间为建议值待定稿</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

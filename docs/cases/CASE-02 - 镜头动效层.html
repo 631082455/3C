@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>镜头动效层：增量、叠加、自动归零 · 案例复盘</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.85 var(--sans);
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:20px 60px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(27px,3.6vw,37px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);
+      box-shadow:var(--shadow);counter-reset:sec;overflow:hidden;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:baseline;gap:14px;padding:20px 42px;
+      background:var(--soft);border-bottom:1px solid var(--line);}
+    .part i{font:700 11px/1 var(--mono);letter-spacing:.26em;color:var(--brass);font-style:normal;}
+    .part b{font-size:15px;font-weight:750;color:var(--ink);letter-spacing:.06em;}
+    .part span{margin-left:auto;font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    section{padding:36px 42px;border-bottom:1px solid var(--line);scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{border-bottom:none;}
+    h2{display:flex;align-items:center;gap:12px;margin:0;font-size:22px;font-weight:750;line-height:1.3;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 13px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:28px 0 0;font-size:16.5px;font-weight:720;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Case Study · Doc CASE-02</div>
+      <h1>镜头动效层：增量、叠加、自动归零</h1>
+      <p class="lede">技能镜头的 0→1 建设案。旧系统配不出旋转、多效果互相顶、打断后会残留，还会碰判定。新系统把每个镜头效果做成相对基础镜头的增量：资产化预设、使用处填强度、同帧求和叠加、包络必然归零、永不写入判定。两个真英雄技能全链路实配验证，配置体验落到"选预设、填强度"。</p>
+      <div class="tldr">
+        <div><i>课题</i><span>建设型：技能镜头缺一层靠谱的地基。旋转配不出、last-wins 互相顶、残留、污染判定，策划想要的"拿预设改一两个数"无从谈起。</span></div>
+        <div><i>终案</i><span>镜头动效层（CME)：<b>效果 = 相对基础镜头的增量，叠加求和、分带钳制、自动归零、只写渲染视图</b>；清理由结构保证，不靠人记得配。</span></div>
+        <div><i>结果</i><span>Steel 大招、Kallari 两个技能全链路实配通过；验收清单 10 条过 9 条；逐帧数据确认判定视线全程不受演绎影响。一期已提交进库。</span></div>
+        <div><i>分工</i><span>我（战斗 3C 策划）定方向、审计取舍、逐项验收、参数拍板；AI agent 在我指挥下写 C++、跑审计与竞品调研、搭数据工具；战斗程序对齐架构、承接遗留 P0。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>CASE-02（入库时分配）</b></div>
+        <div><i>版本 / 状态</i><b>v1.0 · 已定稿入库 · 2026-07-14</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>实现方</i><b>战斗 3C 策划 × AI agent（实现） · 战斗程序（对齐/P0）</b></div>
+        <div class="wide"><i>配套文档</i><b><a href="../topics/核心战斗手感/Camera - 镜头动效配置手册.html">《配置手册》</a> · <a href="../topics/核心战斗手感/Camera - 镜头动效层二期需求（程序对齐）.html">《二期需求》</a> · <a href="CASE-01 - 准星是眼睛的锚.html">《准星是眼睛的锚》（姊妹案例）</a></b></div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">背景</div>
+        <a href="#goal"><i>01</i>体验目标与课题</a>
+        <div class="grp">过程</div>
+        <a href="#research"><i>02</i>业界调研</a>
+        <a href="#decision"><i>03</i>方案排定</a>
+        <a href="#implementation"><i>04</i>实验与落地实录</a>
+        <div class="grp">结果</div>
+        <a href="#solution"><i>05</i>终案分层</a>
+        <a href="#acceptance"><i>06</i>验收实录</a>
+        <div class="grp">资料</div>
+        <a href="#params"><i>07</i>关键参数</a>
+        <a href="#leftovers"><i>08</i>遗留与保险丝</a>
+        <a href="#methodology"><i>09</i>方法论沉淀</a>
+        <a href="#appendix"><i>10</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>背景</b></div>
+
+        <section id="goal">
+          <h2>体验目标与课题</h2>
+          <p>项目是 UE5 第三人称 MOBA 射击（自研引擎分支）。技能镜头当时的实现是裁剪版 Lyra 加一条旁路：模式栈只推一个全局第三人称，技能镜头走 UAbilityCameraData(ACD，按技能配置的镜头数据）数组。</p>
+          <p>我要的体验其实很朴素：放技能的时候，镜头得跟角色一起憋劲、一起爆发，技能才有排面；而我是配技能的人，想要的配置体验是拿预设改一两个数，不是每个技能从零搭。这两件事在旧系统上都落不了地。案发现场是一次很平常的疑问：</p>
+          <blockquote>"现在战斗镜头好像是配不出一些旋转、偏移效果的，是这样吗？" <i>—— 我，翻旧设计文档对照现状时</i></blockquote>
+          <p>确实配不出。顺着这个问题做了一次全代码审计，挖出来的不止旋转：</p>
+          <ul>
+            <li>旋转通道整个不存在，渲染朝向只来自控制朝向，大招俯角、命中踢这类效果无从表达；</li>
+            <li>多个技能镜头同帧时 last-wins，后来的整体顶掉先前的，结果不可预期；</li>
+            <li>技能被打断、角色死亡后镜头可能卡在技能状态，清理靠各路径自觉；</li>
+            <li>镜头偏移写进了判定视图，表现层悄悄影响弹道；</li>
+            <li>另有一批配了没效果也不报错的死配置字段。</li>
+          </ul>
+          <div class="rule">
+            <h3>课题定性：建设型，带一条共存约束</h3>
+            <p>这不是修 bug，是缺一层地基：需要一个让"旋转/推拉/FOV/冲击"都能配、能同帧共存、坏不掉的技能镜头系统。约束是不能停机重造：存量技能还在用 ACD，新系统得和它并行，逐个迁移。</p>
+          </div>
+          <h3>分工与工作方式</h3>
+          <p>我负责体验判断、审计结论取舍、方案拍板、每一轮 PIE 验收和参数定稿；AI agent 在我指挥下做全代码审计、竞品逐案核实、C++ 实现、对抗性代码审查和数据工具搭建；战斗程序对齐架构边界（哪些钩子能用、判定链路怎么走），并承接列到二期的 P0 需求。三次方案评审加两个英雄的实配，发生在几个工作日内，实验闭环不用排程序档期，这是这套工作方式的实际收益。</p>
+        </section>
+
+        <div class="part"><b>过程</b></div>
+
+        <section id="research">
+          <h2>业界调研</h2>
+          <p>调研目标很明确：旋转到底能不能给、给多少；清理为什么总是坏；震屏的边界在哪。逐案核实，AI 执行检索、我做取舍。</p>
+          <table>
+            <thead><tr><th style="width:20%">案例</th><th>它的做法</th><th style="width:30%">借了什么</th><th style="width:13%">核实方式</th></tr></thead>
+            <tbody>
+              <tr><td>Deadlock / 漫威争锋（旋转逐案）</td><td>镜头会转，但旋转从不叠加在"活的瞄准向量"上：演出集中在脱手技能的施法窗口，可瞄准时只有小幅踢</td><td>设计铁律"旋转预算与玩家操作权成反比"的来源。我一开始以为竞品的技能镜头能随便转，逐案看完发现转的全是操作权受限的窗口</td><td>实机与公开录像逐案</td></tr>
+              <tr><td>Deadlock（清理事故）</td><td>存在一整类"大招被打断后镜头永久卡在拉远状态"的 bug(Haze、Mina、滑索加速）</td><td>根因都是进/出成对事件、出事件被打断吞掉。结论：新系统不要"出事件"，效果只有到期与死亡两个出口</td><td>社区 bug 汇报，多例交叉</td></tr>
+              <tr><td>Predecessor</td><td>连续多个平衡补丁在砍震屏强度</td><td>震屏是预算不是调料：上线时不设总量钳制，后面就要用补丁一点点还债</td><td>官方补丁说明</td></tr>
+              <tr><td>怪物猎人 / 战神</td><td>可瞄准窗口镜头静默，冲击放在瞄准已结算的时刻</td><td>演绎窗口纪律的基线。细节在姊妹案例里展开，此处不重讲</td><td>实机归纳</td></tr>
+              <tr><td>UE 引擎侧</td><td>GameplayCameras 插件在树内（v0.1 experimental，项目零引用）；UCameraModifier::ProcessViewRotation 是引擎内唯一能转镜头的钩子</td><td>前者暂不押注，5.8 转正再评估；后者决定了旋转必须自己在动效层求值，没有现成轮子</td><td>引擎源码检查</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="decision">
+          <h2>方案排定</h2>
+          <p>三个候选摆上台面竞标。取舍标准排序：策划工作流第一（我自己就是最重的用户）、清理可靠性第二、实现成本第三。</p>
+          <table>
+            <thead><tr><th style="width:22%">候选</th><th>内容</th><th style="width:34%">判定</th></tr></thead>
+            <tbody>
+              <tr><td>改造旧 ACD</td><td>在现有旁路上补旋转字段、修 last-wins</td><td><span class="no">否</span> 它的语义就是错的：无包络、无优先级、整体覆盖。字段级兼容存量资产的负担比新建更重，修完还是那套"配了会不会生效看运气"</td></tr>
+              <tr><td>全量换引擎 GameplayCameras</td><td>押注 UE 新相机框架</td><td><span class="no">否</span> v0.1 experimental，项目零引用，坑深浅未知。写下再议条款：5.8 转正后评估</td></tr>
+              <tr><td>演进式动效层</td><td>保留模式栈管状态，把旁路升级为独立的动效栈 + 设计师资产（CME）</td><td><span class="ok">✅ 选定</span> 存量 ACD 原样共存，新技能走新层，按需逐个迁移，不停机</td></tr>
+            </tbody>
+          </table>
+          <h3>两刀砍下去的范围决策</h3>
+          <p>比选方案更要紧的是砍范围，两刀都砍在"看起来该做"的东西上：</p>
+          <ul>
+            <li><b>不做状态镜头层</b>（开镜/俯瞰模式/变身机位那一族）。推导过程：逐个场景过，"技能期间改、结束回去"全是动效层的活；产品没有 ADS；升空俯瞰用动效垫高就够；操控无人机是接管型玩法，不是镜头问题。再议触发条件写死：出现操控型接管技能时重开。</li>
+            <li><b>技能提前结束的一个已知洞缓修</b>（极端时序下清理可能走不到）。判断依据：常规死亡不触发，且镜头侧有看门狗和死亡全清双兜底，后果被接住了。移出一期，归属 GAS 侧独立立项。</li>
+          </ul>
+          <div class="rule">
+            <h3>配置粒度的定案</h3>
+            <p>复杂度沉在资产，日常路径极简：<b>资产管形状，使用位点管强度</b>。预设三形态收敛为一条黄金路径（招牌多通道预设）加两个后门（单通道原语在引用处堆叠调配比；稀疏变体做单英雄灰度）。在使用处自由改各通道的方案被否，理由是每处引用会变成不可评审的孤本。"预设包按技能原型自动映射"也缓议了：预设库没被真实技能磨过之前，这是负资产，第 4~5 个英雄接入时再开。</p>
+          </div>
+        </section>
+
+        <section id="implementation">
+          <h2>实验与落地实录</h2>
+          <h3>动手前的三次查证</h3>
+          <p>方案过了，先把三个"感觉对"的地方逐个查实，查完两个改了设计：</p>
+          <ul>
+            <li>动效位移若在碰撞检测后求值会穿墙（旧偏移恰好在检测前，反而没事）。修法：动效位移单独做一次碰撞钳制；</li>
+            <li>蒙太奇窗口打断时，结束回调由引擎三条路径保证送达，与技能实例是否健康无关。这条让"窗口驱动"的生命周期可以放心用；</li>
+            <li>技能是本地预测型，预测被服务器拒绝时走的也是技能结束路径，但 bWasCancelled 为 false。结论写进代码注释：清理不得以 bWasCancelled 为条件。</li>
+          </ul>
+          <h3>一处证伪：曲线放哪</h3>
+          <p>冲击类效果需要形状曲线（冲出、回弹那条线）。第一版把它做成外部曲线资产槽，配一个效果要另建一个曲线资产再关联。我实际用的时候找不到在哪改：</p>
+          <blockquote>"在哪改啊，我没看到。" <i>—— 我，第一次配曲线</i></blockquote>
+          <p>改成内联曲线，细节面板里直接画关键帧，纵轴允许过冲和负值。外部资产槽这个设计看起来对（复用、共享），错在配置动线：曲线和效果是一对一的，拆开只增加跳转。</p>
+          <h3>落地与第一条真链路</h3>
+          <p>止血项（除零、哨兵不复位、死亡不清理）和动效栈一起落地，编译通过后先用控制台命令空跑，再接第一个真英雄：Steel 大招挂了一个俯角加拉远的预设，放大招自动推入、结束自动吐出。四个验收点一次过。</p>
+          <h3>Kallari：把系统跑穿的两个技能</h3>
+          <p>CrossSlash（直线刀波 skillshot）是第一个完整实配的技能，蓄力、出手、恢复三段全走动效层。这一趟把系统的边边角角都磨了一遍：逐帧记录仪抓出发射帧配置错位（逻辑 0.03 发射、动画 0.37 表演，我据此把触发点挪正）；震屏调音摸出三条规律（资产振幅即标定值；干脆靠短时长高频定相；蓄力颤必须在出手帧前熄火）。中途撞上的准星偏移问题另立了一案，两轮实验一次证伪一次终案，见姊妹案例《准星是眼睛的锚》，这里不重讲。</p>
+          <p>瞬步（Mark,holding 选目标后瞬移到目标身后）接着验证了两件系统层的事：瞬移那一帧镜头会拖影，补了单帧吸附（全局基建，以后任何闪现类都受益）；镜头模块的 Remove 选项被发现从上线起就是坏的，按位点匹配永远失败。它是潜伏缺陷，一期只有 Add 的用户，holding 这种"A 时机挂、B 时机收"的配置是第一个真实用户，一用就暴露。</p>
+          <div class="note">发射帧那次教训值得单独记：动画描述说 0.37 出手，配置里投射物 0.03 就出生了。数据不查，这种错位就长期潜伏。此后新技能接镜头前，先让记录仪录一遍定发射帧。</div>
+          <h3>对抗性审查</h3>
+          <p>二期代码合入前跑了一轮三视角对抗审查（数学边界/系统集成/配置滥用），AI 产出 9 条告警，我逐条对源码裁决：5 条真实全修，4 条误报逐条给出"现有防护在哪一行"后否掉。真问题里最值钱的一条是实验开关的 C++ 默认值是开，两个直接继承基类的英雄准星暗地里带着实验行为，没人知道。</p>
+          <div class="aside">同期试了个副产物：让 AI 从一句话（"重锤下砸带回弹"）直接生成 CME 资产初稿，归一化器按校验器规则钳值兜底。通了，对话式调预设可用。工程化（系统提示词、编辑器内入口）列为候补，没排期。这里还没想清楚它该不该进正式管线，先挂着。</div>
+        </section>
+
+        <div class="part"><b>结果</b></div>
+
+        <section id="solution">
+          <h2>终案分层</h2>
+          <div class="rule">
+            <h3>系统的一句话</h3>
+            <p>每个镜头效果都是<b>相对基础镜头的增量</b>：自带包络，必然衰减归零；多个效果同帧求和，分带软钳；只写渲染视图。拿掉全部动效，画面精确回到底座；判定从头到尾没被碰过。</p>
+          </div>
+          <svg class="diagram" viewBox="0 0 900 300" role="img" aria-label="动效层求值管线">
+            <g font-family="Consolas,monospace" font-size="12.5">
+              <!-- 主链 -->
+              <rect x="20" y="40" width="130" height="46" rx="6" fill="var(--accent)" opacity="0.12" stroke="var(--accent)"/>
+              <text x="38" y="60" fill="var(--ink)">基础镜头</text>
+              <text x="30" y="76" fill="var(--muted)" font-size="11">模式栈输出</text>
+              <line x1="150" y1="63" x2="205" y2="63" stroke="var(--muted)" stroke-width="1.5"/>
+              <rect x="205" y="40" width="150" height="46" rx="6" fill="var(--brass)" opacity="0.12" stroke="var(--brass)"/>
+              <text x="222" y="60" fill="var(--ink)">判定视图快照</text>
+              <text x="215" y="76" fill="var(--muted)" font-size="11">动效介入前定格</text>
+              <line x1="355" y1="63" x2="410" y2="63" stroke="var(--muted)" stroke-width="1.5"/>
+              <rect x="410" y="26" width="180" height="74" rx="6" fill="var(--accent)" opacity="0.12" stroke="var(--accent)"/>
+              <text x="428" y="48" fill="var(--ink)">动效求和</text>
+              <text x="420" y="66" fill="var(--muted)" font-size="11">旋转/位移/臂长/FOV</text>
+              <text x="420" y="82" fill="var(--muted)" font-size="11">各效果 × 包络 × 强度</text>
+              <line x1="590" y1="63" x2="640" y2="63" stroke="var(--muted)" stroke-width="1.5"/>
+              <rect x="640" y="40" width="115" height="46" rx="6" fill="var(--accent)" opacity="0.12" stroke="var(--accent)"/>
+              <text x="652" y="60" fill="var(--ink)">分带软钳</text>
+              <text x="648" y="76" fill="var(--muted)" font-size="11">受击4° 全局20°</text>
+              <line x1="755" y1="63" x2="795" y2="63" stroke="var(--muted)" stroke-width="1.5"/>
+              <rect x="795" y="40" width="90" height="46" rx="6" fill="var(--ok)" opacity="0.14" stroke="var(--ok)"/>
+              <text x="806" y="60" fill="var(--ink)">渲染视图</text>
+              <text x="800" y="76" fill="var(--muted)" font-size="11">碰撞钳制后</text>
+              <!-- 判定分支 -->
+              <line x1="280" y1="86" x2="280" y2="170" stroke="var(--brass)" stroke-width="1.5" stroke-dasharray="4 4"/>
+              <rect x="180" y="170" width="200" height="46" rx="6" fill="var(--brass)" opacity="0.10" stroke="var(--brass)" stroke-dasharray="4 3"/>
+              <text x="196" y="190" fill="var(--ink)">弹道 / 目标选取 / 发射方向</text>
+              <text x="196" y="206" fill="var(--muted)" font-size="11">只读快照，动效碰不到</text>
+              <!-- 清理入口 -->
+              <rect x="440" y="150" width="330" height="112" rx="6" fill="none" stroke="var(--line)"/>
+              <text x="456" y="172" fill="var(--accent-text)" font-weight="700" font-size="11.5">归零的四个出口（有一个走到就干净）</text>
+              <text x="456" y="194" fill="var(--muted)" font-size="12">① 包络到期，自然收尾</text>
+              <text x="456" y="212" fill="var(--muted)" font-size="12">② 蒙太奇窗口结束（打断时引擎保证送达）</text>
+              <text x="456" y="230" fill="var(--muted)" font-size="12">③ 技能结束无条件释放（含预测回滚）</text>
+              <text x="456" y="248" fill="var(--muted)" font-size="12">④ 死亡/切观战全清 + 死主看门狗兜底</text>
+              <line x1="500" y1="100" x2="500" y2="150" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="2 4"/>
+            </g>
+          </svg>
+          <p>读图：上面一条是每帧的求值链，判定分支在动效介入前就岔出去了；下面那个框是清理契约，四个出口互为冗余，配置层不存在"清除条件"这种字段。Deadlock 那类打断残留事故在这套结构里没有生存空间：没有可以被吞掉的出事件。</p>
+          <table>
+            <thead><tr><th style="width:18%">层</th><th>内容</th><th style="width:30%">守住的体验</th></tr></thead>
+            <tbody>
+              <tr><td>通道</td><td>旋转分两个空间：绕枢轴轨道（演绎，≤25°，限操作权受限窗口）与原地视线踢（冲击，≤3°）；后来加了第三空间"瞄点锁定环绕"（来源见姊妹案例）。另有位移、臂长、FOV（均支持百分比）、震屏引用、跟随柔和度覆盖</td><td>旋转终于能配，且每一度都有预算依据：预算与操作权成反比</td></tr>
+              <tr><td>叠加</td><td>增量通道跨效果求和；受击带旋转合计软钳 4°，全局 20°，FOV ±15，越近上限压缩越强，不硬截平</td><td>大招俯角和命中踢同帧共存互不覆盖；团战刷屏叠不成晕，反馈递减不消失</td></tr>
+              <tr><td>节奏</td><td>包络（混入/保持/混出）必然归零；形状曲线内联可画，纵轴允许过冲与负回弹；形状与强度分离，重触发策略可选（受击默认高强度胜出，防轻击吞重击）</td><td>手感的"形状"是全局一致的稀缺资产，强度是每处可调的廉价参数</td></tr>
+              <tr><td>配置</td><td>资产=形状，位点=引用+强度；三形态：招牌预设/原语堆叠/稀疏变体；非法配置存盘即拒，可疑配置警告</td><td>拿预设改一两个数；配错当场知道，不存在"配了没效果还不报错"</td></tr>
+              <tr><td>判定</td><td>判定视图快照：弹道、目标选取、发射方向全部读动效介入前的视线</td><td>准星永不说谎：大招压着俯角开枪，子弹仍打准星指的位置</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="acceptance">
+          <h2>验收实录</h2>
+          <p>验收人=需求方本人（我），单人闭环，n=1。多人盲测列在遗留。</p>
+          <table>
+            <thead><tr><th style="width:8%">#</th><th>验收项</th><th style="width:14%">状态</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>大招俯角+拉远期间开枪，子弹打准星位置；强震屏下连续射击弹道不漂（逐帧数据佐证：控制朝向列全程不动）</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>2</td><td>技能被打断/角色死亡，镜头在混出时长内回位，无残留，震屏立停</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>3</td><td>大招俯角与命中踢同帧共存互不覆盖，调试面板可逐项解释</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>4</td><td>删除任意/全部动效配置，游戏正常可玩</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>5</td><td>贴墙释放拉远类效果不穿墙</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>6</td><td>非法配置存盘被拒；无 NaN、无瞬移</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>7</td><td>演绎在操作权归还前混出完毕</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>8</td><td>PIE 中改资产字段/曲线，下一帧生效</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>9</td><td>团战级叠加无晕动感（软钳生效）</td><td><span class="ok">✅</span></td></tr>
+              <tr><td>10</td><td>单英雄灰度走通（变体试点→归并→删除）</td><td><span class="later">机制已备，待首用</span></td></tr>
+            </tbody>
+          </table>
+          <p>真英雄链路的验收原话，按时间：</p>
+          <blockquote>"都对了。" <i>—— 旋转方向首验</i></blockquote>
+          <blockquote>"OK 的，没问题。" <i>—— Steel 大招自动推入/自动清理</i></blockquote>
+          <blockquote>"天啊，现在我发现，准星完全没有晃动感了。" <i>—— Kallari 蓄力环绕终案（姊妹案例的结局，也是本系统第三旋转空间的验收）</i></blockquote>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="params">
+          <h2>关键参数</h2>
+          <details class="fold"><summary>展开参数表</summary>
+          <table>
+            <thead><tr><th style="width:32%">参数</th><th style="width:24%">定稿值</th><th>体验依据</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="3">旋转预算（双层：超建议值警告 / 超硬上限拒绝）</td></tr>
+              <tr><td>原地视线踢 ViewKick</td><td>3° / 5°</td><td>可瞄准窗口唯一直接挪准星的通道，瞬态短于 0.2s 且在弹道采样后</td></tr>
+              <tr><td>瞄点锁定环绕 OrbitAimLocked</td><td>12° / 18°</td><td>不挪准星，预算约束的是角色遮挡准线</td></tr>
+              <tr><td>绕枢轴轨道 Orbit</td><td>25° / 35°</td><td>只用于操作权受限窗口的演绎</td></tr>
+              <tr class="group"><td colspan="3">叠加钳制（软拐点，越近上限压缩越强）</td></tr>
+              <tr><td>受击带旋转合计</td><td>4°</td><td>团战刷屏防叠爆，反馈递减不消失</td></tr>
+              <tr><td>全局旋转合计 / FOV 合计</td><td>20° / ±15</td><td>晕动上限；绝对模式 FOV 超 15 校验器直接拒</td></tr>
+              <tr class="group"><td colspan="3">系统默认</td></tr>
+              <tr><td>包络默认（混入/混出）</td><td>0.15s / 0.25s</td><td>短冲击够快，长状态不跳变；混合时间为 0 存盘即拒（除零）</td></tr>
+              <tr><td>瞬移吸附阈值</td><td>250cm（可调）</td><td>任何合法位移一帧到不了；超过即视为瞬移，跟随插值跳过，镜头随人硬切</td></tr>
+              <tr><td>臂长最小保护 / 无主推入钳制</td><td>20cm / 1.5s</td><td>拉近不穿模；控制台空跑无限时长自动钳短并告警</td></tr>
+            </tbody>
+          </table>
+          <p>单技能级参数（Kallari 蒙太奇时间线、震屏频率档）在《配置手册》，不在此重列。</p>
+          </details>
+        </section>
+
+        <section id="leftovers">
+          <h2>遗留与保险丝</h2>
+          <details class="fold"><summary>展开清单</summary>
+          <table>
+            <thead><tr><th style="width:30%">事项</th><th style="width:14%">状态</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>FOV 灵敏度补偿</td><td><span class="later">P0 · 待程序</span></td><td>动效含 FOV 冲且窗口内可瞄准，不补偿等于演绎期间偷改手感；按动效后渲染 FOV 换算</td></tr>
+              <tr><td>弹道命中触发位点</td><td><span class="later">P0 · 待程序</span></td><td>实体弹命中路径上没有镜头钩子，"蓄力→出手→命中"的最后一拍是空的</td></tr>
+              <tr><td>瞄准窗口制度化（AimSafe 分类+运行时抑制）</td><td><span class="later">P2</span></td><td>"什么能进可瞄准窗口"目前靠人脑纪律</td></tr>
+              <tr><td>多人盲测</td><td><span class="later">P2 · 未做</span></td><td>全部手感结论 n=1，个体差异风险在</td></tr>
+              <tr><td>观战端不重放动效</td><td><span class="later">缓议</span></td><td>动效本地触发，观战镜头没有演绎。这里还没有答案，观战体验变重要时再对</td></tr>
+              <tr><td>存量 ACD 迁移</td><td><span class="ok">按需进行</span></td><td>老 ACD 的偏移仍写在判定视图里，这是迁移的真正理由；新技能一律走动效层</td></tr>
+              <tr><td>技能提前结束的极端时序洞</td><td><span class="ok">已兜底缓修</span></td><td>看门狗+死亡全清接住后果；GAS 侧独立立项</td></tr>
+            </tbody>
+          </table>
+          </details>
+        </section>
+
+        <section id="methodology">
+          <h2>方法论沉淀</h2>
+          <details class="fold"><summary>展开沉淀条目</summary>
+          <h3>候选元规则（M）</h3>
+          <table>
+            <thead><tr><th style="width:34%">规律</th><th>内容与适用边界</th></tr></thead>
+            <tbody>
+              <tr><td><b>M · 表现效果做成增量，归零是结构属性</b></td><td>效果=相对底座的增量、自带包络、必然归零，则清理不需要任何人配"清除条件"。边界：只适用于"结束回原样"的效果；要"回到另一种持续状态"的（开镜类）是模式问题，别硬塞进增量层</td></tr>
+              <tr><td><b>M · 清理不依赖健康的归属者</b></td><td>打断、预测回滚、实例消亡都不是可靠的清理时机；出口要多路冗余（到期/窗口/技能终/死亡+看门狗），且不得以取消标记为条件。边界：看门狗只兜无限时长条目，有限时长靠包络自身</td></tr>
+              <tr><td>M · 旋转预算与操作权成反比</td><td>竞品逐案核实的共同规律。玩家操作权越完整，允许的旋转越小；演绎混出须在操作权归还前完成</td></tr>
+              <tr><td>M · 资产管形状，位点管强度</td><td>形状全局一致是镜头语言的来源；强度每处可调是配比自由的来源。边界：跨英雄灰度用稀疏变体，不要复制资产</td></tr>
+              <tr><td>M · 非法配置必须可见</td><td>"能配但没效果且不报错"按 P0 缺陷对待。存盘校验拒绝越界、警告可疑，比文档管用</td></tr>
+              <tr><td>M · 范围决策写死再议条件</td><td>砍掉的东西（状态镜头层、预设包映射）各自带触发条件，防"当时为什么不做"的翻案成本。边界：条件要写成可观测事件，不是"以后看情况"</td></tr>
+            </tbody>
+          </table>
+          <h3>候选反模式（AP）</h3>
+          <ul>
+            <li>AP · last-wins 旁路：多来源写同一目标，后到覆盖先到，结果不可预期。求和+优先带是替代；</li>
+            <li>AP · 进/出成对事件管生命周期：出事件会被打断吞掉，残留即事故（Deadlock 实证）；</li>
+            <li>AP · 一对一的东西拆成外部资产：曲线与效果一对一，拆开只增加配置跳转（"在哪改啊，我没看到")；</li>
+            <li>AP · 为"后续可能使用"预留结构：预设包映射在库未磨熟前是负资产；</li>
+            <li>AP · 信动画描述定关键帧：发射帧要实测，配置与表演错位会长期潜伏。</li>
+          </ul>
+          <p>准星与旋转诚实性的沉淀（眼睛的锚、预算换币种等）在姊妹案例，不重列。工具与流程坑在附录。</p>
+          </details>
+        </section>
+
+        <section id="appendix">
+          <h2>附录：未入正文的素材</h2>
+          <details class="fold"><summary>展开附录</summary>
+          <h3>工具箱（本案自建，可复用）</h3>
+          <ul>
+            <li>逐帧镜头记录仪 camera_trace：每帧采样镜头位置/旋转/FOV/臂长、蒙太奇进度、投射物首现，CSV 落盘。用途：定发射帧、验证时序、验证判定纯净、揪静默失配；</li>
+            <li>CME 程序化生成 cme_authoring：字段字典→合法资产，归一化器按校验器规则钳值；AI 一句话生成初稿的写盘层；</li>
+            <li>控制台：Effect.Play/ClearAll/Slomo/Loop、Camera.Debug 权重条面板（慢放下能看清冲出-回弹的形状）。</li>
+          </ul>
+          <h3>流程与工具坑（与 3C 方法论无关，留档）</h3>
+          <ul>
+            <li>二进制 uasset 存盘只信 LogSavePackage，不信返回值；PIE 中资产创建/存盘会失败，窗口期要排；</li>
+            <li>p4 change -i 更新描述不带 Files 段会静默清空 CL 文件列表；编辑器的版控集成会在"保存所有"时自动 checkout 脏资产，试验值可能被顺手写盘；</li>
+            <li>UE python：布尔属性去 b 前缀；Rotator 构造是（roll,pitch,yaw）必须关键字传参；蒙太奇通知按名字 configure，按下标有静默错配史；</li>
+            <li>UHT 头文件规则：.generated.h 必须是最后一个 include,WITH_EDITOR 的额外 include 放 cpp；</li>
+            <li>Live Coding 挡命令行构建，UENUM 加值这类改动必须关编辑器完整编译。</li>
+          </ul>
+          <h3>提交轨迹（内部编号，只在此处）</h3>
+          <ul>
+            <li>一期已提交：CL 5628029（源码）、5628058（资产）、5633738（目标选取切快照）、5636536(Kallari CrossSlash 首配）；</li>
+            <li>待提交：CL 5643871（二期代码：第三旋转空间+准星跟随）、5644306(CrossSlash 手感定稿）、5652378（瞬移吸附+Remove 修正）、5652384（瞬步 holding/到达）。</li>
+          </ul>
+          <h3>存疑与引用纪律</h3>
+          <ul>
+            <li>Deadlock 打断残留 bug 为社区多例交叉，非官方承认；Nesky《50 Game Camera Mistakes》无公开编号文本，引用只述内容不引条号；</li>
+            <li>竞品参数（BF4 灵敏度系数 1.33、OW zoom sens 37.89）为社区文档口径。</li>
+          </ul>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
