@@ -90,26 +90,11 @@
   .tag.html{color:var(--accent-text);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);}
   .tag.md{color:var(--brass);border:1px solid color-mix(in srgb,var(--brass) 45%,transparent);}
   .ver{color:var(--muted);font-size:12.5px;flex:none;}
-  /* 子抽屉:入口内嵌主稿行右侧(徽章左边),收起时不占行,点开在行下展开 */
-  li{position:relative;}
-  li:has(>details.sub)>a{padding-right:150px;}
-  li>details.sub{margin:0;}
-  li>details.sub>summary{position:absolute;right:72px;top:8px;cursor:pointer;list-style:none;
-    display:inline-flex;align-items:center;gap:6px;padding:1px 10px;
-    border:1px solid var(--line);border-radius:999px;background:var(--paper);
-    font:600 11px/1.7 var(--mono);letter-spacing:.06em;color:var(--muted);user-select:none;transition:all .15s;}
-  li>details.sub>summary::-webkit-details-marker{display:none;}
-  li>details.sub>summary::before{content:"▸";transition:transform .15s;}
-  li>details.sub[open]>summary::before{transform:rotate(90deg);}
-  li>details.sub>summary:hover{background:var(--soft);color:var(--accent-text);}
-  ul.subl{margin:0 0 8px 20px;border-left:2px solid var(--line);}
+  /* 书目式子稿:常显缩进,印刷目录的层级语言,无折叠机关 */
+  ul.subl{margin:0 0 9px 22px;border-left:2px solid var(--line);}
   ul.subl li{border-bottom:none;}
-  ul.subl li a{padding:5px 8px 5px 14px;font-size:13.5px;color:var(--muted);}
+  ul.subl li a{padding:4px 8px 4px 14px;font-size:13.5px;color:var(--muted);}
   ul.subl li a:hover{color:var(--accent-text);background:var(--soft);}
-  @media(max-width:760px){
-    li:has(>details.sub)>a{padding-right:8px;}
-    li>details.sub>summary{position:static;margin:0 0 8px 20px;}
-  }
 
   footer{margin-top:28px;text-align:center;font:500 12px/1.8 var(--mono);letter-spacing:.14em;color:var(--muted);}
   footer a{color:var(--brass);text-decoration:none;} footer a:hover{text-decoration:underline;}
@@ -162,9 +147,9 @@
         <li><a href="docs/topics/核心战斗手感/Skill - 单体施法选取 V2.1.html">单体施法选取 <span class="ver">V2.1</span><span class="tag html">HTML</span></a></li>
         <li>
           <a href="docs/topics/核心战斗手感/Skill - 范围施法落点.html">范围施法落点 <span class="ver">V1</span><span class="tag html">HTML</span></a>
-          <details class="sub"><summary>附稿 ×1</summary><ul class="subl">
+          <ul class="subl">
             <li><a href="docs/topics/核心战斗手感/Skill - 范围施法落点 V1.2 - 程序对齐.html">程序对齐稿 <span class="ver">V1.2</span></a></li>
-          </ul></details>
+          </ul>
         </li>
         <li><a href="docs/topics/核心战斗手感/Skill - 战场交互物机制拓展.html">战场交互物机制拓展<span class="tag html">HTML</span></a></li>
       </ul>
@@ -184,12 +169,12 @@
       <ul>
         <li>
           <a href="docs/topics/移动优化/MM调参手册.html">MM 调参手册<span class="tag html">HTML</span></a>
-          <details class="sub"><summary>分期 ×4</summary><ul class="subl">
-            <li><a href="docs/topics/移动优化/MM优化一期-数据流接入.html">一期 · 数据流接入</a></li>
-            <li><a href="docs/topics/移动优化/MM优化二期-起停手感.html">二期 · 起停手感</a></li>
-            <li><a href="docs/topics/移动优化/MM优化三期-战斗上身与分层.html">三期 · 战斗上身与分层</a></li>
-            <li><a href="docs/topics/移动优化/MM优化五期-收官与全英雄治理.html">五期 · 收官与全英雄治理</a></li>
-          </ul></details>
+          <ul class="subl">
+            <li><a href="docs/topics/移动优化/MM优化一期-数据流接入.html">分期一 · 数据流接入</a></li>
+            <li><a href="docs/topics/移动优化/MM优化二期-起停手感.html">分期二 · 起停手感</a></li>
+            <li><a href="docs/topics/移动优化/MM优化三期-战斗上身与分层.html">分期三 · 战斗上身与分层</a></li>
+            <li><a href="docs/topics/移动优化/MM优化五期-收官与全英雄治理.html">分期五 · 收官与全英雄治理</a></li>
+          </ul>
         </li>
         <li><a href="docs/topics/移动优化/MM竞技化.html">MM 竞技化 · 三选一才留<span class="tag html">HTML</span></a></li>
       </ul>
