@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twinblast 翻越系统 — 关卡设计参数手册</title>
+<style>
+  :root {
+    --c-bg:       #0f1117;
+    --c-surface:  #1a1d27;
+    --c-surface2: #21253a;
+    --c-border:   #2d3148;
+    --c-accent:   #4f8ef7;
+    --c-accent2:  #7c5bf0;
+    --c-green:    #3ec98a;
+    --c-yellow:   #f5c842;
+    --c-orange:   #f0803c;
+    --c-red:      #e05252;
+    --c-text:     #d8dce8;
+    --c-muted:    #6b738f;
+    --c-tag-hurdle:  #3ec98a;
+    --c-tag-vault:   #4f8ef7;
+    --c-tag-mantle:  #f5c842;
+    --c-tag-climb:   #f0803c;
+    --c-tag-catch:   #c97be0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    background: linear-gradient(135deg, #111827 0%, #1e1b4b 100%);
+    border-bottom: 1px solid var(--c-border);
+    padding: 36px 48px 28px;
+  }
+  .page-header h1 { font-size: 26px; font-weight: 700; letter-spacing: .04em; }
+  .page-header h1 span { color: var(--c-accent); }
+  .page-header .meta { color: var(--c-muted); font-size: 12px; margin-top: 6px; }
+  .page-header .meta b { color: var(--c-text); }
+
+  /* ── Layout ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 48px 80px; }
+  section { margin-bottom: 48px; }
+  h2 {
+    font-size: 17px; font-weight: 700; color: #fff;
+    border-left: 3px solid var(--c-accent);
+    padding-left: 12px; margin-bottom: 18px;
+  }
+  h3 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+  p { color: var(--c-text); margin-bottom: 10px; }
+
+  /* ── Action type pills ── */
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: .05em;
+    vertical-align: middle;
+  }
+  .pill-hurdle  { background: rgba(62,201,138,.18); color: var(--c-tag-hurdle); border: 1px solid rgba(62,201,138,.3); }
+  .pill-vault   { background: rgba(79,142,247,.18); color: var(--c-tag-vault);  border: 1px solid rgba(79,142,247,.3); }
+  .pill-mantle  { background: rgba(245,200,66,.18); color: var(--c-tag-mantle); border: 1px solid rgba(245,200,66,.3); }
+  .pill-climb   { background: rgba(240,128,60,.18); color: var(--c-tag-climb);  border: 1px solid rgba(240,128,60,.3); }
+  .pill-catch   { background: rgba(201,123,224,.18); color: var(--c-tag-catch); border: 1px solid rgba(201,123,224,.3); }
+
+  /* ── Card grid ── */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+  }
+  .card .card-label { font-size: 11px; color: var(--c-muted); margin-bottom: 4px; }
+  .card .card-value { font-size: 22px; font-weight: 700; color: #fff; }
+  .card .card-unit  { font-size: 13px; color: var(--c-muted); margin-left: 2px; }
+  .card .card-note  { font-size: 11px; color: var(--c-muted); margin-top: 4px; }
+  .card.accent { border-color: rgba(79,142,247,.4); }
+
+  /* ── Table ── */
+  .tbl-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--c-border); }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--c-surface2); }
+  thead th {
+    padding: 11px 16px; text-align: left;
+    font-size: 12px; font-weight: 700; letter-spacing: .06em;
+    color: var(--c-muted); white-space: nowrap;
+  }
+  tbody tr { border-top: 1px solid var(--c-border); }
+  tbody tr:hover { background: rgba(255,255,255,.03); }
+  tbody td { padding: 11px 16px; vertical-align: middle; font-size: 13px; }
+  td .val { font-weight: 700; color: #fff; }
+  td .sub { font-size: 11px; color: var(--c-muted); }
+  .center { text-align: center; }
+
+  /* ── Decision tree ── */
+  .flow {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    font-size: 13px;
+  }
+  .flow-node {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--c-border);
+  }
+  .flow-node:last-child { border-bottom: none; }
+  .flow-idx {
+    flex-shrink: 0; width: 24px; height: 24px;
+    border-radius: 50%; background: var(--c-surface2); border: 1px solid var(--c-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--c-muted);
+  }
+  .flow-content { flex: 1; }
+  .flow-cond { color: var(--c-muted); font-size: 12px; margin-bottom: 3px; }
+  .flow-result { font-weight: 600; color: #fff; }
+  .arrow { color: var(--c-accent); margin: 0 4px; }
+
+  /* ── Param rows ── */
+  .param-list {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .param-row {
+    display: flex; align-items: center;
+    padding: 10px 18px; gap: 12px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .param-row:last-child { border-bottom: none; }
+  .param-name { flex: 1; font-size: 13px; color: var(--c-text); }
+  .param-name .en { font-size: 11px; color: var(--c-muted); display: block; }
+  .param-val { font-weight: 700; color: #fff; font-size: 14px; min-width: 80px; text-align: right; }
+  .param-desc { font-size: 12px; color: var(--c-muted); min-width: 160px; text-align: right; }
+
+  /* ── Notice box ── */
+  .notice {
+    border-radius: 8px; padding: 12px 16px; font-size: 12px; line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .notice-blue   { background: rgba(79,142,247,.1);  border-left: 3px solid var(--c-accent); }
+  .notice-yellow { background: rgba(245,200,66,.1);  border-left: 3px solid var(--c-yellow); }
+  .notice-green  { background: rgba(62,201,138,.1);  border-left: 3px solid var(--c-green); }
+  .notice b { color: #fff; }
+
+  /* ── Separator ── */
+  .sep { height: 1px; background: var(--c-border); margin: 36px 0; }
+
+  /* ── Footer ── */
+  .page-footer {
+    border-top: 1px solid var(--c-border);
+    padding: 24px 48px;
+    font-size: 11px;
+    color: var(--c-muted);
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HEADER ═══════════════════════ -->
+<div class="page-header">
+  <h1>🎮 <span>Twinblast</span> 翻越系统 — 关卡设计参数手册</h1>
+  <div class="meta">
+    角色：<b>Twinblast</b> &nbsp;|&nbsp;
+    系统：<b>GA_Traverse（新翻越系统）</b> &nbsp;|&nbsp;
+    单位：<b>cm / s</b> &nbsp;|&nbsp;
+    更新：<b>2026-03-27</b> &nbsp;|&nbsp;
+    数据来源：<b>MovementConfigDataAsset / HeroCharacterMovementComponent</b>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════ OVERVIEW ═══════════════════════ -->
+<section>
+  <h2>概述</h2>
+  <div class="notice notice-blue">
+    <b>系统说明：</b>翻越系统会根据障碍物的几何属性（高度 / 深度 / 背面地形）自动判定动作类型。<br>
+    关卡策划需要保证障碍物的<b>高度、深度、背面落差</b>落在对应动作的范围内，角色才能触发对应动作。
+  </div>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-label">翻越检测距离</div>
+      <div class="card-value">200 <span class="card-unit">cm</span></div>
+      <div class="card-note">角色前方向前检测</div>
+    </div>
+    <div class="card">
+      <div class="card-label">高速检测距离加成</div>
+      <div class="card-value">速度 × 0.5</div>
+      <div class="card-unit" style="display:inline;font-size:13px"> (上限 +300 cm)</div>
+      <div class="card-note">跑动时检测范围更远</div>
+    </div>
+    <div class="card">
+      <div class="card-label">最小墙面坡度角</div>
+      <div class="card-value">75 <span class="card-unit">°</span></div>
+      <div class="card-note">法线与 Up 轴夹角，太斜无法触发</div>
+    </div>
+    <div class="card">
+      <div class="card-label">最大角色朝向偏角</div>
+      <div class="card-value">35–60 <span class="card-unit">°</span></div>
+      <div class="card-note">各动作独立，见下表</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ CLASSIFICATION ═══════════════════════ -->
+<section>
+  <h2>动作分类规则（判断优先级）</h2>
+  <div class="notice notice-yellow">
+    <b>判断顺序：</b>系统按以下优先级依次判断，命中第一条即确定动作类型，后续条件不再检查。
+  </div>
+
+  <div class="flow">
+    <div class="flow-node">
+      <div class="flow-idx">1</div>
+      <div class="flow-content">
+        <div class="flow-cond">障碍高度 &gt; <b>160 cm</b>（MantleReachHeight.Max）</div>
+        <div class="flow-result"><span class="arrow">→</span> <span class="pill pill-climb">CLIMB 攀爬</span> &nbsp;高台（160 ~ 360 cm）</div>
+      </div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-idx">2</div>
+      <div class="flow-content">
+        <div class="flow-cond">障碍深度 ≥ <b>59 cm</b>（厚障碍物，MinMantleDepth），且高度 ≤ 160 cm</div>
+        <div class="flow-result"><span class="arrow">→</span> <span class="pill pill-mantle">MANTLE 翻越</span> &nbsp;厚墙/厚台</div>
+      </div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-idx">3</div>
+      <div class="flow-content">
+        <div class="flow-cond">薄障碍物（深度 &lt; 59 cm）且背面 <b>没有</b>地面</div>
+        <div class="flow-result"><span class="arrow">→</span> <span class="pill pill-vault">VAULT 翻越矮墙</span> &nbsp;薄墙悬空</div>
+      </div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-idx">4</div>
+      <div class="flow-content">
+        <div class="flow-cond">薄障碍物 + 背面有地面 + 背面落差 ≥ <b>50 cm</b>（HurdleMinBackDrop）</div>
+        <div class="flow-result"><span class="arrow">→</span> <span class="pill pill-hurdle">HURDLE 跨越障碍</span> &nbsp;薄墙＋背面高落差</div>
+      </div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-idx">5</div>
+      <div class="flow-content">
+        <div class="flow-cond">薄障碍物 + 背面有地面 + 背面落差 22 ~ 50 cm（踏步范围）</div>
+        <div class="flow-result"><span class="arrow">→</span> <span class="pill pill-mantle">MANTLE 踏步翻越</span> &nbsp;小台阶</div>
+      </div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-idx">✗</div>
+      <div class="flow-content">
+        <div class="flow-cond">背面落差 &lt; 22 cm（楼梯台阶高度）</div>
+        <div class="flow-result" style="color: var(--c-red)"><span class="arrow">→</span> 不触发（交由 UE 自动步上处理）</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px" class="notice notice-green">
+    <b>Catch（空中抓取）：</b>在下落状态（Falling）且下落速度 ≤ <b>−100 cm/s</b> 时，若检测到障碍物，则在上述分类基础上叠加 Catch 标记，播放空中抓取动画变体。检测距离缩短为 <b>75 cm</b>（需贴近墙面才触发）。
+  </div>
+</section>
+
+<!-- ═══════════════════════ HEIGHT RANGES ═══════════════════════ -->
+<section>
+  <h2>各动作高度范围</h2>
+  <p style="color:var(--c-muted);font-size:12px;margin-bottom:14px">
+    障碍高度 = 障碍物顶面 Z − 角色脚底 Z（即从角色站立地面量起）
+  </p>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>动作类型</th>
+          <th>障碍最低高度</th>
+          <th>障碍最高高度</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="pill pill-hurdle">HURDLE</span></td>
+          <td><span class="val">~50 cm</span><br><span class="sub">（MaxStepHeight + 5）</span></td>
+          <td><span class="val">160 cm</span></td>
+          <td>薄障碍物（深度 &lt; 59cm），背面落差 ≥ 50cm</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-vault">VAULT</span></td>
+          <td><span class="val">~50 cm</span></td>
+          <td><span class="val">160 cm</span></td>
+          <td>薄障碍物（深度 &lt; 59cm），背面无地面（悬空侧）</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-mantle">MANTLE</span></td>
+          <td><span class="val">~50 cm</span><br><span class="sub">（或 22 cm 踏步）</span></td>
+          <td><span class="val">160 cm</span></td>
+          <td>厚障碍物（深度 ≥ 59cm），或薄墙低落差踏步</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-climb">CLIMB</span></td>
+          <td><span class="val">160 cm</span><br><span class="sub">（MantleReachHeight.Max）</span></td>
+          <td><span class="val">360 cm</span><br><span class="sub">（160 + ClimbMaxExt 200）</span></td>
+          <td>高台攀爬，不受深度影响</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-catch">CATCH</span></td>
+          <td><span class="val">0 cm</span></td>
+          <td><span class="val">360 cm</span></td>
+          <td>空中下落叠加，高度分三档（见下方 Catch 档位表）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════ DEPTH ═══════════════════════ -->
+<section>
+  <h2>障碍深度影响</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>深度范围</th>
+          <th>分类结果</th>
+          <th>Hurdle 动画变体</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="val">&lt; 25 cm</span></td>
+          <td>Hurdle/Vault（薄障碍物）</td>
+          <td>薄版动画（Thin: stand_F_V2 / walk_F / run_F）</td>
+        </tr>
+        <tr>
+          <td><span class="val">25 ~ 58 cm</span></td>
+          <td>Hurdle/Vault（薄障碍物）</td>
+          <td>厚版动画（Thick: stand_F_V2_Rfoot / walk_F_V2 / run_F_V2）</td>
+        </tr>
+        <tr>
+          <td><span class="val">≥ 59 cm</span></td>
+          <td><span class="pill pill-mantle">MANTLE</span>（强制，不走 Hurdle/Vault 路径）</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="notice notice-blue" style="margin-top:14px">
+    <b>关键：</b>障碍深度是区分 Hurdle/Vault 与 Mantle 的核心条件。深度 ≥ 59cm 的平台/墙体<b>始终走 Mantle 路径</b>，无论背面落差多大。
+  </div>
+</section>
+
+<!-- ═══════════════════════ SPEED ═══════════════════════ -->
+<section>
+  <h2>速度与动画变体选择</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>动作类型</th>
+          <th>速度 &lt; 100 cm/s</th>
+          <th>100 ≤ 速度 &lt; 200 cm/s</th>
+          <th>200 ≤ 速度 &lt; 250 cm/s</th>
+          <th>速度 ≥ 250 cm/s</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="pill pill-hurdle">HURDLE</span></td>
+          <td>Stand（站立）</td>
+          <td>Walk（行走）</td>
+          <td>Walk（行走）</td>
+          <td>Run（奔跑）</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-vault">VAULT</span></td>
+          <td>Stand（站立）</td>
+          <td>Stand（站立）</td>
+          <td>Run（奔跑）</td>
+          <td>Run（奔跑）</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-mantle">MANTLE</span></td>
+          <td>Stand（站立）</td>
+          <td>Stand（站立）</td>
+          <td>Run（奔跑）</td>
+          <td>Run（奔跑）</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-climb">CLIMB</span></td>
+          <td>Stand（站立）</td>
+          <td>Stand（站立）</td>
+          <td>Run（奔跑）</td>
+          <td>Run（奔跑）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="notice notice-yellow" style="margin-top:14px">
+    <b>脚步区分：</b>动画还会根据步态相位曲线（Phase Curve）自动区分左脚（LFoot）/ 右脚（RFoot）版本，关卡侧无需关注。
+  </div>
+</section>
+
+<!-- ═══════════════════════ CATCH ═══════════════════════ -->
+<section>
+  <h2>Catch（空中下落抓取）档位</h2>
+  <div class="notice notice-blue">
+    <b>触发条件：</b>角色处于 <b>下落状态（Falling）</b>且当前下落速度 ≤ <b>−100 cm/s</b>（向下），距离墙面 ≤ <b>75 cm</b> 时触发。
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>档位</th>
+          <th>障碍高度范围</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="pill pill-catch">LOW</span></td>
+          <td><span class="val">0 ~ 50 cm</span></td>
+          <td>矮障碍空中抓取（Catch_low 动画）</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-catch">MED</span></td>
+          <td><span class="val">50 ~ 100 cm</span></td>
+          <td>中高障碍空中抓取（Catch_med 动画）</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-catch">HIGH</span></td>
+          <td><span class="val">≥ 100 cm</span></td>
+          <td>高台/悬崖空中抓取（Catch_high / Cliff 动画）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════ ALIGNMENT ═══════════════════════ -->
+<section>
+  <h2>角色朝向容差（最大对齐角度）</h2>
+  <p style="color:var(--c-muted);font-size:12px;margin-bottom:14px">
+    角色正方向与障碍物法线夹角超过此值时，该动作类型无法触发。越小越严格。
+  </p>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-label"><span class="pill pill-hurdle">HURDLE</span></div>
+      <div class="card-value">50 <span class="card-unit">°</span></div>
+      <div class="card-note">容错最宽松（跑动跨越）</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="pill pill-vault">VAULT</span></div>
+      <div class="card-value">50 <span class="card-unit">°</span></div>
+      <div class="card-note">与 Hurdle 相同</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="pill pill-mantle">MANTLE</span></div>
+      <div class="card-value">35 <span class="card-unit">°</span></div>
+      <div class="card-note">需要相对正对墙面</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="pill pill-climb">CLIMB</span></div>
+      <div class="card-value">30 <span class="card-unit">°</span></div>
+      <div class="card-note">最严格，需正对</div>
+    </div>
+    <div class="card">
+      <div class="card-label"><span class="pill pill-catch">CATCH</span></div>
+      <div class="card-value">60 <span class="card-unit">°</span></div>
+      <div class="card-note">空中容错最大</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ FEEL PARAMS ═══════════════════════ -->
+<section>
+  <h2>手感调节参数（策划可调）</h2>
+  <div class="param-list">
+    <div class="param-row">
+      <div class="param-name">
+        动画播放速率
+        <span class="en">TraversalMontagePlayRate</span>
+      </div>
+      <div class="param-val">1.0×</div>
+      <div class="param-desc">1.0 = 正常；调高更利落</div>
+    </div>
+    <div class="param-row">
+      <div class="param-name">
+        翻越结束混出时间
+        <span class="en">TraversalBlendOutTime</span>
+      </div>
+      <div class="param-val">0.35 s</div>
+      <div class="param-desc">控制翻完接下一动作的流畅度</div>
+    </div>
+    <div class="param-row">
+      <div class="param-name">
+        落地速度恢复比例（Hurdle/Vault）
+        <span class="en">LandingVelocityRestoreScale</span>
+      </div>
+      <div class="param-val">80%</div>
+      <div class="param-desc">落地恢复 80% 翻越前速度</div>
+    </div>
+    <div class="param-row">
+      <div class="param-name">
+        使用 Run 动画的最低速度（Vault/Mantle/Climb）
+        <span class="en">MinSpeedForRunMontage</span>
+      </div>
+      <div class="param-val">200 cm/s</div>
+      <div class="param-desc">速度达到此值触发跑步版动画</div>
+    </div>
+    <div class="param-row">
+      <div class="param-name">
+        Hurdle Walk 最低速度
+        <span class="en">HurdleWalkMinSpeed</span>
+      </div>
+      <div class="param-val">100 cm/s</div>
+      <div class="param-desc">低于此值为站立跨越</div>
+    </div>
+    <div class="param-row">
+      <div class="param-name">
+        Hurdle Run 最低速度
+        <span class="en">HurdleRunMinSpeed</span>
+      </div>
+      <div class="param-val">250 cm/s</div>
+      <div class="param-desc">达到此值触发奔跑跨越</div>
+    </div>
+    <div class="param-row">
+      <div class="param-name">
+        翻越结束提前释放偏移
+        <span class="en">EndAbilityTimingEarlyOffset</span>
+      </div>
+      <div class="param-val">0.0 s</div>
+      <div class="param-desc">正值=更早还控制权，负值=动画更完整</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ QUICK REF ═══════════════════════ -->
+<section>
+  <h2>关卡快速参考 — 常见障碍物配置建议</h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>目标效果</th>
+          <th>推荐高度</th>
+          <th>推荐深度</th>
+          <th>背面落差</th>
+          <th>触发类型</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>矮箱子/护栏（跨越）</td>
+          <td><span class="val">60 ~ 120 cm</span></td>
+          <td>&lt; 25 cm</td>
+          <td>≥ 50 cm</td>
+          <td><span class="pill pill-hurdle">HURDLE</span></td>
+        </tr>
+        <tr>
+          <td>薄墙（无背面地面）</td>
+          <td><span class="val">60 ~ 150 cm</span></td>
+          <td>&lt; 59 cm</td>
+          <td>—（悬空）</td>
+          <td><span class="pill pill-vault">VAULT</span></td>
+        </tr>
+        <tr>
+          <td>1m 台（厚实平台）</td>
+          <td><span class="val">80 ~ 130 cm</span></td>
+          <td>≥ 59 cm</td>
+          <td>任意</td>
+          <td><span class="pill pill-mantle">MANTLE</span></td>
+        </tr>
+        <tr>
+          <td>1.5m 高台（大平台）</td>
+          <td><span class="val">130 ~ 160 cm</span></td>
+          <td>≥ 59 cm</td>
+          <td>任意</td>
+          <td><span class="pill pill-mantle">MANTLE</span></td>
+        </tr>
+        <tr>
+          <td>2~3m 高台（攀爬）</td>
+          <td><span class="val">160 ~ 360 cm</span></td>
+          <td>任意</td>
+          <td>—</td>
+          <td><span class="pill pill-climb">CLIMB</span></td>
+        </tr>
+        <tr>
+          <td>低台阶（不触发）</td>
+          <td>任意</td>
+          <td>任意</td>
+          <td>&lt; 22 cm</td>
+          <td style="color:var(--c-muted)">— 不触发（UE 自动步上）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="notice notice-yellow" style="margin-top:14px">
+    <b>注意：</b>以上高度均为障碍物顶面相对角色<b>当前脚底</b>的高度差，而非世界 Z 坐标绝对高度。角色站在 1m 台上触发翻越，目标高度也从这个 1m 台的脚底算起。
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ═══════════════════════ DIMENSION DIAGRAM ═══════════════════════ -->
+<section>
+  <h2>测距示意图（高度参数一览）</h2>
+  <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:12px;padding:28px 32px;">
+    <svg viewBox="0 0 900 320" style="width:100%;max-width:860px;display:block;margin:0 auto;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L8,4 Z" fill="#4f8ef7"/>
+        </marker>
+        <marker id="arr-up" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L8,4 Z" fill="#6b738f"/>
+        </marker>
+      </defs>
+
+      <!-- ground -->
+      <line x1="40" y1="280" x2="860" y2="280" stroke="#2d3148" stroke-width="2"/>
+      <text x="50" y="298" fill="#6b738f" font-size="11">地面 (Floor)</text>
+
+      <!-- CHARACTER silhouette (simple) -->
+      <ellipse cx="110" cy="274" rx="18" ry="6" fill="#21253a" stroke="#2d3148"/>
+      <rect x="101" y="222" width="18" height="52" rx="5" fill="#2d3148"/>
+      <circle cx="110" cy="210" r="12" fill="#2d3148"/>
+      <text x="98" y="305" fill="#6b738f" font-size="10">角色</text>
+
+      <!-- Height annotation: 0 ~50 line -->
+      <line x1="60" y1="280" x2="60" y2="230" stroke="#6b738f" stroke-dasharray="4,3" stroke-width="1"/>
+      <text x="62" y="225" fill="#6b738f" font-size="10">~50cm</text>
+      <text x="62" y="215" fill="#6b738f" font-size="10">最低触发</text>
+
+      <!-- HURDLE obstacle (60cm high, 20cm deep) -->
+      <rect x="240" y="220" width="20" height="60" rx="2" fill="#1e2a1e" stroke="#3ec98a" stroke-width="1.5"/>
+      <text x="228" y="218" fill="#3ec98a" font-size="11" font-weight="bold">60cm</text>
+      <text x="225" y="300" fill="#3ec98a" font-size="11">HURDLE</text>
+      <text x="219" y="313" fill="#6b738f" font-size="10">薄 &lt;25cm</text>
+      <!-- height arrow -->
+      <line x1="268" y1="280" x2="268" y2="222" stroke="#3ec98a" stroke-width="1.2" marker-end="url(#arr)"/>
+      <line x1="268" y1="280" x2="268" y2="280" stroke="#3ec98a" stroke-width="1.2"/>
+
+      <!-- VAULT obstacle (100cm, 40cm deep, no back floor indicator) -->
+      <rect x="360" y="180" width="35" height="100" rx="2" fill="#1a2030" stroke="#4f8ef7" stroke-width="1.5"/>
+      <text x="354" y="175" fill="#4f8ef7" font-size="11" font-weight="bold">100cm</text>
+      <text x="355" y="300" fill="#4f8ef7" font-size="11">VAULT</text>
+      <text x="349" y="313" fill="#6b738f" font-size="10">薄+悬空背</text>
+      <line x1="402" y1="280" x2="402" y2="182" stroke="#4f8ef7" stroke-width="1.2" marker-end="url(#arr)"/>
+
+      <!-- MANTLE obstacle (110cm, 80cm deep) -->
+      <rect x="470" y="170" width="80" height="110" rx="2" fill="#2a2818" stroke="#f5c842" stroke-width="1.5"/>
+      <text x="475" y="166" fill="#f5c842" font-size="11" font-weight="bold">130cm</text>
+      <text x="476" y="300" fill="#f5c842" font-size="11">MANTLE</text>
+      <text x="470" y="313" fill="#6b738f" font-size="10">深≥59cm</text>
+      <line x1="556" y1="280" x2="556" y2="172" stroke="#f5c842" stroke-width="1.2" marker-end="url(#arr)"/>
+      <!-- depth indicator -->
+      <line x1="470" y1="295" x2="550" y2="295" stroke="#f5c842" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="492" y="290" fill="#f5c842" font-size="9">深 ≥59cm</text>
+
+      <!-- CLIMB obstacle (200cm, wide) -->
+      <rect x="610" y="80" width="90" height="200" rx="2" fill="#2a1e14" stroke="#f0803c" stroke-width="1.5"/>
+      <text x="620" y="75" fill="#f0803c" font-size="11" font-weight="bold">160~360cm</text>
+      <text x="623" y="300" fill="#f0803c" font-size="11">CLIMB</text>
+      <text x="614" y="313" fill="#6b738f" font-size="10">高台攀爬</text>
+      <line x1="707" y1="280" x2="707" y2="82" stroke="#f0803c" stroke-width="1.2" marker-end="url(#arr)"/>
+
+      <!-- Legend -->
+      <text x="760" y="100" fill="#6b738f" font-size="11">← 高度参考</text>
+      <line x1="755" y1="120" x2="820" y2="120" stroke="#6b738f" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="760" y="135" fill="#6b738f" font-size="10">─ ─  160cm (Climb起点)</text>
+      <line x1="755" y1="148" x2="820" y2="148" stroke="#6b738f" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="760" y="163" fill="#6b738f" font-size="10">─ ─  130cm (Mantle最大)</text>
+
+      <!-- 160cm dash line -->
+      <line x1="40" y1="120" x2="740" y2="120" stroke="#f0803c" stroke-dasharray="5,4" stroke-width="0.8" opacity="0.4"/>
+      <!-- 130cm dash line -->
+      <line x1="40" y1="148" x2="740" y2="148" stroke="#f5c842" stroke-dasharray="5,4" stroke-width="0.8" opacity="0.4"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══════════════════════ NOTES ═══════════════════════ -->
+<section>
+  <h2>常见问题 & 注意事项</h2>
+  <div class="param-list">
+    <div class="param-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="font-weight:600;color:#fff;">Q：我摆了一个 1m 的平台，但角色有时翻越有时不翻，为什么？</div>
+      <div style="font-size:12px;color:var(--c-muted);">检查角色朝向是否正对墙面（Mantle 最大 35°）；检查平台顶面是否有碰撞遮挡（Clearance 检测会查落点上方的胶囊空间）；检查是否处于 Post-traversal cooldown 冷却期（翻越结束后短暂无法再次触发）。</div>
+    </div>
+    <div class="param-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="font-weight:600;color:#fff;">Q：楼梯台阶不想触发翻越，怎么设置？</div>
+      <div style="font-size:12px;color:var(--c-muted);">背面落差 &lt; 22cm（MantleMinStepUpDrop）的台阶系统自动跳过，不触发。确保楼梯踏步背面高差 ≤ 22cm 即可。</div>
+    </div>
+    <div class="param-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="font-weight:600;color:#fff;">Q：想要强制触发 Mantle 而非 Hurdle？</div>
+      <div style="font-size:12px;color:var(--c-muted);">加厚障碍物深度到 ≥ 59cm，或降低背面落差到 &lt; 50cm（此时走 Step-up Mantle 路径）。</div>
+    </div>
+    <div class="param-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="font-weight:600;color:#fff;">Q：高度从哪里量起？</div>
+      <div style="font-size:12px;color:var(--c-muted);">始终以角色<b>当前脚底</b>为基准（不是 Actor Origin）。角色站在 1m 台上看 2m 台，目标障碍高度 = 2m − 1m = 1m，会触发 Mantle 而非 Climb。</div>
+    </div>
+    <div class="param-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="font-weight:600;color:#fff;">Q：Catch 要怎么触发？</div>
+      <div style="font-size:12px;color:var(--c-muted);">角色需要处于下落状态（跳跃后下降阶段或直接掉落），且下落速度达到 ≥ 100 cm/s（方向向下），并在 75cm 范围内检测到墙面。不需要额外输入，满足条件自动触发。</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<div class="page-footer">
+  本文档根据 <code>MovementConfigDataAsset.h</code> / <code>HeroCharacterMovementComponent.cpp</code> 自动整理 &nbsp;|&nbsp;
+  角色：Twinblast &nbsp;|&nbsp; 单位：cm（厘米）/ s（秒）&nbsp;|&nbsp;
+  如需修改参数，请在 MCD（MovementConfigDataAsset）中调整对应字段。
+</div>
+
+</body>
+</html>

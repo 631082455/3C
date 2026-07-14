@@ -1,0 +1,2385 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gameplay Camera 完整评估与实施方案</title>
+  <style>
+    :root { --bg:#f4ede3; --bg-2:#e8dfd0; --panel:rgba(255,250,243,.9); --panel-strong:rgba(255,248,238,.98); --ink:#1e1914; --muted:#685d51; --line:rgba(30,25,20,.1); --accent:#8b3b20; --good:#22694a; --warn:#9c6516; --sans:"Segoe UI Variable","PingFang SC","Microsoft YaHei",sans-serif; --serif:"Sitka Display","Noto Serif SC","Source Han Serif SC",serif; }
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:var(--sans);color:var(--ink);background:radial-gradient(circle at 0% 0%, rgba(139,59,32,.14), transparent 26%),radial-gradient(circle at 100% 0%, rgba(53,90,120,.14), transparent 24%),linear-gradient(180deg,var(--bg) 0%,var(--bg-2) 100%);line-height:1.72}
+    .page{width:min(1280px,calc(100vw - 32px));margin:22px auto 44px}.hero,.doc-section,.summary{border:1px solid var(--line);border-radius:28px;background:var(--panel);box-shadow:0 26px 64px rgba(50,39,29,.14);backdrop-filter:blur(14px)}
+    .hero{position:relative;overflow:hidden;padding:40px 40px 32px}.hero::after{content:"";position:absolute;right:-70px;top:-70px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle, rgba(139,59,32,.18), transparent 70%);pointer-events:none}
+    .summary,.doc-section{margin-top:18px;padding:24px}.eyebrow{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(30,25,20,.06);color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+    h1,h2,h3{margin:0;line-height:1.14} h1{margin-top:14px;max-width:980px;font-family:var(--serif);font-size:clamp(34px,5vw,60px);letter-spacing:-.03em} h2{font-family:var(--serif);font-size:30px} p{margin:0}
+    .lead{max-width:940px;margin-top:16px;color:var(--muted);font-size:17px}.chips,.toc,.cards{display:grid;gap:16px}.chips{margin-top:24px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .chip,.toc a,.card{border:1px solid var(--line);border-radius:18px;background:var(--panel-strong)} .chip,.card{padding:18px}.chip strong{display:block;margin-bottom:6px;color:var(--muted);font-size:13px;letter-spacing:.06em;text-transform:uppercase}.chip span{font-size:20px;font-weight:700}
+    .toc{margin-top:22px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.toc a{display:block;padding:16px 18px;color:var(--ink);text-decoration:none;font-weight:700}.toc a span{display:block;margin-top:4px;color:var(--muted);font-size:13px;font-weight:500}
+    .cards{margin-top:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.card h3{margin-bottom:10px;font-size:20px}.good{color:var(--good)}.warn{color:var(--warn)} .summary p + p{margin-top:10px}
+    .doc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}.doc-head p{margin-top:10px;color:var(--muted);max-width:860px}.jump{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel-strong);color:var(--ink);text-decoration:none;font-size:14px;font-weight:700}
+    .doc-frame{width:100%;min-height:1100px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}.foot{margin-top:22px;color:var(--muted);font-size:14px}
+    @media (max-width:760px){.page{width:min(100vw - 16px,1280px)}.hero,.summary,.doc-section{padding:20px}.doc-head{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="page" id="top">
+    <header class="hero">
+      <span class="eyebrow">Master Report / Full Merge</span>
+      <h1>GASPALS Gameplay Cameras 对比当前相机系统的完整评估与实施方案</h1>
+      <p class="lead">这份总文档现在是无损合并版。顶部保留统一总览，下面内嵌 4 份原始 H5 完整正文。你只需要打开这一份，就可以同时看到总体评估、同步与观战、渐进优化路线，以及 P0/P1/P2 实施清单。</p>
+      <div class="chips">
+        <div class="chip"><strong>当前状态</strong><span>原文完整内嵌</span></div>
+        <div class="chip"><strong>新增补充</strong><span>P1 已加入策划意义、示例和 SpringArm 解释</span></div>
+        <div class="chip"><strong>阅读方式</strong><span>先看总览，再看原文区块</span></div>
+      </div>
+      <nav class="toc">
+        <a href="#summary">总览<span>先看统一结论</span></a>
+        <a href="#assessment">总体评估原文<span>优劣势、适配性、项目判断</span></a>
+        <a href="#sync">同步与观战原文<span>服务器同步与 CameraState 边界</span></a>
+        <a href="#roadmap">优化路线图原文<span>当前系统如何渐进升级</span></a>
+        <a href="#plan">实施清单原文<span>P0 / P1 / P2 排期与验收</span></a>
+      </nav>
+    </header>
+    <section class="summary" id="summary">
+      <span class="eyebrow">Executive Summary</span>
+      <h2>统一结论</h2>
+      <div class="cards">
+        <article class="card"><h3 class="warn">是否切主相机</h3><p>不建议当前阶段直接整体切到 Gameplay Cameras。</p></article>
+        <article class="card"><h3 class="good">更合理的方向</h3><p>保留当前主战斗相机骨架，同时按 Gameplay Cameras 的思路补配置层、状态层和 modifier 体系。</p></article>
+        <article class="card"><h3 class="warn">关于观战同步</h3><p>关键不在于换框架，而在于先设计最小可复制的 <code>CameraState</code>。</p></article>
+      </div>
+      <p class="foot">下面四个区块是原始 H5 正文的完整内嵌版本，包含最近补进去的 P1 策划解释。</p>
+    </section>
+    <section class="doc-section" id="assessment">
+      <div class="doc-head">
+        <div>
+          <span class="eyebrow">Original Report</span>
+          <h2>1. 总体评估原文</h2>
+          <p>GASPALS Gameplay Cameras 与当前 Lyra 演化相机方案的整体对比、优劣势和项目适配性判断。</p>
+        </div>
+        <a class="jump" href="#top">返回顶部</a>
+      </div>
+      <iframe class="doc-frame" loading="lazy" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+  &lt;title&gt;Gameplay Camera System 评估&lt;/title&gt;
+  &lt;style&gt;
+    :root {
+      --bg: #f4efe6;
+      --bg-accent: #e6dcc8;
+      --panel: rgba(255, 252, 246, 0.84);
+      --panel-strong: rgba(255, 250, 240, 0.94);
+      --ink: #1b1814;
+      --muted: #665d52;
+      --line: rgba(35, 28, 22, 0.12);
+      --good: #1d5f43;
+      --warn: #8b5a12;
+      --risk: #8a2f2f;
+      --accent: #9b3d19;
+      --accent-2: #355c7d;
+      --shadow: 0 24px 60px rgba(54, 43, 31, 0.14);
+      --radius: 22px;
+      --mono: &quot;Cascadia Code&quot;, &quot;JetBrains Mono&quot;, Consolas, monospace;
+      --sans: &quot;Segoe UI Variable&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;
+      --serif: &quot;Sitka Display&quot;, &quot;Noto Serif SC&quot;, &quot;Source Han Serif SC&quot;, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(155, 61, 25, 0.15), transparent 28%),
+        radial-gradient(circle at 85% 0%, rgba(53, 92, 125, 0.18), transparent 24%),
+        linear-gradient(180deg, var(--bg) 0%, #efe7db 100%);
+      line-height: 1.7;
+    }
+
+    .frame {
+      width: min(1180px, calc(100vw - 40px));
+      margin: 28px auto 48px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 42px 42px 30px;
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      background:
+        linear-gradient(135deg, rgba(255, 248, 236, 0.96), rgba(247, 240, 228, 0.88)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: &quot;&quot;;
+      position: absolute;
+      inset: auto -80px -80px auto;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(155, 61, 25, 0.18), transparent 70%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(27, 24, 20, 0.07);
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.15;
+    }
+
+    h1 {
+      margin-top: 16px;
+      max-width: 900px;
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 58px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .chip-row,
+    .grid,
+    .code-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .chip-row {
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      margin-top: 28px;
+    }
+
+    .chip {
+      padding: 18px 18px 16px;
+      border-radius: 20px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+    }
+
+    .chip strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .chip span {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    section {
+      margin-top: 22px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    section h2 {
+      font-size: 28px;
+      margin-bottom: 14px;
+      font-family: var(--serif);
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      margin-top: 16px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 250, 242, 0.85);
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+      font-size: 19px;
+    }
+
+    .label {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(27, 24, 20, 0.08);
+      color: var(--muted);
+    }
+
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .risk { color: var(--risk); }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    .callout {
+      margin-top: 16px;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      background: rgba(155, 61, 25, 0.07);
+    }
+
+    .code-grid {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      margin-top: 18px;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #161310;
+      color: #f7efe1;
+      font: 13px/1.6 var(--mono);
+    }
+
+    code {
+      font-family: var(--mono);
+    }
+
+    .file {
+      display: block;
+      margin-bottom: 10px;
+      color: #d7c7b2;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 16px;
+    }
+
+    .matrix th,
+    .matrix td {
+      padding: 14px 14px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .matrix th:last-child,
+    .matrix td:last-child {
+      border-right: 0;
+    }
+
+    .matrix tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .matrix thead th {
+      background: rgba(27, 24, 20, 0.06);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .foot {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .step {
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 250, 242, 0.86);
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 720px) {
+      .frame {
+        width: min(100vw - 20px, 1180px);
+        margin-top: 10px;
+      }
+
+      .hero,
+      section {
+        padding: 22px;
+      }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;frame&quot;&gt;
+    &lt;header class=&quot;hero&quot;&gt;
+      &lt;span class=&quot;eyebrow&quot;&gt;GameMoba / Camera Review&lt;/span&gt;
+      &lt;h1&gt;GASPALS 的 Gameplay Camera System 对比当前 Lyra 演化相机方案&lt;/h1&gt;
+      &lt;p class=&quot;lead&quot;&gt;
+        这份报告基于当前工程源码和 GASPALS 资产实际结构整理，重点回答三个问题：
+        它到底强在哪、弱在哪、以及对当前竞技项目是否值得直接替换主相机。
+      &lt;/p&gt;
+      &lt;div class=&quot;chip-row&quot;&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;当前主结论&lt;/strong&gt;
+          &lt;span&gt;不建议直接替换主战斗相机&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;更合理定位&lt;/strong&gt;
+          &lt;span&gt;作为展示层与演出层增量接入&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;网络侧判断&lt;/strong&gt;
+          &lt;span&gt;两套方案都不会自动解决观战同步&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;事实基线&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;关于 GASPALS&lt;/span&gt;
+          &lt;p&gt;
+            你工程里的 &lt;code&gt;Plugins/GASPALS&lt;/code&gt; 是一个 content-only 插件，不带 C++ 运行时代码，
+            也没有把 &lt;code&gt;GameplayCameras&lt;/code&gt; 作为插件依赖写进 &lt;code&gt;.uplugin&lt;/code&gt;。
+          &lt;/p&gt;
+          &lt;p&gt;
+            这说明它不是“官方 Gameplay Cameras 插件的封装版”，而是使用了官方资产类型的一组样例内容。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;关于当前工程&lt;/span&gt;
+          &lt;p&gt;
+            当前项目主相机仍然是自定义 &lt;code&gt;PlayerCameraManager + CameraComponent + CameraModeStack&lt;/code&gt; 链路，
+            核心逻辑集中在 &lt;code&gt;Source/GameMoba/Camera&lt;/code&gt;。
+          &lt;/p&gt;
+          &lt;p&gt;
+            这套结构明显是从 Lyra 相机模式演化过来的，但已经和能力系统、朝向、技能预览、发射物起点深度耦合。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;关于 Gameplay Cameras 资产&lt;/span&gt;
+          &lt;p&gt;
+            GASPALS 里的 &lt;code&gt;CameraAsset_SandboxCharacter&lt;/code&gt;、&lt;code&gt;CameraRig_*&lt;/code&gt; 确实是
+            &lt;code&gt;/Script/GameplayCameras.CameraAsset&lt;/code&gt; 和
+            &lt;code&gt;/Script/GameplayCameras.CameraRigAsset&lt;/code&gt; 资产类型。
+          &lt;/p&gt;
+          &lt;p&gt;
+            它用的是官方框架，但还没有成为你当前工程的主镜头运行时。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;当前相机系统是怎么跑起来的&lt;/h2&gt;
+      &lt;p&gt;
+        当前主链路非常清晰：&lt;code&gt;AMatchPlayerController&lt;/code&gt; 指定自定义
+        &lt;code&gt;AGameMatchCameraManager&lt;/code&gt;，相机管理器再在自身上创建
+        &lt;code&gt;UGameMatchCameraComponent&lt;/code&gt;，最终由这个组件每帧接管 POV。
+      &lt;/p&gt;
+      &lt;div class=&quot;code-grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;代码说明 1&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/Camera/GameMatchCameraManager.cpp&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;void AGameMatchCameraManager::BeginPlay()
+{
+    Super::BeginPlay();
+
+    GameMatchCameraComponent = NewObject&amp;lt;UGameMatchCameraComponent&amp;gt;(
+        this,
+        UGameMatchCameraComponent::StaticClass(),
+        TEXT(&quot;GameMatchCameraComponent&quot;));
+    GameMatchCameraComponent-&amp;gt;RegisterComponent();
+    AddInstanceComponent(GameMatchCameraComponent);
+}
+
+void AGameMatchCameraManager::UpdateViewTargetInternal(
+    FTViewTarget&amp;amp; OutVT,
+    float DeltaTime)
+{
+    Super::UpdateViewTargetInternal(OutVT, DeltaTime);
+
+    if (GameMatchCameraComponent)
+    {
+        GameMatchCameraComponent-&amp;gt;GetCameraView(DeltaTime, OutVT.POV);
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            解释：真正的最终 POV 是集中在 &lt;code&gt;GameMatchCameraComponent&lt;/code&gt; 里算出来的，
+            不是依赖 Pawn 身上的摄像机组件。
+          &lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;代码说明 2&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/Player/MatchPlayerController.cpp&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;void AMatchPlayerController::GetPlayerViewPointForGameplay(
+    FVector&amp;amp; OutLocation,
+    FRotator&amp;amp; OutRotator) const
+{
+    if (MatchCameraManager &amp;amp;&amp;amp; MatchCameraManager-&amp;gt;GetCameraComponent())
+    {
+        // not affected by camera shake
+        UGameMatchCameraComponent* CamerComponent =
+            MatchCameraManager-&amp;gt;GetCameraComponent();
+        OutLocation = CamerComponent-&amp;gt;GetComponentLocation();
+        OutRotator = CamerComponent-&amp;gt;GetComponentRotation();
+    }
+    else
+    {
+        GetPlayerViewPoint(OutLocation, OutRotator);
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            解释：战斗逻辑用的是一份“干净的 gameplay-safe 视角”，刻意绕开了 camera shake，
+            这对竞技项目很重要。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;callout&quot;&gt;
+        这里的关键不是“镜头怎么摆”，而是“哪些系统把它当作判定基准”。当前项目里，
+        技能发射、位移方向、预览朝向都已经依赖这条接口。
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;当前方案的优势&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;good&quot;&gt;1. 战斗接口稳定&lt;/h3&gt;
+          &lt;p&gt;
+            相机和 gameplay 的边界已经约定好。镜头表现可以变化，但判定取值仍然统一从
+            &lt;code&gt;GetPlayerViewPointForGameplay&lt;/code&gt; 出来，发射物不会被展示性镜头污染。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;good&quot;&gt;2. 逻辑集中&lt;/h3&gt;
+          &lt;p&gt;
+            主 POV 集中在 &lt;code&gt;GameMatchCameraComponent&lt;/code&gt;。要排查 FOV、碰撞、能力 offset、
+            lag、控制旋转回写，基本都能在一条链上看完。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;good&quot;&gt;3. 对竞技玩法更可控&lt;/h3&gt;
+          &lt;p&gt;
+            这套结构更像“战斗相机”，不是“镜头资产系统”。对 MOBA / 对抗型项目而言，
+            可控性通常比镜头编辑自由度更重要。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;GASPALS 里的 Gameplay Cameras 在做什么&lt;/h2&gt;
+      &lt;p&gt;
+        GASPALS 相机层的核心不是 C++，而是一个 director 资产按状态激活不同 rig。
+        它的思路是把“相机模式选择”抽成状态机，把“镜头实际行为”抽成可组合的 rig。
+      &lt;/p&gt;
+      &lt;div class=&quot;code-grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;蓝图逻辑摘要&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;/GASPALS/Blueprints/Cameras/CameraDirector_SandboxCharacter&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;OnRunCameraDirector
+  -&gt; Get_CharacterPropertiesForCamera()
+  -&gt; switch(CameraStyle)
+  -&gt; switch(CameraMode)
+  -&gt; ActivateCameraRig(...)
+  -&gt; switch(CameraSide)
+  -&gt; ActivateCameraRig(Offset_Right)
+  -&gt; switch(Stance)
+  -&gt; ActivateCameraRig(Offset_Crouch)&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            解释：这是典型的“状态驱动 rig 叠加”。镜头逻辑不直接写死在单个 C++ 计算函数里，
+            而是拆成多个 camera rig 资产再拼装。
+          &lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;资产结构摘要&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;/GASPALS/Blueprints/Cameras&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;CameraAsset_SandboxCharacter
+CameraDirector_SandboxCharacter
+CameraRigPrefab_BasicThirdPersonBehavior
+CameraRig_CollisionOffset
+CameraRig_SandboxCharacter_Far_Freecam
+CameraRig_SandboxCharacter_Far_Aim
+CameraRig_SandboxCharacter_Balanced_Strafe
+CameraRig_SandboxCharacter_FirstPerson
+...&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            解释：它天然适合做近中远镜头、左右肩、瞄准态、第一人称、展示镜头和演出镜头。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;Gameplay Cameras 相比当前方案的优势&lt;/h2&gt;
+      &lt;table class=&quot;matrix&quot;&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;维度&lt;/th&gt;
+            &lt;th&gt;Gameplay Cameras&lt;/th&gt;
+            &lt;th&gt;对当前项目的实际意义&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;镜头资产化&lt;/td&gt;
+            &lt;td&gt;把复杂镜头拆成 &lt;code&gt;CameraAsset / CameraRig / Director&lt;/code&gt;&lt;/td&gt;
+            &lt;td&gt;适合未来做英雄差异镜头、展示镜头、死亡镜头、回放镜头&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;设计师迭代效率&lt;/td&gt;
+            &lt;td&gt;很多变化可以在资产层调，不必每次进 C++&lt;/td&gt;
+            &lt;td&gt;如果后续镜头需要频繁调试，迭代效率会明显更高&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;状态组合能力&lt;/td&gt;
+            &lt;td&gt;相机模式、肩位、姿态、瞄准态可以正交拆分&lt;/td&gt;
+            &lt;td&gt;比现在“能力 offset/FOV 直接覆盖”更容易扩成体系&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;演出能力&lt;/td&gt;
+            &lt;td&gt;更容易做有层次的 blend、过渡与局部 rig 叠加&lt;/td&gt;
+            &lt;td&gt;适合局外、过场、击杀回放，不一定适合先接主战斗镜头&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;Gameplay Cameras 相比当前方案的劣势&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;risk&quot;&gt;1. 迁移成本不是“换个相机组件”那么简单&lt;/h3&gt;
+          &lt;p&gt;
+            你现在的战斗逻辑已经绑定在 &lt;code&gt;GetPlayerViewPointForGameplay&lt;/code&gt;、
+            &lt;code&gt;ControlRotation&lt;/code&gt; 回写、能力镜头叠加和 root motion 朝向上。
+            如果直接切主相机，整个判定链都要重新梳理。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;risk&quot;&gt;2. 它解决的是本地求值，不是网络协议&lt;/h3&gt;
+          &lt;p&gt;
+            Gameplay Cameras 更像更强的本地镜头求值器。它不会自动帮你解决观战、
+            服务器同步、回放复现、owner-only 特效剥离。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;warn&quot;&gt;3. 当前项目里还没有正式接管 ViewTarget&lt;/h3&gt;
+          &lt;p&gt;
+            GASPALS 只是提供了 camera 资产，但你工程的主 &lt;code&gt;.uproject&lt;/code&gt; 和主代码链路
+            还没有围绕 Gameplay Cameras 重组。这意味着真切过去时，接的是底层骨架，不是现成成品。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;为什么当前工程更适合继续保留主战斗相机&lt;/h2&gt;
+      &lt;div class=&quot;code-grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;代码说明 3&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/AbilitySystem/Abilities/SkillModuleLaunchProjectile.cpp&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;FVector ViewLocation = FVector::ZeroVector;
+FRotator ViewRotator = FRotator::ZeroRotator;
+TargetController-&amp;gt;GetPlayerViewPointForGameplay(ViewLocation, ViewRotator);
+
+FVector LaunchDirectionNormal = ViewRotator.Vector().GetSafeNormal();
+FVector CameraToCharacter =
+    CurrentHeroCharacter-&amp;gt;GetActorLocation() - ViewLocation;
+FVector StartLocation = ViewLocation +
+    CameraToCharacter.ProjectOnToNormal(LaunchDirectionNormal);&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            解释：发射物起点和方向已经和 gameplay 视角绑定。只要主相机体系变化，
+            这个判定结果就可能变化。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;代码说明 4&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/Camera/GameMatchCameraComponent.cpp&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;FGameCameraModeView CameraModeView;
+CameraModeStack-&amp;gt;EvaluateStack(DeltaTime, CameraModeView);
+
+if (APawn* TargetPawn = Cast&amp;lt;APawn&amp;gt;(GetTargetActor()))
+{
+    if (APlayerController* PC = TargetPawn-&amp;gt;GetController&amp;lt;APlayerController&amp;gt;())
+    {
+        PC-&amp;gt;SetControlRotation(CameraModeView.ControlRotation);
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            解释：当前镜头不仅在“看”，还在反向驱动控制器旋转。它已经是战斗控制链的一部分。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;callout&quot;&gt;
+        对竞技项目来说，这一点很关键。主战斗相机一旦重构，通常要同时验收：
+        技能朝向、预览朝向、根运动转向、投射物起点、死亡后切人、回放镜头和观战镜头。
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;最终建议&lt;/h2&gt;
+      &lt;div class=&quot;timeline&quot;&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;阶段 1：保留当前主战斗相机&lt;/strong&gt;
+          当前方案已经足够支撑对抗玩法，短期内优先保证判定稳定性，不建议直接替换主相机。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;阶段 2：把 Gameplay Cameras 用在“非战斗主链”&lt;/strong&gt;
+          推荐优先接入英雄展示、出生镜头、死亡镜头、击杀回放、局外预览等演出层。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;阶段 3：如果未来考虑迁移主相机，先拆两层视角&lt;/strong&gt;
+          先明确 &lt;code&gt;GameplayView&lt;/code&gt; 和 &lt;code&gt;PresentationView&lt;/code&gt; 两层，再决定哪些 rig 可见、
+          哪些只能影响表现，避免污染战斗判定。
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;相关阅读&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;专题&lt;/span&gt;
+          &lt;p&gt;
+            如果要继续看观战和服务器同步边界，打开
+            &lt;a href=&quot;./gameplay-camera-sync-and-spectating.html&quot;&gt;Gameplay Camera 同步与观战专题&lt;/a&gt;。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;路线图&lt;/span&gt;
+          &lt;p&gt;
+            如果要看“在当前相机体系上怎么逐步优化，而不是整体切 Gameplay Cameras”，打开
+            &lt;a href=&quot;./gameplay-camera-optimization-roadmap.html&quot;&gt;相机系统渐进优化路线图&lt;/a&gt;。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;label&quot;&gt;实施清单&lt;/span&gt;
+          &lt;p&gt;
+            如果要直接排开发计划，查看
+            &lt;a href=&quot;./gameplay-camera-implementation-plan.html&quot;&gt;相机系统 P0/P1/P2 实施清单&lt;/a&gt;。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;p class=&quot;foot&quot;&gt;
+      关联源码：&lt;code&gt;Source/GameMoba/Camera/*&lt;/code&gt;、&lt;code&gt;Source/GameMoba/Player/MatchPlayerController.cpp&lt;/code&gt;、
+      &lt;code&gt;Source/GameMoba/AbilitySystem/Abilities/*&lt;/code&gt;、&lt;code&gt;Plugins/GASPALS/Content/Blueprints/Cameras/*&lt;/code&gt;
+    &lt;/p&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+    </section>
+    <section class="doc-section" id="sync">
+      <div class="doc-head">
+        <div>
+          <span class="eyebrow">Original Report</span>
+          <h2>2. 同步与观战原文</h2>
+          <p>服务器同步、观战边界、CameraState 复制范围，以及三种接入策略。</p>
+        </div>
+        <a class="jump" href="#top">返回顶部</a>
+      </div>
+      <iframe class="doc-frame" loading="lazy" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+  &lt;title&gt;Gameplay Camera 同步与观战专题&lt;/title&gt;
+  &lt;style&gt;
+    :root {
+      --bg: #0d1318;
+      --bg-2: #172028;
+      --panel: rgba(20, 28, 35, 0.82);
+      --panel-2: rgba(24, 35, 44, 0.9);
+      --ink: #e9f2f7;
+      --muted: #9fb1bf;
+      --line: rgba(233, 242, 247, 0.11);
+      --accent: #4db6ac;
+      --warn: #ffb74d;
+      --risk: #ef6c5b;
+      --good: #7fd48d;
+      --shadow: 0 24px 50px rgba(0, 0, 0, 0.28);
+      --mono: &quot;Cascadia Code&quot;, &quot;JetBrains Mono&quot;, Consolas, monospace;
+      --sans: &quot;Segoe UI Variable&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;
+      --serif: &quot;Sitka Display&quot;, &quot;Noto Serif SC&quot;, &quot;Source Han Serif SC&quot;, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(77, 182, 172, 0.16), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(239, 108, 91, 0.14), transparent 24%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      line-height: 1.7;
+    }
+
+    .wrap {
+      width: min(1120px, calc(100vw - 36px));
+      margin: 24px auto 42px;
+    }
+
+    .hero,
+    section {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      padding: 34px 34px 28px;
+    }
+
+    section {
+      margin-top: 20px;
+      padding: 24px;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.15;
+    }
+
+    h1 {
+      margin-top: 12px;
+      font-family: var(--serif);
+      font-size: clamp(30px, 4.8vw, 50px);
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 28px;
+      font-family: var(--serif);
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    .lead {
+      margin-top: 16px;
+      color: var(--muted);
+      max-width: 860px;
+    }
+
+    .row {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      margin-top: 16px;
+    }
+
+    .box {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+    }
+
+    .box h3 {
+      margin-bottom: 10px;
+      font-size: 19px;
+    }
+
+    .pill {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(233, 242, 247, 0.08);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .risk { color: var(--risk); }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      padding: 18px;
+      border-radius: 18px;
+      background: #0b0f13;
+      color: #f3fbff;
+      border: 1px solid rgba(233, 242, 247, 0.06);
+      font: 13px/1.6 var(--mono);
+    }
+
+    .code {
+      margin-top: 16px;
+    }
+
+    .file {
+      display: block;
+      margin-bottom: 10px;
+      color: #96c8c3;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .flow {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px dashed rgba(233, 242, 247, 0.16);
+      background: rgba(233, 242, 247, 0.03);
+      font: 14px/1.8 var(--mono);
+      white-space: pre-wrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+
+    th, td {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th:last-child, td:last-child {
+      border-right: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    thead th {
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(233, 242, 247, 0.04);
+    }
+
+    .note {
+      margin-top: 14px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      background: rgba(77, 182, 172, 0.08);
+    }
+
+    @media (max-width: 720px) {
+      .wrap {
+        width: min(100vw - 18px, 1120px);
+      }
+
+      .hero,
+      section {
+        padding: 20px;
+      }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;wrap&quot;&gt;
+    &lt;header class=&quot;hero&quot;&gt;
+      &lt;div class=&quot;eyebrow&quot;&gt;Spectating / Sync / Camera Boundary&lt;/div&gt;
+      &lt;h1&gt;为什么 Gameplay Cameras 和当前方案都不会自动解决观战同步&lt;/h1&gt;
+      &lt;p class=&quot;lead&quot;&gt;
+        观战与同步的关键不在于“相机系统够不够高级”，而在于你复制给旁观者的到底是什么：
+        是每帧最终 POV，还是驱动镜头决策的状态。
+      &lt;/p&gt;
+    &lt;/header&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;当前项目里的能力镜头是本地效果&lt;/h2&gt;
+      &lt;p&gt;
+        当前能力镜头并没有走服务端复制，它是通过本地 &lt;code&gt;PlayerCameraManager&lt;/code&gt; 找到
+        &lt;code&gt;GameMatchCameraComponent&lt;/code&gt; 后直接加减相机数据。
+      &lt;/p&gt;
+      &lt;div class=&quot;row&quot;&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;代码说明 1&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/AbilitySystem/Abilities/HeroAbility.cpp&lt;/span&gt;
+          &lt;pre class=&quot;code&quot;&gt;&lt;code&gt;void UHeroAbility::AddOrRemoveCachedCameraData(
+    const UAbilityCameraData* CameraData,
+    ESkillModuleAddOrRemove AddOrRemove)
+{
+    if (CameraData == nullptr || HeroCharacter == nullptr)
+    {
+        return;
+    }
+
+    if (HeroCharacter-&gt;GetNetMode() == NM_DedicatedServer)
+    {
+    }
+    else
+    {
+        if (AGameMatchCameraManager* CameraManager =
+            Cast&amp;lt;AGameMatchCameraManager&amp;gt;(UGameplayStatics::GetPlayerCameraManager(this, 0)))
+        {
+            if (UGameMatchCameraComponent* CurrentCamera =
+                CameraManager-&gt;GetCameraComponent())
+            {
+                CurrentCamera-&gt;AddOrRemoveAbilityCameraData(
+                    CameraData,
+                    AddOrRemove == ESkillModuleAddOrRemove::Add);
+            }
+        }
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            结论：Dedicated Server 不参与实际镜头求值，能力镜头默认就是 owner-local。
+          &lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;代码说明 2&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/AbilitySystem/Abilities/HeroAbility_Traverse.cpp&lt;/span&gt;
+          &lt;pre class=&quot;code&quot;&gt;&lt;code&gt;if (TraversalCameraData &amp;amp;&amp;amp; HeroCharacter &amp;amp;&amp;amp;
+    HeroCharacter-&gt;GetNetMode() != NM_DedicatedServer)
+{
+    AGameMatchCameraManager* CM =
+        Cast&amp;lt;AGameMatchCameraManager&amp;gt;(UGameplayStatics::GetPlayerCameraManager(this, 0));
+    UGameMatchCameraComponent* CC = CM ? CM-&gt;GetCameraComponent() : nullptr;
+
+    if (CC)
+    {
+        CC-&gt;AddOrRemoveAbilityCameraData(TraversalCameraData, true);
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            结论：翻越镜头也是同样逻辑。旁观者不会天然看到被观战玩家自己的本地镜头变化。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;这意味着什么&lt;/h2&gt;
+      &lt;div class=&quot;row&quot;&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3 class=&quot;risk&quot;&gt;当前方案不会自动同步观战镜头&lt;/h3&gt;
+          &lt;p&gt;
+            如果未来增加观战，旁观者默认只能切到目标 Pawn 或目标 Controller 的视角基线，
+            但不会自动继承 owner-local 的能力 FOV、镜头 lag、镜头偏移、shake。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3 class=&quot;risk&quot;&gt;Gameplay Cameras 也不会自动同步观战镜头&lt;/h3&gt;
+          &lt;p&gt;
+            换成 CameraAsset / CameraRig 后，本质还是本地求值。只是从“代码里算 POV”
+            变成了“director 和 rig 在本地算 POV”。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3 class=&quot;good&quot;&gt;真正该同步的是状态&lt;/h3&gt;
+          &lt;p&gt;
+            最好的观战方案通常不是复制每帧 camera transform，而是复制驱动镜头的状态，
+            再让观战端本地重算镜头。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;推荐的竞技项目做法&lt;/h2&gt;
+      &lt;div class=&quot;flow&quot;&gt;Server
+  -&gt; 复制 SpectatorTarget
+  -&gt; 复制 CameraState（可选）
+
+Spectator Client
+  -&gt; 确定当前观战对象
+  -&gt; 读取 CameraState
+  -&gt; 本地求值镜头
+  -&gt; 单独剥离 owner-only 特效（shake / recoil / input lag）
+
+战斗判定
+  -&gt; 仍然使用 gameplay-safe view
+  -&gt; 不使用 spectator presentation view&lt;/div&gt;
+      &lt;div class=&quot;note&quot;&gt;
+        重点是把 &lt;code&gt;GameplayView&lt;/code&gt; 和 &lt;code&gt;PresentationView&lt;/code&gt; 分开。
+        前者用于技能与判定，后者用于玩家自己看到的镜头表现和观战表现。
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;哪些状态值得复制，哪些不值得&lt;/h2&gt;
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;状态&lt;/th&gt;
+            &lt;th&gt;是否建议复制&lt;/th&gt;
+            &lt;th&gt;原因&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;当前观战目标&lt;/td&gt;
+            &lt;td class=&quot;good&quot;&gt;建议&lt;/td&gt;
+            &lt;td&gt;观战系统的最小基础，没有它镜头无从求值&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;CameraMode / Style / Side / Stance&lt;/td&gt;
+            &lt;td class=&quot;good&quot;&gt;建议&lt;/td&gt;
+            &lt;td&gt;这是 Gameplay Cameras 最适合复制的层，数据量小，旁观端可本地重建镜头&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;ADS / 蹲伏 / 特殊姿态 / 死亡态&lt;/td&gt;
+            &lt;td class=&quot;good&quot;&gt;建议&lt;/td&gt;
+            &lt;td&gt;这些是镜头决策输入，不是最终输出&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;每帧最终 Camera Transform&lt;/td&gt;
+            &lt;td class=&quot;warn&quot;&gt;通常不建议&lt;/td&gt;
+            &lt;td&gt;带宽浪费大，也容易和本地碰撞修正、插值、时间线不一致&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;Camera Shake / Recoil / 本地手感 lag&lt;/td&gt;
+            &lt;td class=&quot;risk&quot;&gt;通常不建议&lt;/td&gt;
+            &lt;td&gt;这些通常是 owner-only 体验，观战看上去未必合适，还会增加噪声&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;如果未来要结合 Gameplay Cameras，最稳的接法&lt;/h2&gt;
+      &lt;div class=&quot;row&quot;&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3&gt;方案 A：当前主战斗相机不动&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;继续保留当前 &lt;code&gt;GameMatchCameraManager&lt;/code&gt; 作为战斗 POV 主链。&lt;/li&gt;
+            &lt;li&gt;Gameplay Cameras 只用在演出、局外、回放、展示。&lt;/li&gt;
+            &lt;li&gt;风险最低，最适合当前竞技项目。&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3&gt;方案 B：观战先接 Gameplay Cameras&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;玩家自己仍用当前相机。&lt;/li&gt;
+            &lt;li&gt;观战端根据复制的状态走 Gameplay Cameras 本地求值。&lt;/li&gt;
+            &lt;li&gt;优点是不会污染战斗判定，但可以提前验证 rig 资产体系是否适合长期演进。&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3&gt;方案 C：整套替换主战斗相机&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;需要先把 gameplay-safe view 和 presentation view 正式拆开。&lt;/li&gt;
+            &lt;li&gt;要逐项回归：发射物、预览、位移、回放、切人、死亡态。&lt;/li&gt;
+            &lt;li&gt;当前阶段不建议作为首选。&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;一句话结论&lt;/h2&gt;
+      &lt;p&gt;
+        观战同步的核心不是“把相机系统换成 Gameplay Cameras”，而是先设计一份可复制的
+        &lt;code&gt;CameraState&lt;/code&gt;。没有这层协议，不管你现在用 Lyra 演化相机，还是用 Gameplay Cameras，
+        观战镜头都不会自然成立。
+      &lt;/p&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;相关阅读&lt;/h2&gt;
+      &lt;div class=&quot;row&quot;&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3&gt;总评估&lt;/h3&gt;
+          &lt;p&gt;
+            回到总体判断和优劣势对比，查看
+            &lt;a href=&quot;./gameplay-camera-system-assessment.html&quot;&gt;Gameplay Camera System 评估&lt;/a&gt;。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3&gt;优化路线&lt;/h3&gt;
+          &lt;p&gt;
+            如果重点是“当前方案如何升级”，查看
+            &lt;a href=&quot;./gameplay-camera-optimization-roadmap.html&quot;&gt;相机系统渐进优化路线图&lt;/a&gt;。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;box&quot;&gt;
+          &lt;h3&gt;实施清单&lt;/h3&gt;
+          &lt;p&gt;
+            如果要按阶段推进开发，查看
+            &lt;a href=&quot;./gameplay-camera-implementation-plan.html&quot;&gt;相机系统 P0/P1/P2 实施清单&lt;/a&gt;。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+    </section>
+    <section class="doc-section" id="roadmap">
+      <div class="doc-head">
+        <div>
+          <span class="eyebrow">Original Report</span>
+          <h2>3. 渐进优化路线图原文</h2>
+          <p>不直接切 Gameplay Cameras 的前提下，当前相机系统如何分层升级。</p>
+        </div>
+        <a class="jump" href="#top">返回顶部</a>
+      </div>
+      <iframe class="doc-frame" loading="lazy" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+  &lt;title&gt;相机系统渐进优化路线图&lt;/title&gt;
+  &lt;style&gt;
+    :root {
+      --bg: #f3f6f4;
+      --bg-2: #e8efe9;
+      --panel: rgba(255, 255, 255, 0.84);
+      --panel-2: rgba(248, 252, 249, 0.9);
+      --ink: #18201c;
+      --muted: #5d6b63;
+      --line: rgba(24, 32, 28, 0.1);
+      --accent: #2e7d68;
+      --accent-2: #6d4c41;
+      --good: #1c7c54;
+      --warn: #a36a11;
+      --risk: #a63d40;
+      --shadow: 0 24px 60px rgba(31, 49, 38, 0.12);
+      --mono: &quot;Cascadia Code&quot;, &quot;JetBrains Mono&quot;, Consolas, monospace;
+      --sans: &quot;Segoe UI Variable&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;
+      --serif: &quot;Sitka Display&quot;, &quot;Noto Serif SC&quot;, &quot;Source Han Serif SC&quot;, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(46, 125, 104, 0.18), transparent 26%),
+        radial-gradient(circle at 100% 0%, rgba(109, 76, 65, 0.12), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      line-height: 1.72;
+    }
+
+    .page {
+      width: min(1180px, calc(100vw - 40px));
+      margin: 26px auto 44px;
+    }
+
+    .hero,
+    section {
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 38px 38px 30px;
+    }
+
+    .hero::after {
+      content: &quot;&quot;;
+      position: absolute;
+      top: -70px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(46, 125, 104, 0.15), transparent 70%);
+      pointer-events: none;
+    }
+
+    section {
+      margin-top: 20px;
+      padding: 26px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(24, 32, 28, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.14;
+    }
+
+    h1 {
+      margin-top: 14px;
+      max-width: 920px;
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 56px);
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-family: var(--serif);
+      font-size: 28px;
+    }
+
+    h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .chips,
+    .grid,
+    .code-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .chips {
+      margin-top: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .chip,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-2);
+    }
+
+    .chip {
+      padding: 16px 18px;
+    }
+
+    .chip strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .chip span {
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .grid {
+      margin-top: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card {
+      padding: 20px;
+    }
+
+    .pill {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(24, 32, 28, 0.07);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .risk { color: var(--risk); }
+
+    .roadmap {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .step {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .code-grid {
+      margin-top: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      padding: 18px;
+      border-radius: 18px;
+      background: #121715;
+      color: #eef7f3;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font: 13px/1.62 var(--mono);
+    }
+
+    .file {
+      display: block;
+      margin-bottom: 10px;
+      color: #bedbd2;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    code {
+      font-family: var(--mono);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+
+    th:last-child, td:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    thead th {
+      background: rgba(24, 32, 28, 0.05);
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .callout {
+      margin-top: 14px;
+      padding: 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      background: rgba(46, 125, 104, 0.08);
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100vw - 18px, 1180px);
+      }
+
+      .hero,
+      section {
+        padding: 20px;
+      }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;page&quot;&gt;
+    &lt;header class=&quot;hero&quot;&gt;
+      &lt;span class=&quot;eyebrow&quot;&gt;Optimization / Current Camera Foundation&lt;/span&gt;
+      &lt;h1&gt;不切 Gameplay Cameras，当前相机系统可以怎么升级&lt;/h1&gt;
+      &lt;p class=&quot;lead&quot;&gt;
+        当前方案的问题不在“不能用”，而在“配置层太薄、逻辑入口太散、扩展方式偏硬编码”。
+        所以更合理的方向不是重写主相机，而是在现有链路上补一层数据驱动和状态驱动，把它做得更像
+        Gameplay Cameras 的组织方式，但仍保留现在的战斗稳定性。
+      &lt;/p&gt;
+      &lt;div class=&quot;chips&quot;&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;优先级最高&lt;/strong&gt;
+          &lt;span&gt;先补配置层和状态层&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;短期收益最大&lt;/strong&gt;
+          &lt;span&gt;拆 GameplayView / PresentationView&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;不建议&lt;/strong&gt;
+          &lt;span&gt;直接整体换主相机&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;先说结论&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;good&quot;&gt;应该做的&lt;/h3&gt;
+          &lt;p&gt;
+            继续保留 &lt;code&gt;PlayerCameraManager + GameMatchCameraComponent + CameraModeStack&lt;/code&gt;
+            作为主骨架，但把“如何选模式、如何叠加能力、如何同步状态”从硬编码里剥离出来。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;warn&quot;&gt;可以借鉴 Gameplay Cameras 的地方&lt;/h3&gt;
+          &lt;p&gt;
+            借鉴它的“状态驱动 + 资产驱动 + 局部组合”思想，而不是直接照搬它的主相机接管方式。
+          &lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3 class=&quot;risk&quot;&gt;最容易踩坑的方向&lt;/h3&gt;
+          &lt;p&gt;
+            一边保留现有 gameplay-safe 视角假设，一边让表现层镜头直接改最终 POV。
+            这会把技能判定和展示性镜头搅在一起。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;优化目标应该怎么拆&lt;/h2&gt;
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;目标&lt;/th&gt;
+            &lt;th&gt;建议做法&lt;/th&gt;
+            &lt;th&gt;原因&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;让配置更好调&lt;/td&gt;
+            &lt;td&gt;增加相机 profile / preset / selector 资产&lt;/td&gt;
+            &lt;td&gt;避免 FOV、offset、碰撞、lag 参数散在多个类里&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;让链路更清晰&lt;/td&gt;
+            &lt;td&gt;拆出 CameraState 和 CameraModifier 两层&lt;/td&gt;
+            &lt;td&gt;把“模式选择”和“局部修饰”分开&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;支持观战与回放&lt;/td&gt;
+            &lt;td&gt;复制最小 CameraState，不复制最终 POV&lt;/td&gt;
+            &lt;td&gt;和 Gameplay Cameras 的状态驱动思路兼容，也更省带宽&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;降低后续切换成本&lt;/td&gt;
+            &lt;td&gt;先把当前方案做成半数据驱动&lt;/td&gt;
+            &lt;td&gt;如果未来真要接 Gameplay Cameras，迁移成本会小很多&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;第一层优化：补配置层，而不是继续加硬编码&lt;/h2&gt;
+      &lt;p&gt;
+        当前工程里，默认相机模式主要来自 &lt;code&gt;HeroDefaultDataAsset::DefaultCameraMode&lt;/code&gt;，
+        能力镜头则是单独的 &lt;code&gt;UAbilityCameraData&lt;/code&gt;。这能用，但配置表达力明显不如 Gameplay Cameras。
+      &lt;/p&gt;
+      &lt;div class=&quot;roadmap&quot;&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;建议 1：新增 Camera Profile 资产&lt;/strong&gt;
+          把第三人称基础 FOV、PivotOffset、Pitch Curve、碰撞参数、Lag 默认值收敛进单个 profile，
+          让不同英雄和不同战斗场景都能切 profile，而不是只切一个 camera mode class。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;建议 2：新增 Camera Selector 资产&lt;/strong&gt;
+          学 Gameplay Cameras 的 director 思路，但不用整套替换。
+          例如根据 &lt;code&gt;MovementMode / ADS / Stance / Side / AbilityTag&lt;/code&gt; 决定当前基模式和附加修饰器。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;建议 3：把能力镜头改成 Modifier，不要直接覆盖最终值&lt;/strong&gt;
+          现在的能力镜头是“最后一个覆盖 offset/FOV”。更好的方式是把它变成 modifier stack，
+          支持 additive、override、clamp、priority 四种合成策略。
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;callout&quot;&gt;
+        简单说：先把“一个类里怎么算相机”升级成“几个资产描述相机规则，由当前组件负责求值”。
+        这样它就会更接近 Gameplay Cameras 的可配置感，但不会破坏现有战斗接口。
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;第二层优化：把逻辑链路拆干净&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;建议结构&lt;/span&gt;
+          &lt;p&gt;&lt;code&gt;CameraIntent&lt;/code&gt;：输入层，来自姿态、能力、目标锁定、换肩、观战目标。&lt;/p&gt;
+          &lt;p&gt;&lt;code&gt;CameraState&lt;/code&gt;：状态层，产出当前模式、侧肩、profile、观战模式、演出模式。&lt;/p&gt;
+          &lt;p&gt;&lt;code&gt;CameraModifier&lt;/code&gt;：修饰层，负责局部 offset、FOV、lag、shake、collision bias。&lt;/p&gt;
+          &lt;p&gt;&lt;code&gt;GameplayView / PresentationView&lt;/code&gt;：输出层，前者用于战斗，后者用于渲染。&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;为什么值&lt;/span&gt;
+          &lt;p&gt;
+            这一步做完以后，当前系统最大的好处是：你可以继续用现在的主 POV 骨架，
+            但逻辑组织方式已经更接近 Gameplay Cameras。
+          &lt;/p&gt;
+          &lt;p&gt;
+            后面无论是接观战、回放，还是局部接入官方 Camera Rig，都会更顺。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;第三层优化：先解决几个当前代码里的具体短板&lt;/h2&gt;
+      &lt;div class=&quot;code-grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;短板 1&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/Camera/GameCameraMode.cpp&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;// Add new entry to top of stack.
+CameraModeStack.Insert(CameraMode, 0);
+
+// ...
+
+UGameCameraMode* TopEntry = CameraModeStack.Last();&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            这里 stack 的“顶部”定义前后不一致。插入时顶部是索引 &lt;code&gt;0&lt;/code&gt;，但
+            &lt;code&gt;GetBlendInfo&lt;/code&gt; 里取的是 &lt;code&gt;Last()&lt;/code&gt;。如果后面真有依赖这个接口的玩法或 UI，
+            这里应该先修。
+          &lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;短板 2&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/Camera/GameMatchCameraComponent.cpp&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;TargetAbilityCameraAdditionalOffsetLerpSpeed =
+    (TargetAbilityCameraAdditionalOffset - CurrentAbilityCameraAdditionalOffset).Size()
+    / InCameraData-&gt;BlendInTime;
+
+TargetAbilityCameraFOVLerpSpeed =
+    FMath::Abs((TargetAbilityCameraFOV - FieldOfView) / InCameraData-&gt;BlendInTime);&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            这里对 &lt;code&gt;BlendInTime / BlendOutTime&lt;/code&gt; 没有做零值保护。即使现在数据资产里大多不会填零，
+            也应该加最小值钳制，避免未来配置踩坑。
+          &lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;短板 3&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/Camera/AbilityCameraData.h + HeroCameraMode_ThirdPerson.cpp&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;// AbilityCameraData 有旋转 lag 配置
+bool bEnableCameraRotationLag = false;
+float CameraRotationLagSpeed = 10.f;
+
+// 但当前求值只使用了位置 lag
+const bool bIsLagging = CurrentCameraData &amp;&amp; CurrentCameraData-&gt;bEnableCameraLag;&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            说明配置能力和实际求值不一致。要么补齐 rotation lag，要么把这个配置从资产层收掉，
+            否则设计侧会以为它已经生效。
+          &lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;span class=&quot;pill&quot;&gt;短板 4&lt;/span&gt;
+          &lt;span class=&quot;file&quot;&gt;Source/GameMoba/AbilitySystem/Abilities/HeroAbility.cpp 等&lt;/span&gt;
+          &lt;pre&gt;&lt;code&gt;UGameplayStatics::GetPlayerCameraManager(this, 0)&lt;/code&gt;&lt;/pre&gt;
+          &lt;p&gt;
+            这类写法默认拿本地 0 号玩家 camera manager。对未来的观战、回放、分屏、本地多控制器场景都不够稳。
+            更好的方式是从 owning controller 或 camera context 取引用。
+          &lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;第四层优化：把能力镜头从“单一覆盖”升级成“规则化叠加”&lt;/h2&gt;
+      &lt;p&gt;
+        现在的能力相机逻辑本质上是最后一个 &lt;code&gt;UAbilityCameraData&lt;/code&gt; 生效，再做简单插值。
+        这对于少量技能足够，但一旦要处理多个同时存在的相机诉求，就会不够用。
+      &lt;/p&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;建议的数据结构&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;code&gt;BaseMode&lt;/code&gt;：基础相机模式，例如 ThirdPerson、Aim、Spectate。&lt;/li&gt;
+            &lt;li&gt;&lt;code&gt;Profile&lt;/code&gt;：基础参数集，例如 FOV、pitch curve、collision preset。&lt;/li&gt;
+            &lt;li&gt;&lt;code&gt;Modifier&lt;/code&gt;：技能、蹲伏、锁定、死亡、演出带来的局部修饰。&lt;/li&gt;
+            &lt;li&gt;&lt;code&gt;BlendPolicy&lt;/code&gt;：每个 modifier 指明 additive、override、max、min 或 clamp。&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;建议的求值顺序&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;先算 &lt;code&gt;BaseMode&lt;/code&gt; 产出基础 pivot / FOV / rotation。&lt;/li&gt;
+            &lt;li&gt;再叠加非破坏性 modifier，例如 crouch offset、side offset、ADS offset。&lt;/li&gt;
+            &lt;li&gt;最后单独处理碰撞修正和 owner-only shake。&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;这样做的价值&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;配置层会明显更像 Gameplay Cameras 的 rig 叠加。&lt;/li&gt;
+            &lt;li&gt;观战只需同步 modifier 所需状态，不需要同步每帧结果。&lt;/li&gt;
+            &lt;li&gt;未来接演出镜头时不容易把战斗相机逻辑弄乱。&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;第五层优化：把观战能力提前纳入相机设计&lt;/h2&gt;
+      &lt;p&gt;
+        即使当前还没有完整观战系统，也建议现在就把相机状态设计成可同步结构。
+      &lt;/p&gt;
+      &lt;div class=&quot;roadmap&quot;&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;同步最小 CameraState&lt;/strong&gt;
+          例如 &lt;code&gt;ViewTargetActor&lt;/code&gt;、&lt;code&gt;CameraMode&lt;/code&gt;、&lt;code&gt;CameraSide&lt;/code&gt;、
+          &lt;code&gt;ADSState&lt;/code&gt;、&lt;code&gt;Stance&lt;/code&gt;、&lt;code&gt;SpectatorMode&lt;/code&gt;。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;不要同步 owner-only 镜头噪声&lt;/strong&gt;
+          比如 recoil shake、临时输入 lag、命中震动。它们更适合保留在本地表现层。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;旁观端本地重算 PresentationView&lt;/strong&gt;
+          这样未来无论你用现有组件求值，还是混入 Gameplay Cameras rig，都能共用同一份状态协议。
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;推荐的实施顺序&lt;/h2&gt;
+      &lt;div class=&quot;roadmap&quot;&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;第 1 周：修补当前实现&lt;/strong&gt;
+          修正 stack 顶层读取、为 blend time 加零值保护、统一无效配置处理、梳理 CameraManager 获取方式。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;第 2 周：补 Camera Profile / Selector 资产&lt;/strong&gt;
+          先不动主链路，只让默认相机模式和附加规则能从数据资产读出来。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;第 3 周：把能力镜头改成 modifier stack&lt;/strong&gt;
+          让能力、姿态、换肩、锁定目标都通过统一修饰器求值。
+        &lt;/div&gt;
+        &lt;div class=&quot;step&quot;&gt;
+          &lt;strong&gt;第 4 周：定义 SpectatorCameraState&lt;/strong&gt;
+          哪怕先不做完整观战，也先把协议准备好，避免以后返工相机状态结构。
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;一句话建议&lt;/h2&gt;
+      &lt;p&gt;
+        当前方案最值得做的，不是“换成 Gameplay Cameras”，而是把它升级成
+        “Gameplay Cameras 风格的组织方式 + 当前战斗相机的稳定输出”。
+        这样你能拿到更好的配置体验和更清晰的链路，同时保住竞技项目最关键的判定稳定性。
+      &lt;/p&gt;
+      &lt;div class=&quot;callout&quot;&gt;
+        相关阅读：
+        &lt;a href=&quot;./gameplay-camera-system-assessment.html&quot;&gt;Gameplay Camera System 评估&lt;/a&gt; /
+        &lt;a href=&quot;./gameplay-camera-sync-and-spectating.html&quot;&gt;Gameplay Camera 同步与观战专题&lt;/a&gt; /
+        &lt;a href=&quot;./gameplay-camera-implementation-plan.html&quot;&gt;相机系统 P0/P1/P2 实施清单&lt;/a&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+    </section>
+    <section class="doc-section" id="plan">
+      <div class="doc-head">
+        <div>
+          <span class="eyebrow">Original Report</span>
+          <h2>4. P0 / P1 / P2 实施清单原文</h2>
+          <p>可执行排期、代码落点、验收标准与回归测试清单。</p>
+        </div>
+        <a class="jump" href="#top">返回顶部</a>
+      </div>
+      <iframe class="doc-frame" loading="lazy" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+  &lt;title&gt;相机系统 P0/P1/P2 实施清单&lt;/title&gt;
+  &lt;style&gt;
+    :root {
+      --bg: #f7f3ee;
+      --bg-2: #ece5db;
+      --panel: rgba(255, 252, 248, 0.88);
+      --panel-2: rgba(255, 248, 241, 0.94);
+      --ink: #1c1814;
+      --muted: #6b6157;
+      --line: rgba(28, 24, 20, 0.11);
+      --p0: #9a2f2f;
+      --p1: #9a5f18;
+      --p2: #256b4e;
+      --accent: #3f5f8c;
+      --shadow: 0 24px 60px rgba(49, 39, 29, 0.14);
+      --mono: &quot;Cascadia Code&quot;, &quot;JetBrains Mono&quot;, Consolas, monospace;
+      --sans: &quot;Segoe UI Variable&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei&quot;, sans-serif;
+      --serif: &quot;Sitka Display&quot;, &quot;Noto Serif SC&quot;, &quot;Source Han Serif SC&quot;, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(63, 95, 140, 0.14), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(154, 47, 47, 0.12), transparent 24%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      line-height: 1.7;
+    }
+
+    .page {
+      width: min(1220px, calc(100vw - 36px));
+      margin: 24px auto 46px;
+    }
+
+    .hero,
+    section {
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero {
+      padding: 38px 38px 30px;
+    }
+
+    section {
+      margin-top: 20px;
+      padding: 24px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(28, 24, 20, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.14;
+    }
+
+    h1 {
+      margin-top: 14px;
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 58px);
+      letter-spacing: -0.03em;
+      max-width: 920px;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-family: var(--serif);
+      font-size: 28px;
+    }
+
+    h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    .lead {
+      max-width: 900px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .chips,
+    .grid,
+    .task-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .chips {
+      margin-top: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .chip,
+    .card,
+    .task {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-2);
+    }
+
+    .chip {
+      padding: 16px 18px;
+    }
+
+    .chip strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .chip span {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .grid {
+      margin-top: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card {
+      padding: 20px;
+    }
+
+    .task-grid {
+      margin-top: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
+    .task {
+      padding: 20px;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .p0 { background: var(--p0); }
+    .p1 { background: var(--p1); }
+    .p2 { background: var(--p2); }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+
+    th:last-child, td:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    thead th {
+      background: rgba(28, 24, 20, 0.05);
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .code {
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 18px;
+      background: #14110e;
+      color: #f9f0e2;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      overflow: auto;
+      font: 13px/1.62 var(--mono);
+      white-space: pre-wrap;
+    }
+
+    .file {
+      display: block;
+      margin-bottom: 10px;
+      color: #dfcbb3;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .callout {
+      margin-top: 14px;
+      padding: 18px;
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      background: rgba(63, 95, 140, 0.08);
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100vw - 18px, 1220px);
+      }
+
+      .hero,
+      section {
+        padding: 20px;
+      }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;page&quot;&gt;
+    &lt;header class=&quot;hero&quot;&gt;
+      &lt;span class=&quot;eyebrow&quot;&gt;Implementation Plan / Camera Refactor&lt;/span&gt;
+      &lt;h1&gt;相机系统 P0 / P1 / P2 实施清单&lt;/h1&gt;
+      &lt;p class=&quot;lead&quot;&gt;
+        这份文档把前面那份“优化路线图”收敛成可执行排期。目标不是一次性重写相机，
+        而是按优先级逐步把当前系统变成“更可配置、更易扩展、更适合观战”的版本。
+      &lt;/p&gt;
+      &lt;div class=&quot;chips&quot;&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;P0&lt;/strong&gt;
+          &lt;span&gt;修补现有实现和接口风险&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;P1&lt;/strong&gt;
+          &lt;span&gt;补状态层和配置层&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;chip&quot;&gt;
+          &lt;strong&gt;P2&lt;/strong&gt;
+          &lt;span&gt;为观战与回放准备协议层&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;范围定义&lt;/h2&gt;
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;阶段&lt;/th&gt;
+            &lt;th&gt;目标&lt;/th&gt;
+            &lt;th&gt;不做什么&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;P0&lt;/td&gt;
+            &lt;td&gt;修掉当前已知链路问题，保证主战斗相机更稳&lt;/td&gt;
+            &lt;td&gt;不改主架构，不引入官方 Gameplay Cameras 主接管&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;P1&lt;/td&gt;
+            &lt;td&gt;让相机开始具备“半数据驱动”能力&lt;/td&gt;
+            &lt;td&gt;不做大规模重构，不重写所有 CameraMode&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;P2&lt;/td&gt;
+            &lt;td&gt;准备观战、回放、局部演出的相机状态协议&lt;/td&gt;
+            &lt;td&gt;不直接实现完整观战产品功能&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;P0：现有链路修补&lt;/h2&gt;
+      &lt;div class=&quot;task-grid&quot;&gt;
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p0&quot;&gt;P0-1&lt;/span&gt;
+          &lt;h3&gt;统一 CameraModeStack 顶层语义&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;检查 &lt;code&gt;PushCameraMode&lt;/code&gt;、&lt;code&gt;BlendStack&lt;/code&gt;、&lt;code&gt;GetBlendInfo&lt;/code&gt; 中 top/bottom 约定。&lt;/li&gt;
+            &lt;li&gt;修正 &lt;code&gt;GetBlendInfo&lt;/code&gt; 读取目标，避免和插入顺序相反。&lt;/li&gt;
+            &lt;li&gt;补 debug 输出，能看到当前 stack 顺序、权重、tag。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 打印的 stack 顺序和最终混合顺序一致，tag 查询不再反着读。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p0&quot;&gt;P0-2&lt;/span&gt;
+          &lt;h3&gt;为 BlendIn / BlendOut 做零值保护&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;对 &lt;code&gt;UAbilityCameraData::BlendInTime&lt;/code&gt;、&lt;code&gt;BlendOutTime&lt;/code&gt; 做最小值钳制。&lt;/li&gt;
+            &lt;li&gt;避免出现除零和无限速度插值。&lt;/li&gt;
+            &lt;li&gt;对非法配置打 warning，方便策划排查资产。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 即使资产填 0，也不会出现异常 FOV、offset 或 NaN。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p0&quot;&gt;P0-3&lt;/span&gt;
+          &lt;h3&gt;清理无效配置项&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;确认 &lt;code&gt;bEnableCameraRotationLag&lt;/code&gt; / &lt;code&gt;CameraRotationLagSpeed&lt;/code&gt; 是否要真正实现。&lt;/li&gt;
+            &lt;li&gt;如果短期不实现，就从资产层隐藏或标注未启用。&lt;/li&gt;
+            &lt;li&gt;保证“资产能配的东西”和“运行时实际生效的东西”一致。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 不存在“策划以为可配但运行时没效果”的相机参数。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p0&quot;&gt;P0-4&lt;/span&gt;
+          &lt;h3&gt;统一 CameraContext 获取方式&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;替换多处 &lt;code&gt;GetPlayerCameraManager(this, 0)&lt;/code&gt; 的直接调用。&lt;/li&gt;
+            &lt;li&gt;从 owning controller、camera manager 或统一 camera context service 取引用。&lt;/li&gt;
+            &lt;li&gt;为未来观战、回放、切人打基础。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 相机查询不再依赖“本地 0 号玩家”这一假设。&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;callout&quot;&gt;
+        P0 是最值得先做的，因为它不改变主相机结构，但能立刻降低后续重构和观战接入风险。
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;P1：补配置层和状态层&lt;/h2&gt;
+      &lt;div class=&quot;task-grid&quot;&gt;
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p1&quot;&gt;P1-1&lt;/span&gt;
+          &lt;h3&gt;引入 CameraProfile 资产&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;把基础 FOV、pivot offset、pitch curve、碰撞参数、默认 lag 汇总到 profile。&lt;/li&gt;
+            &lt;li&gt;默认英雄相机从“只配一个 mode class”升级为“mode + profile”。&lt;/li&gt;
+            &lt;li&gt;允许按英雄、职业、镜头风格切 profile。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;为什么它归在这里：&lt;/strong&gt; 当前主战斗相机已经不走传统 &lt;code&gt;SpringArm&lt;/code&gt; 链路了，所以原本会被 &lt;code&gt;SpringArm&lt;/code&gt; 或 CameraBoom 概念承接的一部分“基础镜头职责”，现在散落在英雄数据、camera mode 和能力相机数据里。&lt;code&gt;CameraProfile&lt;/code&gt; 的作用就是把这层重新收拢成一份统一配置。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;对策划的意义：&lt;/strong&gt; 策划可以直接定义“这类镜头的基础气质”，不需要每次找程序改默认 FOV、肩位、俯仰曲线和碰撞参数。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;例子：&lt;/strong&gt; 刺客英雄可以配一套近距离、压迫感更强的 profile；射手英雄可以配一套更远、更利于观察战场和弹道的 profile。玩法逻辑不变，只换 profile 就能做镜头风格 A/B 测试。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 不改 C++ 代码即可替换基础镜头参数集合。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p1&quot;&gt;P1-2&lt;/span&gt;
+          &lt;h3&gt;引入 CameraSelector 规则资产&lt;/h3&gt;
+        &lt;ul&gt;
+            &lt;li&gt;把 &lt;code&gt;ADS / Stance / Side / AbilityTag / LockTarget&lt;/code&gt; 这些输入组织成 selector。&lt;/li&gt;
+            &lt;li&gt;selector 决定当前基模式、附加 profile、附加 modifier。&lt;/li&gt;
+            &lt;li&gt;这一步本质上是在模仿 Gameplay Cameras 的 director 思路。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;和 skill module 的关系：&lt;/strong&gt; 你的想法方向是对的。技能模块、AnimNotify、情绪动画节点都可以在各个时点触发镜头请求；但它们更适合作为“触发源”，不应该直接决定最终切哪台相机。更稳妥的链路是：&lt;code&gt;skill module / notify&lt;/code&gt; 只负责提交 &lt;code&gt;AbilityTag&lt;/code&gt;、镜头状态或 modifier 请求，再由 &lt;code&gt;CameraSelector&lt;/code&gt; 统一裁决当前该用什么镜头。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;为什么不直接在 skill 里切：&lt;/strong&gt; 直接切本质上也能工作，但会把同一条镜头规则复制到多个技能、多个动画节点里。一旦角色同时处于瞄准、锁敌、技能释放、受击等状态，就容易互相覆盖，也不利于观战端、回放端基于统一状态重建镜头。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;对策划的意义：&lt;/strong&gt; 策划可以配置“什么时候切哪种镜头”，而不是把切换条件写死在代码里。镜头切换规则会从程序逻辑，变成可维护的配置规则。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;例子：&lt;/strong&gt; 普通移动用标准第三人称，瞄准时切更近镜头，蹲伏时镜头略降，锁定目标时切右肩偏移。以后如果要把“锁定目标镜头”改成更远或更偏上，策划改规则资产即可，不用程序改条件分支。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;技能时序例子：&lt;/strong&gt; 一个蓄力技能可以在开始蓄力时由 skill module 提交 &lt;code&gt;State.Aim&lt;/code&gt;，出手瞬间提交 &lt;code&gt;State.Skill.CastHeavy&lt;/code&gt;，收招时移除；如果此时角色还处于锁敌态，selector 仍可继续保留“右肩偏移”规则，而不是被技能硬切掉整个镜头链路。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 至少支持三类规则切换，例如普通态、瞄准态、蹲伏态。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p1&quot;&gt;P1-3&lt;/span&gt;
+          &lt;h3&gt;把能力相机升级成 Modifier Stack&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;将当前“最后一个能力镜头覆盖”改成 modifier 叠加。&lt;/li&gt;
+            &lt;li&gt;支持 additive、override、clamp、priority。&lt;/li&gt;
+            &lt;li&gt;把 crouch、right shoulder、锁定目标镜头也纳入同一修饰器体系。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;对策划的意义：&lt;/strong&gt; 策划终于可以同时表达多个镜头诉求，而不是“最后一个配置把前面所有镜头都盖掉”。复杂状态下镜头结果会更可预测，也更容易解释。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;例子：&lt;/strong&gt; 角色同时处于蹲伏、锁定目标、释放大招三个状态。理想结果不是三者互相覆盖，而是“蹲伏只改高度、锁定只改侧肩、大招临时接管 FOV”。这样策划知道每个状态各自影响什么，不会出现调一个技能把整套镜头打乱。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 同时存在两个相机需求时，结果可预测且能通过规则解释。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p1&quot;&gt;P1-4&lt;/span&gt;
+          &lt;h3&gt;拆 GameplayView 和 PresentationView&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;code&gt;GameplayView&lt;/code&gt; 继续作为技能、发射物、预览的安全视角。&lt;/li&gt;
+            &lt;li&gt;&lt;code&gt;PresentationView&lt;/code&gt; 用于 shake、展示性 offset、局部演出。&lt;/li&gt;
+            &lt;li&gt;先在接口层拆分，不要求一次性把所有逻辑迁完。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;对策划的意义：&lt;/strong&gt; 策划可以放心加“手感”和“演出”，不用担心把战斗判定搞坏。数值平衡和镜头表现会第一次真正分层。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;例子：&lt;/strong&gt; 某个重击技能想加强 shake、瞬时拉近和冲击感镜头偏移。这些效果只进 &lt;code&gt;PresentationView&lt;/code&gt;，不会影响发射物起点、技能朝向和预览方向。策划就可以大胆调爽感，而不用担心“镜头一改，技能打偏”。&lt;/p&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; camera shake 或演出镜头不会污染发射物起点和位移方向。&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;P2：为观战和回放准备相机协议&lt;/h2&gt;
+      &lt;div class=&quot;task-grid&quot;&gt;
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p2&quot;&gt;P2-1&lt;/span&gt;
+          &lt;h3&gt;定义 SpectatorCameraState&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;最少包含 &lt;code&gt;ViewTarget&lt;/code&gt;、&lt;code&gt;CameraMode&lt;/code&gt;、&lt;code&gt;CameraSide&lt;/code&gt;、&lt;code&gt;ADSState&lt;/code&gt;、&lt;code&gt;Stance&lt;/code&gt;。&lt;/li&gt;
+            &lt;li&gt;明确哪些字段是 spectator-visible，哪些是 owner-only。&lt;/li&gt;
+            &lt;li&gt;先定义结构和写入点，不必一次做完完整观战。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 旁观端能基于状态重建出基础镜头，而不是读每帧 transform。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p2&quot;&gt;P2-2&lt;/span&gt;
+          &lt;h3&gt;旁观端本地求值镜头&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;旁观端基于同步状态求值 &lt;code&gt;PresentationView&lt;/code&gt;。&lt;/li&gt;
+            &lt;li&gt;owner-only 特效单独剥离，不给观战端同步。&lt;/li&gt;
+            &lt;li&gt;为未来 killcam、回放、OB 镜头保留扩展点。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 同一状态在本地玩家和观战玩家上能得到一致的基础镜头行为。&lt;/p&gt;
+        &lt;/article&gt;
+
+        &lt;article class=&quot;task&quot;&gt;
+          &lt;span class=&quot;tag p2&quot;&gt;P2-3&lt;/span&gt;
+          &lt;h3&gt;补 Camera Debug Overlay&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;实时显示 base mode、profile、active modifiers、spectator state。&lt;/li&gt;
+            &lt;li&gt;能区分 gameplay-safe view 和 presentation view。&lt;/li&gt;
+            &lt;li&gt;给网络和镜头联调留工具。&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;p&gt;&lt;strong&gt;验收：&lt;/strong&gt; 研发和策划都能从 overlay 看出“当前镜头是怎么被算出来的”。&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;建议的代码落点&lt;/h2&gt;
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;模块&lt;/th&gt;
+            &lt;th&gt;建议新增或修改&lt;/th&gt;
+            &lt;th&gt;说明&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;code&gt;Source/GameMoba/Camera&lt;/code&gt;&lt;/td&gt;
+            &lt;td&gt;新增 &lt;code&gt;CameraProfile&lt;/code&gt;、&lt;code&gt;CameraModifier&lt;/code&gt;、&lt;code&gt;CameraState&lt;/code&gt;&lt;/td&gt;
+            &lt;td&gt;尽量把变化收敛到现有相机目录，不打散到能力或角色目录&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;code&gt;GameMatchCameraComponent&lt;/code&gt;&lt;/td&gt;
+            &lt;td&gt;增加状态求值和 modifier 合成入口&lt;/td&gt;
+            &lt;td&gt;保持它仍是最终 POV 求值器&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;code&gt;HeroDefaultDataAsset&lt;/code&gt;&lt;/td&gt;
+            &lt;td&gt;从只配 &lt;code&gt;DefaultCameraMode&lt;/code&gt; 扩展到 &lt;code&gt;DefaultCameraMode + CameraProfile + Selector&lt;/code&gt;&lt;/td&gt;
+            &lt;td&gt;方便策划调镜头&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;code&gt;HeroAbility&lt;/code&gt; / 相机模块&lt;/td&gt;
+            &lt;td&gt;从直接塞 &lt;code&gt;UAbilityCameraData&lt;/code&gt; 改成提交 modifier 请求&lt;/td&gt;
+            &lt;td&gt;能力层不再直接决定最终 POV，只描述诉求&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;&lt;code&gt;PlayerController&lt;/code&gt;&lt;/td&gt;
+            &lt;td&gt;补统一 camera context / spectator state 访问入口&lt;/td&gt;
+            &lt;td&gt;为未来观战和 replay 准备&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;回归测试清单&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;战斗回归&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;普通攻击与技能发射物起点&lt;/li&gt;
+            &lt;li&gt;位移技能朝向与 root motion 朝向&lt;/li&gt;
+            &lt;li&gt;锁定目标与非锁定目标切换&lt;/li&gt;
+            &lt;li&gt;蹲伏、翻越、换肩的镜头衔接&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;表现回归&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;FOV 插值&lt;/li&gt;
+            &lt;li&gt;camera lag 开关瞬间&lt;/li&gt;
+            &lt;li&gt;碰撞回推和平滑&lt;/li&gt;
+            &lt;li&gt;camera shake 不影响 gameplay-safe view&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;网络回归&lt;/h3&gt;
+          &lt;ul&gt;
+            &lt;li&gt;主控玩家与模拟代理表现差异&lt;/li&gt;
+            &lt;li&gt;切换观战目标后镜头是否重置正确&lt;/li&gt;
+            &lt;li&gt;owner-only modifier 是否泄漏到旁观端&lt;/li&gt;
+            &lt;li&gt;状态同步延迟下是否可接受&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;建议的落地顺序&lt;/h2&gt;
+      &lt;div class=&quot;code&quot;&gt;&lt;span class=&quot;file&quot;&gt;建议开发顺序&lt;/span&gt;P0-1 统一 stack 语义
+P0-2 BlendTime 零值保护
+P0-3 清理未生效配置
+P0-4 统一 CameraContext 获取
+
+P1-1 CameraProfile
+P1-2 CameraSelector
+P1-3 Modifier Stack
+P1-4 GameplayView / PresentationView
+
+P2-1 SpectatorCameraState
+P2-2 旁观端本地求值
+P2-3 Camera Debug Overlay&lt;/div&gt;
+
+      &lt;div class=&quot;callout&quot;&gt;
+        如果资源有限，至少先做完整的 P0 和 P1-1 / P1-3。这样当前系统的配置能力和可维护性就会明显提升，
+        而且不会引入大规模主相机替换风险。
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section&gt;
+      &lt;h2&gt;相关阅读&lt;/h2&gt;
+      &lt;div class=&quot;grid&quot;&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;总评估&lt;/h3&gt;
+          &lt;p&gt;&lt;a href=&quot;./gameplay-camera-system-assessment.html&quot;&gt;Gameplay Camera System 评估&lt;/a&gt;&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;同步专题&lt;/h3&gt;
+          &lt;p&gt;&lt;a href=&quot;./gameplay-camera-sync-and-spectating.html&quot;&gt;Gameplay Camera 同步与观战专题&lt;/a&gt;&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class=&quot;card&quot;&gt;
+          &lt;h3&gt;优化路线图&lt;/h3&gt;
+          &lt;p&gt;&lt;a href=&quot;./gameplay-camera-optimization-roadmap.html&quot;&gt;相机系统渐进优化路线图&lt;/a&gt;&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+    </section>
+    <p class="foot">原始文件仍保留在同一目录，便于单独分享和后续继续维护。</p>
+  </div>
+  <script>
+    (function(){const frames=[...document.querySelectorAll('.doc-frame')];const resizeFrame=(frame)=>{try{const doc=frame.contentDocument;if(!doc||!doc.documentElement)return;const body=doc.body;const html=doc.documentElement;const height=Math.max(body?body.scrollHeight:0,html?html.scrollHeight:0,1100);frame.style.height=height+'px';}catch(err){}};frames.forEach((frame)=>{frame.addEventListener('load',()=>{resizeFrame(frame);setTimeout(()=>resizeFrame(frame),150);setTimeout(()=>resizeFrame(frame),600);});});window.addEventListener('resize',()=>frames.forEach(resizeFrame));})();
+  </script>
+</body>
+</html>
