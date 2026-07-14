@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>技能并行表现层协议（动画、镜头、武器状态）</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #fff;
+      --ink: #22272e;
+      --muted: #66727e;
+      --line: #d9dee5;
+      --soft: #f0f3f6;
+      --accent: #256f65;
+      --accent-soft: #e2f1ee;
+      --blue: #22577a;
+      --blue-soft: #e5f0f8;
+      --warn-soft: #fff4dd;
+      --bad-soft: #ffebe8;
+      --radius: 8px;
+      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: "Cascadia Code", Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.75 var(--sans);
+    }
+    .page {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 32px auto 48px;
+    }
+    header {
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { margin: 0; line-height: 1.28; letter-spacing: 0; }
+    h1 { margin-top: 8px; font-size: 34px; font-weight: 760; }
+    h2 { font-size: 23px; font-weight: 740; }
+    h3 { font-size: 17px; font-weight: 720; }
+    p { margin: 8px 0 0; color: var(--muted); }
+    p, li, td, th { overflow-wrap: anywhere; }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li + li { margin-top: 4px; }
+    code, .mono {
+      font-family: var(--mono);
+      color: #1d5f80;
+      font-size: 0.94em;
+    }
+    main {
+      margin-top: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+    section {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--line);
+    }
+    section:last-child { border-bottom: none; }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .meta span {
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+    }
+    table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f4f6;
+      color: #303740;
+      font-size: 13px;
+      font-weight: 740;
+    }
+    tr:last-child td { border-bottom: none; }
+    .decision, .note, .risk {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+    }
+    .decision {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+    }
+    .note {
+      border: 1px solid #ecd6ad;
+      background: var(--warn-soft);
+      color: #604219;
+    }
+    .risk {
+      border: 1px solid #efc2bc;
+      background: var(--bad-soft);
+      color: #6a2d25;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 16px;
+    }
+    .box {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+    }
+    .box.blue {
+      border-color: #c8dced;
+      background: var(--blue-soft);
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      section { padding: 24px 20px; }
+      h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Presentation Layer Protocol</div>
+      <h1>技能并行表现层协议（动画、镜头、武器状态）</h1>
+      <p>本文件作为《技能释放关系语义系统》的配套专题，专门约束“逻辑允许并行”之后，动画层、镜头、武器姿态和结束恢复如何交接。</p>
+      <div class="meta">
+        <span>适用范围：并行技能组合</span>
+        <span>项目背景：GAS + HeroAbility + Overlay</span>
+        <span>重点案例：Twinblast FastFire / Dash / 左手技能</span>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <h2>1. 核心原则</h2>
+        <p>并行不是“两个技能都能激活”就算完成。任何标记为并行的技能组合，都必须额外定义动画层、镜头和武器状态的控制权。否则逻辑并行只代表两个 Ability 同时存在，不代表玩家看到的动作一定成立。</p>
+        <div class="risk">
+          <strong>边界：</strong>
+          如果没有可用动画层、专用并行动作或镜头恢复策略，正式规则不应标记为并行，应回退为阻挡或打断。
+        </div>
+      </section>
+
+      <section>
+        <h2>2. 并行类型</h2>
+        <p>并行不是一种单一结果。进入配置前，应先判断这组技能属于哪一种并行，避免把“逻辑可以共存”误解成“动作一定要同时完整播放”。</p>
+        <table>
+          <thead>
+            <tr>
+              <th>并行类型</th>
+              <th>定义</th>
+              <th>适用例子</th>
+              <th>主要风险</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>逻辑并行</td>
+              <td>两个 Ability 同时 active，但其中一个不争抢动作层，只保留 Buff、状态、伤害或计时。</td>
+              <td>开火期间开启一个短时强化状态。</td>
+              <td>策划以为会播动作，动画侧却没有表现。</td>
+            </tr>
+            <tr>
+              <td>分层并行</td>
+              <td>两个技能分别占用不同动画层或身体部位。</td>
+              <td>右手持续开火，左手释放小技能。</td>
+              <td>左右手、脊柱、AimOffset、IK 互相覆盖。</td>
+            </tr>
+            <tr>
+              <td>运动主导并行</td>
+              <td>位移、翻滚、Dash 或 RootMotion 拥有移动与主动作，旧技能保留部分表现或只保留逻辑。</td>
+              <td>FastFire Active 中翻滚。</td>
+              <td>翻滚动作顶掉开火姿态，或开火姿态破坏位移表现。</td>
+            </tr>
+            <tr>
+              <td>武器主导并行</td>
+              <td>开火、瞄准、武器发射点继续拥有优先级，新技能只能使用不冲突的动作域。</td>
+              <td>持续开火时插入左手技能。</td>
+              <td>技能动作需要右手或全身时无法成立。</td>
+            </tr>
+            <tr>
+              <td>镜头主导并行</td>
+              <td>某个技能拥有镜头主控权，另一个技能只能继承或延迟镜头反馈。</td>
+              <td>Aiming Fire 中 Dash 只给短促相机震动。</td>
+              <td>镜头被抢走后不能恢复到原来的瞄准状态。</td>
+            </tr>
+            <tr>
+              <td>伪并行 / 延迟表现</td>
+              <td>逻辑先接受输入，但动作延迟到当前不可覆盖段之后播放。</td>
+              <td>强技能蓄力中缓存一个轻技能动作。</td>
+              <td>玩家以为立刻响应，实际表现像吞输入。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>3. 控制域检查表</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>控制域</th>
+              <th>必须回答的问题</th>
+              <th>Twinblast 示例</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>全身 / RootMotion</td>
+              <td>谁拥有位移、翻滚、击退、根运动？是否允许覆盖当前动作？</td>
+              <td>FastFire + 翻滚时，翻滚通常拥有全身或下半身位移，FastFire 不能再强播会顶掉翻滚的全身 Montage。</td>
+            </tr>
+            <tr>
+              <td>上半身 / 武器姿态</td>
+              <td>开火姿态是否继续维持？瞄准 Overlay 是否保留？枪口和发射点是否还稳定？</td>
+              <td>双枪 FastFire 翻滚时，需要“翻滚中持枪/开火”的动作方案，或至少保留武器朝向与发射点，不让开火姿态瞬断。</td>
+            </tr>
+            <tr>
+              <td>左右手分层</td>
+              <td>如果开火占用右手，来袭技能是否只能使用左手层？右手是否继续开火？</td>
+              <td>一边开火一边放左手技能时，技能应声明使用 LeftArm / UpperBody 层；右手和武器层继续归开火控制。</td>
+            </tr>
+            <tr>
+              <td>镜头</td>
+              <td>两个技能都想改镜头时谁优先？是否继承当前瞄准镜头？退出时回到哪里？</td>
+              <td>FastFire 维持 Aiming Camera，Dash 只允许短促镜头反馈；若 Dash 强接管镜头，结束后必须回到 FastFire Aiming 状态。</td>
+            </tr>
+            <tr>
+              <td>结束恢复</td>
+              <td>并行动作播完后，是恢复旧技能循环、进入收招，还是结束旧技能？</td>
+              <td>翻滚播完后，如果 FastFire 仍 active，应回到 FastFire 的 Aiming / 开火循环；如果 FastFire 已结束，则走普通移动状态。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>4. 资源所有权矩阵</h2>
+        <p>并行配置不能只写“允许并行”，还要写清每个控制域的 Owner。Owner 负责进入、持续、退出和异常恢复，非 Owner 只能读取状态或播放不冲突的附加表现。</p>
+        <table>
+          <thead>
+            <tr>
+              <th>资源域</th>
+              <th>Owner 示例</th>
+              <th>进入并行时</th>
+              <th>并行期间</th>
+              <th>退出恢复</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>移动 / RootMotion</td>
+              <td>Dash / Roll</td>
+              <td>暂停旧技能对移动的覆盖。</td>
+              <td>只允许 Owner 写移动模式、RootMotion、速度曲线。</td>
+              <td>恢复旧技能移动配置或回到默认移动。</td>
+            </tr>
+            <tr>
+              <td>上半身 / Overlay</td>
+              <td>FastFire / Aiming</td>
+              <td>确认是否保留瞄准 Overlay。</td>
+              <td>新技能只能占用未被锁定的层。</td>
+              <td>若开火仍 active，回到开火循环；否则释放 Overlay。</td>
+            </tr>
+            <tr>
+              <td>左手 / 右手</td>
+              <td>Attack owns RightHand，Skill owns LeftHand</td>
+              <td>声明左右手占用，避免同一手双写。</td>
+              <td>IK、握把、武器 Socket、施法 Socket 分开维护。</td>
+              <td>释放对应手部层，不影响另一手持续状态。</td>
+            </tr>
+            <tr>
+              <td>武器 / 发射点</td>
+              <td>ContinuousFire</td>
+              <td>锁定当前武器姿态和发射点来源。</td>
+              <td>发射点、枪口特效、弹道方向不能被其它 Montage 顶掉。</td>
+              <td>停火时统一清理 ContinuousFire、武器特效和开火循环。</td>
+            </tr>
+            <tr>
+              <td>镜头</td>
+              <td>Aiming / Ultimate / Dash</td>
+              <td>决定新技能是接管、叠加、继承还是不改镜头。</td>
+              <td>同一时间只允许一个主镜头 Owner，可叠加轻量震动。</td>
+              <td>回到上一层镜头状态，而不是简单回默认镜头。</td>
+            </tr>
+            <tr>
+              <td>输入</td>
+              <td>当前主技能或新技能</td>
+              <td>定义按下、松手、确认、取消由谁消费。</td>
+              <td>避免同一个输入同时触发两个技能的 Press/Release 模块。</td>
+              <td>退出后重新恢复输入路由和缓存策略。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="note">
+          推荐在技能卡里增加“并行 Owner 表”：每个并行组合至少写出 Movement、FullBody、UpperBody、LeftHand、RightHand、Weapon、Camera、Input 八个域的 Owner 和恢复规则。
+        </div>
+      </section>
+
+      <section>
+        <h2>5. 表现策略</h2>
+        <div class="grid">
+          <div class="box blue">
+            <h3>专用并行动作</h3>
+            <p>例如 RollFire / DashFire Montage，动作本身同时满足位移和开火姿态。适合强英雄特征或高频组合。</p>
+          </div>
+          <div class="box">
+            <h3>分层播放</h3>
+            <p>位移技能占全身或下半身，开火保留上半身 / 武器 / AimOffset，左手技能只占左手层。</p>
+          </div>
+          <div class="box">
+            <h3>逻辑并行、表现抑制</h3>
+            <p>两个 Ability 同时 active，但其中一个暂不播动作，只保留数值、Buff、投射物或状态。</p>
+          </div>
+          <div class="box">
+            <h3>回退为非并行</h3>
+            <p>如果没有可用动画层或镜头恢复策略，正式规则应改为阻挡或打断。</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>6. 生命周期协议</h2>
+        <p>并行最常见的问题不在进入瞬间，而在退出和恢复。每个并行组合都必须定义完整生命周期。</p>
+        <table>
+          <thead>
+            <tr>
+              <th>阶段</th>
+              <th>必须定义</th>
+              <th>失败时回退</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>进入前</td>
+              <td>当前窗口是否允许并行；目标、冷却、消耗、输入是否重新校验。</td>
+              <td>阻挡或缓存来袭输入。</td>
+            </tr>
+            <tr>
+              <td>进入并行</td>
+              <td>哪些层保留，哪些层覆盖，哪些层静默；镜头是否接管。</td>
+              <td>如果关键资源被占用，转为阻挡或打断。</td>
+            </tr>
+            <tr>
+              <td>并行持续</td>
+              <td>Tick、Notify、投射物、RootMotion、Camera Update 的写入顺序。</td>
+              <td>检测到冲突时结束低优先级表现或结束低优先级技能。</td>
+            </tr>
+            <tr>
+              <td>新技能先结束</td>
+              <td>旧技能是否恢复循环、继续计时、补播过渡或直接进入收招。</td>
+              <td>恢复失败时清理旧技能表现，避免卡枪、卡镜头。</td>
+            </tr>
+            <tr>
+              <td>旧技能先结束</td>
+              <td>新技能是否继续持有资源；旧技能的特效、镜头、武器状态谁清理。</td>
+              <td>由旧技能 EndAbility 清理自己拥有的域，不能清理新技能域。</td>
+            </tr>
+            <tr>
+              <td>外部打断</td>
+              <td>眩晕、死亡、沉默、硬控进入时，两个技能按什么顺序结束。</td>
+              <td>统一走公共清理顺序，不允许单技能残留 ContinuousFire 或 Camera。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>7. 验收要求</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>阶段</th>
+              <th>验收点</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>进入并行</td>
+              <td>原技能动作、镜头、武器状态不瞬断；新技能动作进入清晰。</td>
+            </tr>
+            <tr>
+              <td>并行中</td>
+              <td>动画层不互顶，RootMotion 不冲突，发射点和命中逻辑稳定。</td>
+            </tr>
+            <tr>
+              <td>其中一个技能结束</td>
+              <td>仍 active 的技能能恢复到自己的循环、姿态或镜头状态。</td>
+            </tr>
+            <tr>
+              <td>两个技能都结束</td>
+              <td>角色回到正确移动状态，镜头、Overlay、武器状态全部释放。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="note">
+          并行验收不能只看“能不能激活”。必须录制进入并行、并行中、其中一个技能结束、两个技能都结束四个阶段，确认动作不瞬断、镜头能恢复、武器状态和发射点不丢。
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
