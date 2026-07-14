@@ -1,0 +1,2796 @@
+<!DOCTYPE html>
+<!-- saved from url=(0068)file:///C:/Users/User/AppData/Local/Temp/marvel_rivals_keybinds.html -->
+<html lang="zh"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marvel Rivals 英雄技能键位大全</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card-bg: #1a1a2e;
+    --card-border: #2a2a4a;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent: #e11d48;
+    --accent2: #7c3aed;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a0a2e 50%, #0f1a2e 100%);
+    padding: 2rem 1rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid #2a2a4a;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(225,29,72,0.15) 0%, transparent 70%);
+  }
+  header h1 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 900;
+    background: linear-gradient(90deg, #ef4444, #f97316, #eab308, #ef4444);
+    background-size: 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+    letter-spacing: 0.05em;
+    position: relative;
+  }
+  @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+  header p { color: var(--text-muted); margin-top: 0.5rem; font-size: 0.9rem; position: relative; }
+  
+  .controls {
+    padding: 1.2rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .search-wrap {
+    flex: 1; min-width: 200px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: #e11d48; }
+  .search-wrap::before {
+    content: '🔍';
+    position: absolute; left: 0.7rem; top: 50%; transform: translateY(-50%);
+    font-size: 0.9rem;
+  }
+  .role-filters {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+  }
+  .role-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .role-btn:hover { border-color: var(--rc, #e11d48); color: var(--text); }
+  .role-btn.active { background: var(--rc, #e11d48); border-color: var(--rc, #e11d48); color: #fff; }
+  .role-btn[data-role="all"].active { background: #e11d48; border-color: #e11d48; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+    padding: 0 1rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .hero-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .hero-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    border-color: #3a3a6a;
+  }
+  .hero-card[data-role="VANGUARD"] .hero-header { border-left: 3px solid #3b82f6; }
+  .hero-card[data-role="DUELIST"] .hero-header { border-left: 3px solid #ef4444; }
+  .hero-card[data-role="STRATEGIST"] .hero-header { border-left: 3px solid #22c55e; }
+  .hero-header {
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.03);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .hero-name {
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .skill-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .skill-table th {
+    background: rgba(255,255,255,0.05);
+    padding: 0.4rem 0.8rem;
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .skill-table td {
+    padding: 0.45rem 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+  }
+  .skill-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .skill-name { color: var(--text); }
+  .cat {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .tag-normal { background: #1e3a5f; color: #60a5fa; }
+  .tag-skill { background: #3b1a1a; color: #f87171; }
+  .tag-team { background: #1a3b2a; color: #4ade80; }
+  .key-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    font-family: monospace;
+    letter-spacing: 0.03em;
+  }
+  .no-results {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+  }
+  .hero-card.hidden { display: none; }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--card-border);
+  }
+
+  /* ===== 方法论 / 抽屉规则 ===== */
+  .methodology {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+  .meth-toggle {
+    width: 100%;
+    background: linear-gradient(135deg, #1a1a2e, #2a1a3e);
+    border: 1px solid #3a3a6a;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .meth-toggle:hover { border-color: #e11d48; background: linear-gradient(135deg, #2a1a3e, #3a1a4e); }
+  .meth-toggle .arrow { transition: transform 0.3s; }
+  .meth-toggle.open .arrow { transform: rotate(180deg); }
+  .meth-content {
+    display: none;
+    margin-top: 1rem;
+    animation: fadeIn 0.3s ease;
+  }
+  .meth-content.open { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
+
+  .meth-block {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .meth-block h2 {
+    font-size: 1.05rem;
+    color: #f59e0b;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 0.5rem;
+    letter-spacing: 0.03em;
+  }
+  .meth-block h3 {
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    margin: 0.8rem 0 0.5rem;
+  }
+  .meth-block p, .meth-block li { font-size: 0.88rem; line-height: 1.7; color: #cbd5e1; }
+  .meth-block ul, .meth-block ol { padding-left: 1.4rem; margin: 0.4rem 0; }
+  .meth-block strong { color: #fcd34d; }
+  .meth-block code, .meth-block kbd {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 0.05rem 0.4rem;
+    font-family: 'Consolas', monospace;
+    font-size: 0.82rem;
+    color: #93c5fd;
+  }
+
+  /* 物理成本表 */
+  .cost-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
+  .cost-table th, .cost-table td {
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .cost-table th { background: rgba(255,255,255,0.04); color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cost-table .lvl { font-weight: 700; }
+  .cost-table .lvl-0 { color: #22c55e; }
+  .cost-table .lvl-1 { color: #84cc16; }
+  .cost-table .lvl-2 { color: #eab308; }
+  .cost-table .lvl-3 { color: #f97316; }
+  .cost-table .lvl-4 { color: #ef4444; }
+  .cost-table .lvl-5 { color: #a855f7; }
+
+  /* 四个抽屉卡片 */
+  .drawer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 0.8rem;
+  }
+  .drawer {
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    border: 1px solid;
+    background: rgba(255,255,255,0.02);
+  }
+  .drawer.rmb    { border-color: #ef4444; box-shadow: inset 0 0 30px rgba(239,68,68,0.06); }
+  .drawer.shift  { border-color: #eab308; box-shadow: inset 0 0 30px rgba(234,179,8,0.06); }
+  .drawer.e      { border-color: #22c55e; box-shadow: inset 0 0 30px rgba(34,197,94,0.06); }
+  .drawer.r      { border-color: #3b82f6; box-shadow: inset 0 0 30px rgba(59,130,246,0.06); }
+  .drawer-head {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin-bottom: 0.7rem; padding-bottom: 0.5rem;
+    border-bottom: 1px dashed rgba(255,255,255,0.1);
+  }
+  .drawer-key {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #fff;
+  }
+  .drawer.rmb   .drawer-key { background: #ef4444; }
+  .drawer.shift .drawer-key { background: #eab308; color: #1a1a1a; }
+  .drawer.e     .drawer-key { background: #22c55e; color: #1a1a1a; }
+  .drawer.r     .drawer-key { background: #3b82f6; }
+  .drawer-title { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+  .drawer-tag { font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 4px; background: rgba(255,255,255,0.08); color: var(--text-muted); margin-left: auto; }
+  .drawer h4 { font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0.6rem 0 0.3rem; }
+  .drawer ul { padding-left: 1.2rem; }
+  .drawer li { font-size: 0.83rem; line-height: 1.6; color: #cbd5e1; }
+  .drawer .forbidden { color: #fca5a5; }
+  .drawer .examples { font-size: 0.78rem; color: var(--text-muted); font-style: italic; margin-top: 0.4rem; }
+
+  /* 决策流程 */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.7rem;
+    margin-top: 0.5rem;
+  }
+  .flow-step {
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.4);
+    border-radius: 8px;
+    padding: 0.8rem;
+    position: relative;
+  }
+  .flow-step::before {
+    content: attr(data-step);
+    position: absolute;
+    top: -10px; left: 10px;
+    background: #7c3aed;
+    color: #fff;
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .flow-step .step-title { font-weight: 700; color: #c4b5fd; font-size: 0.88rem; margin-bottom: 0.3rem; padding-left: 1.6rem; }
+  .flow-step .step-desc { font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; }
+  .flow-step .step-key { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px; background: rgba(255,255,255,0.1); font-family: monospace; font-size: 0.75rem; color: #fff; margin-left: 0.3rem; }
+
+  /* FAQ */
+  .faq details {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #fcd34d;
+    font-size: 0.9rem;
+    list-style: none;
+  }
+  .faq summary::before { content: '▸ '; transition: transform 0.2s; display: inline-block; }
+  .faq details[open] summary::before { transform: rotate(90deg); }
+  .faq details[open] summary { margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+  .faq details p { font-size: 0.85rem; color: #cbd5e1; line-height: 1.65; }
+
+  /* 一句话总结 */
+  .punchline {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(124,58,237,0.15));
+    border: 1px solid rgba(239,68,68,0.4);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.04em;
+  }
+  .punchline .kw { color: #fcd34d; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ MARVEL RIVALS 英雄技能键位大全</h1>
+  <p>共 48 个英雄 · 数据来源：marvelrivals.com</p>
+</header>
+
+<section class="methodology">
+  <button class="meth-toggle open" id="methToggle">
+    <span>📘 抽屉规则方法论 · 基于 48 英雄数据得出的键位分配框架</span>
+    <span class="arrow">▼</span>
+  </button>
+  <div class="meth-content open" id="methContent">
+
+    <!-- 引言 -->
+    <div class="meth-block">
+      <h2>⚡ 核心结论：键就是角色</h2>
+      <p>MR 的键位不是"技能 1/2/3/4"，而是 <strong>语义槽位（semantic slot）</strong>——同一个键在不同英雄上承担同样的语义角色（Q=大招、Shift=自保、E=战术、RMB=高频副武器）。这让玩家跨英雄迁移肌肉记忆，转人零成本。</p>
+      <p>本方法论从 <strong>物理成本</strong>（手指要不要离开 WASD）+ <strong>语义统计</strong>（48 英雄各键的功能分布）两个维度，给出"<strong>每个键应该塞什么技能</strong>"的设计指引。</p>
+    </div>
+
+    <!-- 物理成本 -->
+    <div class="meth-block">
+      <h2>① 物理成本：手指离开 WASD 的代价</h2>
+      <table class="cost-table">
+        <thead><tr><th>等级</th><th>键</th><th>离手成本</th><th>适合承担</th></tr></thead>
+        <tbody>
+          <tr><td class="lvl lvl-0">零成本</td><td><kbd>LMB</kbd> / <kbd>RMB</kbd></td><td>右手食指/中指本来就在</td><td>持续 / 反应性操作</td></tr>
+          <tr><td class="lvl lvl-0">零成本</td><td><kbd>Shift</kbd> / <kbd>Space</kbd></td><td>左小指/左拇指本来就在</td><td>持续 / 反应性操作</td></tr>
+          <tr><td class="lvl lvl-1">低成本</td><td><kbd>E</kbd> / <kbd>Q</kbd></td><td>中指/无名指抬一下，眼睛不离屏</td><td>高频主动技能</td></tr>
+          <tr><td class="lvl lvl-2">中成本</td><td><kbd>R</kbd> / <kbd>F</kbd></td><td>食指/无名指要拉伸</td><td>中频战术技能</td></tr>
+          <tr><td class="lvl lvl-3">高成本</td><td><kbd>C</kbd> / <kbd>V</kbd> / <kbd>X</kbd> / <kbd>Z</kbd></td><td>手掌下移，Space 弃守</td><td>低频 / Team-Up</td></tr>
+          <tr><td class="lvl lvl-5">极高</td><td><kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd> / <kbd>4</kbd></td><td>整只手平移，必须低头瞄键盘</td><td>战前 / 物品 / 装备</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.6rem;">传统 MOBA 的 1234 是人机成本最高方案。MR 的 <kbd>RMB</kbd>/<kbd>Shift</kbd>/<kbd>E</kbd>/<kbd>Q</kbd> 让 4 个主动技能全落在零/低成本区，这是 FPS-MOBA 手感跟手的根本原因。</p>
+    </div>
+
+    <!-- 语义统计 -->
+    <div class="meth-block">
+      <h2>② 语义统计：48 英雄各键功能分布</h2>
+      <table class="cost-table">
+        <thead><tr><th>键</th><th>语义</th><th>典型案例</th><th>占比</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>LMB</kbd></td><td>主输出 / 普攻</td><td>全员普攻</td><td>100%</td></tr>
+          <tr><td><kbd>RMB</kbd></td><td>副武器 / 持续高频技能 / 按住式盾</td><td>Iron Man Unibeam, DocStrange Shield, Punisher Grenade</td><td>~90%</td></tr>
+          <tr><td><kbd>Shift</kbd></td><td>位移 / 自保 / 形态切换</td><td>Storm Surge, Diamond Form, Indestructible Guard</td><td><strong>100% 不留空</strong></td></tr>
+          <tr><td><kbd>E</kbd></td><td>战术 / AoE / 控制 / 增益</td><td>Lightning Realm, Pyro-Prison, Healing Bubble</td><td>~95%</td></tr>
+          <tr><td><kbd>Q</kbd></td><td>大招 / 终极技</td><td>Hulk Smash, Reality Erasure, Soul Resurgence</td><td>100%</td></tr>
+          <tr><td><kbd>F</kbd></td><td>特殊冲击 / 强抉择技</td><td>Karmic Revival(复活), Moonlight Hook</td><td>~30%（备用槽）</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>二段跳 / 飞行 / 攀爬</td><td>Incredible Leap, Hel's Descent</td><td>仅垂直机动英雄</td></tr>
+          <tr><td><kbd>C/V/X/Z</kbd></td><td>Team-Up 联动技</td><td>Vibranium Bastion, Cosmic Fastball</td><td>联动专属</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 四个抽屉 -->
+    <div class="meth-block">
+      <h2>③ 抽屉规则（GameMoba 字母键布局：Skill 1/2/3/4 → RMB / Shift / E / R）</h2>
+      <div class="drawer-grid">
+
+        <div class="drawer rmb">
+          <div class="drawer-head">
+            <span class="drawer-key">RMB</span>
+            <span class="drawer-title">右手枪</span>
+            <span class="drawer-tag">高频输出</span>
+          </div>
+          <h4>✓ 允许塞</h4>
+          <ul>
+            <li>CD &lt; 8s 的输出向技能</li>
+            <li>按住式 / 多段瞄准</li>
+            <li>持续治疗光束（治疗位）</li>
+            <li>按住式护盾</li>
+          </ul>
+          <h4 class="forbidden">✗ 禁止塞</h4>
+          <ul><li class="forbidden">长 CD 大招 / 救命位移 / 长前摇 AoE</li></ul>
+          <div class="examples">参考：Iron Man Unibeam · Hela Piercing Night · Adam Cosmic Cluster</div>
+        </div>
+
+        <div class="drawer shift">
+          <div class="drawer-head">
+            <span class="drawer-key">Shift</span>
+            <span class="drawer-title">逃生绳</span>
+            <span class="drawer-tag">永不留空</span>
+          </div>
+          <h4>✓ 优先级（从有到无依次降级）</h4>
+          <ul>
+            <li>① 传统位移（冲刺/闪现/钩自己）</li>
+            <li>② 形态切换（钻石形态/暴怒）</li>
+            <li>③ 短无敌 / 速度爆发 / Cleanse</li>
+            <li>④ 短 CD 自疗 / 韧性增益</li>
+          </ul>
+          <h4 class="forbidden">✗ 禁止塞</h4>
+          <ul><li class="forbidden">主输出 / 指向控 / 长前摇 AoE</li></ul>
+          <div class="examples">底线："玩家半血被追，本能按下去能活更久"</div>
+        </div>
+
+        <div class="drawer e">
+          <div class="drawer-head">
+            <span class="drawer-key">E</span>
+            <span class="drawer-title">战术匣</span>
+            <span class="drawer-tag">主动开团</span>
+          </div>
+          <h4>✓ 允许塞</h4>
+          <ul>
+            <li>CD 10–20s 的团队收益技</li>
+            <li>范围控制（束缚/眩晕/缓速场）</li>
+            <li>AoE 伤害区</li>
+            <li>队友增益（攻速/护盾/加速）</li>
+            <li>单体硬控 / 标记 / 减抗</li>
+          </ul>
+          <div class="examples">参考：Lightning Realm · Pyro-Prison · Healing Bubble · Buddy Barrier</div>
+        </div>
+
+        <div class="drawer r">
+          <div class="drawer-head">
+            <span class="drawer-key">R</span>
+            <span class="drawer-title">核按钮</span>
+            <span class="drawer-tag">终极技</span>
+          </div>
+          <h4>✓ 允许塞</h4>
+          <ul>
+            <li>长 CD（60s+）</li>
+            <li>单局放 2–3 次</li>
+            <li>改变战局的体量</li>
+            <li>视觉 / 音效最隆重</li>
+          </ul>
+          <h4>📌 为何不沿用 MR 的 Q</h4>
+          <ul><li>MOBA 玩家 R=大招 是肌肉记忆，强改 Q 转岗玩家全员翻车。MR 用 Q 是 FPS 血统</li></ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 决策流程 -->
+    <div class="meth-block">
+      <h2>④ 决策流程：拿到一个英雄怎么分配</h2>
+      <div class="flow">
+        <div class="flow-step" data-step="1">
+          <div class="step-title">找出大招</div>
+          <div class="step-desc">→ 放 <span class="step-key">R</span>（不用想）</div>
+        </div>
+        <div class="flow-step" data-step="2">
+          <div class="step-title">找出自保 / 位移</div>
+          <div class="step-desc">→ 放 <span class="step-key">Shift</span>，找不到就找形态/无敌/自疗</div>
+        </div>
+        <div class="flow-step" data-step="3">
+          <div class="step-title">挑高频 / 可瞄准 / 输出向</div>
+          <div class="step-desc">→ 放 <span class="step-key">RMB</span></div>
+        </div>
+        <div class="flow-step" data-step="4">
+          <div class="step-title">剩下的战术 / 控制 / 团辅</div>
+          <div class="step-desc">→ 放 <span class="step-key">E</span></div>
+        </div>
+      </div>
+      <h3 style="margin-top:1rem;">冲突仲裁</h3>
+      <ul>
+        <li><strong>两个位移</strong>（传统位移 + 瞬移大招）→ 位移留 Shift，瞬移走 R</li>
+        <li><strong>既输出又控制</strong>（眩晕弹）→ CD &lt; 8s 走 RMB；CD ≥ 10s 走 E</li>
+        <li><strong>没大招</strong>（纯辅助）→ R 放"最长 CD 的战略技"</li>
+      </ul>
+    </div>
+
+    <!-- FAQ -->
+    <div class="meth-block">
+      <h2>⑤ FAQ：边界问题</h2>
+      <div class="faq">
+        <details>
+          <summary>Q1：高频输出手段是不是右键好？</summary>
+          <p>是。MR 48 英雄里副武器 / 高频输出 90% 都在 RMB。右手食指零成本，可以一边走位一边按。规则：<strong>任何 CD &lt; 8s 的输出向技能优先 RMB</strong>。</p>
+        </details>
+        <details>
+          <summary>Q2：单体选中的技能也放右键好吗？</summary>
+          <p>分情况。<strong>高频可重复</strong>的单体技（持续射线、连用钩拉、短 CD 单体束缚）→ RMB ✓；<strong>一次性单体重击 + 长 CD</strong> → 放 E 更合适（节奏感强、玩家会"攒着用"）；<strong>选中队友放治疗</strong> → 放 E（治疗英雄 RMB 通常已被持续治疗光束占用）。</p>
+          <p>经验法则：<strong>RMB = 频繁、Shift = 救命、E = 抉择、R = 终结</strong>。同样是单体技，<strong>频次</strong>决定塞哪儿。</p>
+        </details>
+        <details>
+          <summary>Q3：Shift 如果英雄没有位移放什么好？</summary>
+          <p><strong>绝对不能空着</strong>。按优先级降级：① 形态切换（钻石形态/暴怒模式）→ ② 短无敌 / 短霸体 / Cleanse 解控 → ③ 短 CD 治疗自己 / 减伤护盾 → ④ 速度爆发（移速 +50%/2s 之类）。</p>
+          <p>底线：Shift 上的技能必须满足"<strong>玩家半血被追、本能按下去能活更久</strong>"。</p>
+        </details>
+        <details>
+          <summary>Q4：F 键我们要不要用？</summary>
+          <p>暂时不要。F 在 MR 里是"备用第 6 个槽"。我们 4 技能制如果硬塞 F 进字母键布局，会破坏 <code>RMB/Shift/E/R 对应 1/2/3/4</code> 的清晰映射，玩家要记两套规则。F 留给未来扩展（被动主动化、装备技、英雄专属交互）。</p>
+        </details>
+        <details>
+          <summary>Q5：能不能把"治疗"放 Shift？</summary>
+          <p>只对治疗自己的技能可以。给队友的治疗永远放 RMB 或 E：持续光束治疗 → RMB；范围治疗 / 治疗光环 → E；仅治疗自己的应急回复 → Shift（满足"出事就按"语义）。</p>
+        </details>
+        <details>
+          <summary>Q6：一个英雄有 2 个位移怎么办？</summary>
+          <p>主位移（短 CD / 可重复打节奏）→ Shift；副位移（长 CD / 收尾用）看用途：是终结/突进/全屏闪现 → R；是战术性"过墙/绕后" → E。</p>
+        </details>
+        <details>
+          <summary>Q7：被动技能放在哪？</summary>
+          <p>不占字母键抽屉。被动技能纯属角色机制，不参与按键映射。UI 上单独有"被动图标"显示状态即可。</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- 一句话总结 -->
+    <div class="punchline">
+      <span class="kw">RMB</span> 是右手枪 · <span class="kw">Shift</span> 是逃生绳 · <span class="kw">E</span> 是战术匣 · <span class="kw">R</span> 是核按钮<br>
+      <span style="font-size:0.85rem; color:#cbd5e1; font-weight:400;">拿到任何英雄都按这个语义对号入座，<strong style="color:#fcd34d;">Shift 槽不允许留空</strong></span>
+    </div>
+
+  </div>
+</section>
+
+<div class="controls">
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="搜索英雄名或技能名...">
+  </div>
+  <div class="role-filters" id="roleFilters">
+    <button class="role-btn active" data-role="all">全部 (48)</button><button class="role-btn" data-role="VANGUARD" style="--rc:#3b82f6">🛡️ 先锋 (12)</button><button class="role-btn" data-role="DUELIST" style="--rc:#ef4444">⚔️ 决斗者 (25)</button><button class="role-btn" data-role="STRATEGIST" style="--rc:#22c55e">💚 战略家 (11)</button>
+  </div>
+</div>
+
+<div class="grid" id="grid">
+  <div class="hero-card" data-hero="angela" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">ANGELA</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Spear of Ichors</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Axes Of Ichors</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">SHIELDED STANCE</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Seraphic Soar</td>
+          <td><span class="key-badge" style="background:#6b7280">PASSIVE</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Divine Judgement</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Wingblade Ascent</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Assassin's Charge</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Heven's Retribution</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Celestial Command</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="captain america" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">CAPTAIN AMERICA</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Sentinel Strike</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Freedom Charge</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Leading Dash</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Vibranium Energy Saw</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Liberty Rush</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Super-Soldier Slam</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Living Legend</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Captain's Spirit</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">VIBRANIUM BASTION</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="devil dinosaur" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">DEVIL DINOSAUR</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Primal Bite</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Impact Beam</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Buddy Barrier</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Savage Predation</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Frenzied Feast</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Prehistoric Plating</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Apex Advantage</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Devil-Beast Rampage</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Prehistoric Partner</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="doctor strange" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">DOCTOR STRANGE</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Daggers of Denak</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Eye of Agamotto</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Cloak of Levitation</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Maelstrom of Madness</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Pentagram of Farallah</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Shield of the Seraphim</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Price of Magic</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Enchanted Enhancement</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">PSIONIC VORTEX</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="emma frost" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">Emma Frost</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">TELEPATHIC PULSE</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">MIND'S AEGIS</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">PSYCHIC SPEAR</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">DIAMOND FORM</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">FACETED FURY</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">CRYSTAL KICK</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">CARBON CRUSH</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">PSIONIC SEDUCTION</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">ICED OUT DIAMOND</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="groot" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">GROOT</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Vine Strike</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Strangling Prison</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Thornlash Wall</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Ironwood Wall</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spore Bomb</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Flora Colossus</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Furious Flora</td>
+          <td><span class="key-badge" style="background:#10b981">V</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Wild Wall</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="hulk" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">HULK</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Gamma Ray Gun</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Puny Banner</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Gamma Grenade</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Gamma Boost</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Heavy Blow</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">HULK SMASH!</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Indestructible Guard</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Radioactive Lockdown</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Incredible Leap</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Gamma Burst</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Gamma Boost</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Gamma Fastball</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Heavy Blow</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">World Breaker</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Radioactive Lockdown</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Incredible Leap</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Gamma Burst</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Gamma Boost</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Gamma Fastball</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="magneto" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">MAGNETO</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Iron Volley</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Meteor M</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Metallic Curtain</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Metal Bulwark</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Iron Bulwark</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Mag-Cannon</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Magnetic Descent</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">ROYAL BLADE</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="peni parker" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">PENI PARKER</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Cyber-Web Cluster</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spider-Sweeper</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bionic Spider-Nest</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Arachno-Mine</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Cyber-Bond</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Wall Crawl</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Cyber-Web Snare</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">ARMORIZED SPIDER-NEST</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Cyber-Spiders</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="the thing" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">THE THING</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Rocky Jab</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Stone Haymaker</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Yancy Street Charge</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Embattled Leap</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Battle Blitz</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Clobberin' Time</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Unyielding Will</td>
+          <td><span class="key-badge" style="background:#6b7280">PASSIVE</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Cosmic Fastball</td>
+          <td><span class="key-badge" style="background:#f59e0b">Z</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">GAMMA CHARGE</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Flying Thing</td>
+          <td><span class="key-badge" style="background:#84cc16">X</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="thor" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">THOR</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Mjolnir Bash</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">God of Thunder</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Storm Surge</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Lightning Realm</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Awakening Rune</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hammer Throw</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Thorforce</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">THUNDERSTRIKE PIKE</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="venom" data-role="VANGUARD">
+  <div class="hero-header">
+    <span class="hero-name">VENOM</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Dark Predation</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Feast of the Abyss</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Venom Swing</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Symbiotic Resilience</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Frenzied Arrival</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Cellular Corrosion</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Alien Biology</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">HEALING TENDRILS</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="black cat" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">BLACK CAT</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">FELINE FURY</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">CALLING CARD</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">CAT'S CRADLE</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">TURN OF FORTUNE</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">THIEVING GRACE</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">FORTUNE'S FAVOR</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">STEALTHY CATWALK</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">MALKIN MISFORTUNE</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">GIFT OF GOLD</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">CLAW WHIP</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">CALLING CARD</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">CAT'S CRADLE</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">PHANTOM PURSUIT</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">THIEVING GRACE</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">FORTUNE'S FAVOR</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">STEALTHY CATWALK</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">MALKIN MISFORTUNE</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">GIFT OF GOLD</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">GILDED DEAL</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">TABLET OF DESTINIES</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">HELM OF HADES</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">FALTINE FLAME ORB</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">CHERNOBOG'S CRYSTAL</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">RING OF ZONA</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">MENTO-FISH</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">STICKY PAWS</td>
+          <td><span class="key-badge" style="background:#6b7280">PASSIVE</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="black panther" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">BLACK PANTHER</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Vibranium Claws</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bast's Descent</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spirit Rend</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spinning Kick</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Subtle Step</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spear Toss</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Panther's Cunning</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">GAMMA VIBRANIUM ARMOR</td>
+          <td><span class="key-badge" style="background:#6b7280">PASSIVE</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="blade" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">BLADE</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Ancestral Sword</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Hunter's Shotgun</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Scarlet Shroud</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bloodline Awakening</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Daywalker Dash</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Thousand-Fold Slash</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">ECLIPSE EDGE</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="black widow" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">Black Widow</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Widow's Bite Baton</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Red Room Rifle</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Electro-Plasma Explosion</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Fleet Foot</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Edge Dancer</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Straight Shooter</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">PHOENIX SNIPER</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="daredevil" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">Daredevil</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">JUSTICE JAB</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">RIGHTEOUS CROSS</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">OBJECTION!</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">DEVIL'S LATCH</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">INFERNAL FURY</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Sonic Pursuit</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">RADAR SENSE</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">BLIND ASCENT</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">LET THE DEVIL OUT</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">BLIND VERDICT</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="elsa bloodstone" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">Elsa Bloodstone</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">DOUBLE-BARREL BLASTER</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">MONSTER-PIERCER</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">INHERITED INSTINCT</td>
+          <td><span class="key-badge" style="background:#6b7280">PASSIVE</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">RUTHLESS PURSUIT</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">HELIX ADVANCE</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">LIVING BULLET</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">SMOKY SNARE</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">APEX PREDATOR</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">BLOODSTONE'S BOOMBOX BULLETS</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="hawkeye" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">HAWKEYE</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Piercing Arrow</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Blast Arrow</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hunter's Sight</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Crescent Slash</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hypersonic Arrow</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Ronin Slash</td>
+          <td><span class="key-badge" style="background:#10b981">V</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Skyward Leap</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Archer's Focus</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">MOONLIT SLASH</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="hela" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">HELA</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Nightsword Thorn</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Goddess of Death</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Astral Flock</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Soul Drainer</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Piercing Night</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Nastrond Crowstorm</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hel's Descent</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Hel Tendrils</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">DEATH KNELL</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="human torch" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">HUMAN TORCH</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Fire Cluster</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Blazing Blast</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Flaming Meteor</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Plasma Body</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Pyro-Prison</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Supernova</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Storm Siblings</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Pyrokinetic Energy</td>
+          <td><span class="key-badge" style="background:#84cc16">X</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Two In One</td>
+          <td><span class="key-badge" style="background:#94a3b8">—</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="iron fist" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">IRON FIST</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Jeet Kune Do</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Yat Jee Chung Kuen</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Living Chi</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">K'un-Lun Kick</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Harmony Recovery</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Crane Leap</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Dragon's Defense</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Wall Runner</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Chi Absorption</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Lunar Chi</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="iron man" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">IRON MAN</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Repulsor Blast</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Repulsor Blast (Armor Overdrive)</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Unibeam</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Unibeam (Armor Overdrive)</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Invincible Pulse Cannon</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hyper-Velocity</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hyper-Velocity (Armor Overdrive)</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Armor Overdrive</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Micro-Missile Barrage</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Micro-Missile Barrage (Armor Overdrive)</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">NANO TECH</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="magik" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">MAGIK</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Soulsword</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Darkchild</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Stepping Discs</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Umbral Incursion</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Eldritch Whirl</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Magik Slash</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Demon's Rage</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Limbo's Might</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">CHAIN OF CYTTORAK</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Soulsword</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Stepping Discs</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Umbral Incursion</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Eldritch Whirl</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Magik Slash</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Demon's Rage</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="moon knight" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">MOON KNIGHT</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Crescent Dart</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hand of Khonshu</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Night Glider</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Ancient Ankh</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Moonlight Hook</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Rising Leap</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Moon Blade</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Triple Eclipse</td>
+          <td><span class="key-badge" style="background:#10b981">V</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">MOON GOD'S CHOSEN</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="mister fantastic" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">Mister Fantastic</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Stretch Punch</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Distended Grip</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Flexible Elongation</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Reflexive Rubber</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Brainiac Bounce</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Elastic Strength</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">FANTASTIC AMPLIFIER</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="namor" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">NAMOR</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Trident of Neptune</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Horn of Proteus</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Blessing of the Deep</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Aquatic Dominion</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Wrath of the Seven Seas</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">TIDAL DIRGE</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="phoenix" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">PHOENIX</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Cosmic Flames</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Telekinesis Burst</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Dark Ascent</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Telepathic Illusion</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Endsong Inferno</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Mind's Grace</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="psylocke" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">PSYLOCKE</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Psionic Crossbow</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Dance of the Butterfly</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Psi-Blade Dash</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Psychic Stealth</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Wing Shurikens</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">LIGHT &amp; DARK DARTS</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="scarlet witch" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">SCARLET WITCH</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Chaos Control</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Reality Erasure</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Mystic Projection</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Dark Seal</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Telekinesis</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Chthonian Burst</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Sorcery Surge</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="spider-man" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">SPIDER-MAN</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Spider-Power</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Web-Cluster</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spectacular Spin</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Web-Swing</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Get Over Here!</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Amazing Combo</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Thwip and Flip</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spider-Sense</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Wall Crawl</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Inferno Blast</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Sticky Spider-Bomb</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="squirrel girl" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">SQUIRREL GIRL</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Burst Acorn</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Unbeatable Squirrel Tsunami</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Tail Bounce</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Mammal Bond</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Squirrel Blockade</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Squirrel Missile</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="star-lord" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">STAR-LORD</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Element Guns</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Galactic Legend</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Rocket Propulsion</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Blaster Barrage</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Stellar Shift</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Astral Jump</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="storm" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">STORM</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Wind Blade</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Omega Hurricane</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Weather Control</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Goddess Boost</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bolt Rush</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">ETERNAL WEATHER WITCH</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="the punisher" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">THE PUNISHER</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Adjudication</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Deliverance</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Final Judgement</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Vantage Connection</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Culling Turret</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Scourge Grenade</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Warrior's Gaze</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">CUTTING-EDGE TECH</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">JUSTICE SENSE</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Ancient Judgement</td>
+          <td><span class="key-badge" style="background:#84cc16">X</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="winter soldier" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">WINTER SOLDIER</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Roterstern</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Kraken Impact</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Trooper's Fist</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Tainted Voltage</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bionic Hook</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Ceaseless Charge</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Stellar Impact</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="wolverine" data-role="DUELIST">
+  <div class="hero-header">
+    <span class="hero-name">Wolverine</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Savage Claw</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Last Stand</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Feral Leap</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Undying Animal</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Vicious Rampage</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Regenerative Healing Factor</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Berserker Rage</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Phoenix Warrior</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="adam warlock" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">ADAM WARLOCK</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Quantum Magic</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Karmic Revival</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Karmic Revival</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Soul Bond</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Avatar Life Stream</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Cosmic Cluster</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Regenerative Cocoon</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">HEAVENLY HARMONY</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="cloak &amp; dagger" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">Cloak &amp; Dagger</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Darkforce Cloak</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Eternal Bond</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Light's Embrace</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Terror Cape</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Dark Teleportation</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">FROM SHADOW TO LIGHT</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Lightforce Dagger</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Eternal Bond</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Shadow's Embrace</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Veil of Lightforce</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Dagger Storm</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="gambit" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">Gambit</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Kinetic Cards</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Ragin' Royal Flush</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Cajun Charge</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Healing Hearts</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Breaking Spades</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bayou Bash</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">ACE OF ACES</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bridge Boost</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Purifying Pick-Up</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Explosive Trick</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Bidding Barrage</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="invisible woman" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">Invisible Woman</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Orb Projection</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Guardian Shield</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Psionic Vortex</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Force Physics</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Invisible Boundary</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Covert Advance</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Veiled Step</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Fantasti-Force</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="jeff the land shark" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">JEFF THE LAND SHARK</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Joyful Splash</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Aqua Burst</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">It's Jeff!</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Hide and Seek</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Healing Bubble</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Oblivious Cuteness</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">IT'S JEFF-NADO!</td>
+          <td><span class="key-badge" style="background:#f59e0b">Z</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">GUARDIAN OF THE DEEP</td>
+          <td><span class="key-badge" style="background:#84cc16">X</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">New Friends</td>
+          <td><span class="key-badge" style="background:#94a3b8">None</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Jeff's Cuddle Buddy</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="loki" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">LOKI</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Mystical Missile</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">God of Mischief</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Regeneration Domain</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Doppelganger</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Devious Exchange</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Backstab</td>
+          <td><span class="key-badge" style="background:#10b981">V</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Deception</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Deific Blessing</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="luna snow" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">LUNA SNOW</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Light &amp; Dark Ice</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Fate of Both Worlds</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Ice Arts</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Share the Stage</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Absolute Zero</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Cryo Heart</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Smooth Skate</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Number One Idol</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">ICED OUT DIAMOND</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">SPIRIT FOX ACCORD</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="mantis" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">MANTIS</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Life Energy Blast</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Soul Resurgence</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Spore Slumber</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Allied Inspiration</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Natural Anger</td>
+          <td><span class="key-badge" style="background:#ec4899">F</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Healing Flower</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Nature's Favor</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Heavenly Guardian</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="rocket raccoon" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">ROCKET RACCOON</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Bombard Mode</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">Repair Mode</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">C.Y.A.</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Jetpack Dash</td>
+          <td><span class="key-badge" style="background:#eab308">SHIFT</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">B.R.B.</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Wild Crawl</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Flying Ace</td>
+          <td><span class="key-badge" style="background:#6366f1">Space</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">Old Friends</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="ultron" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">Ultron</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">ENCEPHALO-RAY</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">IMPERATIVE: FIREWALL</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">IMPERATIVE: PATCH</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">DYNAMIC FLIGHT</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">RAGE OF ULTRON</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">NANO RAY</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr></tbody>
+  </table>
+</div><div class="hero-card" data-hero="white fox" data-role="STRATEGIST">
+  <div class="hero-header">
+    <span class="hero-name">White Fox</span>
+  </div>
+  <table class="skill-table">
+    <thead><tr><th>类型</th><th>技能名</th><th>键位</th></tr></thead>
+    <tbody><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">YEOWOO GUSEUL</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">CLAW STRIKE</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">SPECTRAL SURGE</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">FOX FORM AWAKENING</td>
+          <td><span class="key-badge" style="background:#f97316">E</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">SPIRIT SANCTUARY</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">TAIL SWEEP</td>
+          <td><span class="key-badge" style="background:#8b5cf6">Right Click</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">Predatory Pounce</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">KUMIHO UNLEASHED</td>
+          <td><span class="key-badge" style="background:#eab308">Shift</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">SPIRIT FOX WARD</td>
+          <td><span class="key-badge" style="background:#ef4444">Q</span></td>
+        </tr><tr>
+          <td><span class="cat tag-team">联动</span></td>
+          <td class="skill-name">NINE-TAILED AURA</td>
+          <td><span class="key-badge" style="background:#6b7280">Passive</span></td>
+        </tr><tr>
+          <td><span class="cat tag-normal">普攻</span></td>
+          <td class="skill-name">NINEFOLD SLAM</td>
+          <td><span class="key-badge" style="background:#06b6d4">C</span></td>
+        </tr><tr>
+          <td><span class="cat tag-skill">技能</span></td>
+          <td class="skill-name">BLESSED BY THE NINE</td>
+          <td><span class="key-badge" style="background:#3b82f6">Left Click</span></td>
+        </tr></tbody>
+  </table>
+</div>
+</div>
+<div class="no-results hidden" id="noResults">😢 没有找到匹配的英雄</div>
+
+<footer>©2026 MARVEL · ©NetEase · 数据整理：Hermes Agent</footer>
+
+<script>
+// 方法论折叠
+const methToggle = document.getElementById('methToggle');
+const methContent = document.getElementById('methContent');
+methToggle.addEventListener('click', () => {
+  methToggle.classList.toggle('open');
+  methContent.classList.toggle('open');
+});
+
+const cards = document.querySelectorAll('.hero-card');
+const searchInput = document.getElementById('search');
+const roleBtns = document.querySelectorAll('.role-btn');
+const noResults = document.getElementById('noResults');
+let activeRole = 'all';
+
+function filterCards() {
+  const q = searchInput.value.toLowerCase();
+  let visible = 0;
+  cards.forEach(card => {
+    const heroName = card.dataset.hero;
+    const role = card.dataset.role;
+    const text = card.innerText.toLowerCase();
+    const roleMatch = activeRole === 'all' || role === activeRole;
+    const searchMatch = !q || text.includes(q);
+    const show = roleMatch && searchMatch;
+    card.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+  noResults.classList.toggle('hidden', visible > 0);
+}
+
+searchInput.addEventListener('input', filterCards);
+
+roleBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    roleBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeRole = btn.dataset.role;
+    filterCards();
+  });
+});
+</script>
+
+</body></html>

@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>单体施法目标选取 （V2.1） 实现规范 · 实现规范（程序向）</title>
+<style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+      pre{margin:12px 0 0;padding:14px 16px;overflow:auto;background:var(--code-bg);
+      border:1px solid var(--line);border-radius:var(--radius);font:13px/1.65 var(--mono);color:var(--code);}
+    pre code{background:none;padding:0;color:inherit;font-size:inherit;}
+    section>h2:first-child{margin-top:0;}
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Reference · Targeting</div>
+      <h1>单体施法目标选取 （V2.1） 实现规范</h1>
+      
+      <div class="docinfo">
+        <div><i>文档类型</i><b>实现规范（程序向）</b></div>
+        <div><i>归属</i><b>镜头与瞄准 · 镜头索敌系统</b></div>
+        <div><i>来源</i><b>战斗 3C 文档区（fdd）</b></div>
+        <div><i>状态</i><b>在用 · 随项目更新</b></div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <a href="#s0"><i>01</i>概述</a>
+        <a href="#s1"><i>02</i>0. 文档定位</a>
+        <a href="#s2"><i>03</i>1. 系统目标</a>
+        <a href="#s3"><i>04</i>2. 三态状态机</a>
+        <a href="#s4"><i>05</i>3. 核心数据资产</a>
+        <a href="#s5"><i>06</i>4. 接入流程（新单体技能怎么挂上 V2.1）</a>
+        <a href="#s6"><i>07</i>5. 数据流（输入 → EventData → ActivateAbility → Execute）</a>
+        <a href="#s7"><i>08</i>6. SelfCast modifier(Alt 强制自施法）</a>
+        <a href="#s8"><i>09</i>7. ResolvePolicy 语义（无候选时怎么办）</a>
+        <a href="#s9"><i>10</i>8. 三条架构约束（踩坑红线）</a>
+        <a href="#s10"><i>11</i>9. 验收清单</a>
+        <a href="#s11"><i>12</i>10. 调试与可视化</a>
+        <a href="#s12"><i>13</i>11. 关键文件与接口索引</a>
+        <a href="#s13"><i>14</i>12. 相关文档</a>
+        <a href="#s14"><i>15</i>13. 演进历史</a>
+      </nav>
+      <main>
+        <section id="s0"><h2>概述</h2><p>文档类型：实现规范（程序向）
+适用对象：战斗程序 / 工具程序 / 给单体技能接入 V2.1 的策划
+对应代码：<code>Source/GameMoba/Targeting/</code> + <code>Source/GameMoba/AbilitySystem/Abilities/HeroAbility.{h,cpp}</code> + <code>Source/GameMoba/Character/HeroCharacter.cpp</code> 的 <code>Input_AbilityPressed</code> + 结算模块 <code>SkillModule{ApplyBuffToTarget,LaunchProjectile,TeleportToTarget,RootMotionSource}</code> + <code>HeroAbilityTypes.{h,cpp}</code> 的 <code>FAbilityHasTSCTargetTrigger</code>
+最后核对：2026-06-04（对应 CL 5358653 / 5365224 落地、Twinblast Bomb CL 5365994 pending 后）</p></section>
+        <section id="s1"><h2>0. 文档定位</h2>
+<p>本文档是 <code>range-ground-targeting-spec.md</code> 的姊妹文档，管的是<strong>单体施法</strong>这条线
+（范围/地面/抛投在那一份）。</p>
+<ul>
+<li><strong>策划语义层</strong>（玩家体验、Soft/Armed 概念由来、设计取向参考）请看
+  <code>Skill - 单体施法选取 V2.html</code>，本文不重复。</li>
+<li><strong>踩坑教训</strong>（为什么某些约束不能违反、历史方案对比）请看
+  <code>memory/combat-skill-conventions.md</code> L90–186，本文复述要点 + 给链接。</li>
+<li><strong>本文档</strong>写的是：<strong>当前系统的接口、数据流、配置入口、接入步骤、约束、验收</strong>。</li>
+</ul>
+</section>
+        <section id="s2"><h2>1. 系统目标</h2>
+<p>为第三人称 3D MOBA 的"单体施法"提供一套统一的目标选取管线：</p>
+<ul>
+<li>Idle 时持续维护一个"软目标"(Soft target）给玩家看（像 League/Smite 的命中体提示）</li>
+<li>Holding 类技能蓄力中维护“已锁目标”（Armed target)，释放时用它结算
+  （结算走 <code>SkillModuleApplyBuffToTarget</code> / <code>LaunchProjectile</code> / <code>TeleportToTarget</code> /
+  <code>RootMotionSource</code> 的 ArmedTarget 模式，见 §3.4）</li>
+<li>Holding 锁敌类“无 Armed target 不放、不进 CD”由确认门 <code>FAbilityHasTSCTargetTrigger</code>
+  保证（见 §7.1)，与 tap 类的 <code>ResolvePolicy</code> 是两套机制</li>
+<li>支持 Alt 强制自施法（SelfCast modifier）绕过当前 Soft/Armed</li>
+<li>支持"无候选时按键 → 自动选 self"(AllowSelfFallback）语义</li>
+</ul>
+<p>设计倾向：<strong>预览给玩家积极引导（粘滞、Grace、抗 jitter)，最终裁决保守
+（不替玩家改变 EventData 里的 target 意图）</strong>。同 <code>range-ground-targeting-spec.md</code>
+的取向。</p>
+</section>
+        <section id="s3"><h2>2. 三态状态机</h2>
+<p><code>UTargetSelectionComponent</code>（挂在本地玩家的 <code>AMatchPlayerController</code> 上）
+维护一个三态机：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>进入 API</th>
+<th>退出 API</th>
+<th>评分 Profile 来源</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Idle</code></td>
+<td>（默认）</td>
+<td><code>BeginHolding</code> / <code>BeginSelfCast</code></td>
+<td><code>IdleDriveProfile</code>（自动 discovery）</td>
+<td>持续 20Hz 评分，胜出者 = Soft target</td>
+</tr>
+<tr>
+<td><code>Holding</code></td>
+<td><code>BeginHolding(profile）</code></td>
+<td><code>EndHolding(）</code></td>
+<td>入参的 <code>InHoldingProfile</code></td>
+<td>蓄力中，胜出者 = Armed target</td>
+</tr>
+<tr>
+<td><code>SelfCast</code></td>
+<td><code>BeginSelfCast(）</code></td>
+<td><code>EndSelfCast(）</code></td>
+<td>（无评分）</td>
+<td><code>CurrentTarget</code> = owner pawn，锁死</td>
+</tr>
+</tbody>
+</table>
+<p><strong>状态互斥</strong> — 同时只有一个；<code>SelfCast</code> 优先级最高（详见 §6 时序与 §8 约束 3）。</p>
+<h3>2.1 IdleDriveProfile 怎么来</h3>
+<p><code>UTargetSelectionComponent::TickComponent</code> 每帧会做一次 <code>TryDiscoverIdleDriveProfile</code>：</p>
+<ol>
+<li>遍历 owner pawn 的 GAS 已 grant 的所有 <code>UHeroAbility</code></li>
+<li>找 <code>AbilityDataAsset-&gt;bDrivesIdleSoftTarget == true</code> 那一个</li>
+<li>取它的 <code>TargetSelectionProfile</code> 作为 Idle 期间的评分 profile</li>
+</ol>
+<p>约定：<strong>每英雄至多一个</strong>驱动源技能。资产层校验保证唯一（目前是规约，
+后续可加 editor validator）。</p>
+</section>
+        <section id="s4"><h2>3. 核心数据资产</h2>
+<h3>3.1 <code>UTargetSelectionPreviewDataAsset</code>（TSP_*）</h3>
+<p>单个技能的"找谁、怎么排序"配置。完整字段表（默认值在头文件 L52–128)：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>字段</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>硬过滤</td>
+<td><code>AllowedTeams</code>（bitflag）</td>
+<td>友/敌/中立/自身，可叠加</td>
+</tr>
+<tr>
+<td>硬过滤</td>
+<td><code>AllowedUnitTypeTags</code>（GameplayTag）</td>
+<td>限制 unit 类型（如 <code>Unit.Type.Hero</code>）</td>
+</tr>
+<tr>
+<td>硬过滤</td>
+<td><code>RangeCm</code></td>
+<td>距离上限</td>
+</tr>
+<tr>
+<td>硬过滤</td>
+<td><code>ScreenConeRadius</code>（0–1）</td>
+<td>屏幕中心半径百分比（NDC）</td>
+</tr>
+<tr>
+<td>硬过滤</td>
+<td><code>LineOfSightRule</code></td>
+<td><code>None</code> / <code>Required</code> / <code>RequiredWithGrace</code></td>
+</tr>
+<tr>
+<td>评分</td>
+<td><code>ScreenCenterWeight</code> / <code>FacingWeight</code> / <code>WorldDistanceWeight</code></td>
+<td>主要评分项权重</td>
+</tr>
+<tr>
+<td>评分</td>
+<td><code>LockRetainBonus</code> / <code>LockProtectBonus</code> / <code>GraceBonus</code></td>
+<td>粘滞类加成</td>
+</tr>
+<tr>
+<td>粘滞</td>
+<td><code>LockRetainRadius</code>（NDC) / <code>LockProtectTime</code>（s) / <code>LostGraceTime</code>（s）</td>
+<td>抗 jitter 节流</td>
+</tr>
+<tr>
+<td>粘滞</td>
+<td><code>SwitchCooldown</code>（s) / <code>SwitchScoreThreshold</code></td>
+<td>主动甩枪短路</td>
+</tr>
+<tr>
+<td>Resolve</td>
+<td><code>ResolvePolicy</code></td>
+<td><code>NoCastOnEmpty</code> / <code>AllowSelfFallback</code>，见 §7</td>
+</tr>
+<tr>
+<td>UI</td>
+<td><code>TargetIndicatorWidgetClass</code>（soft class）</td>
+<td>当前 target 身上挂的指示 widget</td>
+</tr>
+<tr>
+<td>UI</td>
+<td><code>TargetIndicatorOffset</code></td>
+<td>widget 局部偏移</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注：</strong> <code>UTargetSelectionPreviewDataAsset</code> 继承 <code>UPreviewDataAsset</code> 是为了进 Preview
+资产家族，但<strong>不</strong>使用 <code>FPreviewDataInstance</code> 模型（<code>CreatePreviewInstance(）</code>
+直接返回 <code>nullptr</code>）— 运行时状态全部在 <code>UTargetSelectionComponent</code> 上。</p>
+<h3>3.2 <code>UHeroAbilityDataAsset</code>（HAD_*）里的 V2.1 字段</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TargetSelectionProfile</code>（<code>TObjectPtr&lt;TSP_*&gt；</code>）</td>
+<td>引用 TSP，空 = 该技能不走单体管线</td>
+</tr>
+<tr>
+<td><code>bDrivesIdleSoftTarget</code>（bool）</td>
+<td>标记本技能作为该英雄的 Idle 驱动源</td>
+</tr>
+<tr>
+<td><code>bHoldingAbility</code>（bool，<strong>V1 就有</strong>）</td>
+<td>是否走 Holding 链（蓄力技能）</td>
+</tr>
+<tr>
+<td><code>ConfirmHoldingSkillModules</code></td>
+<td>Holding 确认（释放）时跑的 module 链</td>
+</tr>
+<tr>
+<td><code>CustomizeEventSkillModules</code>（map）</td>
+<td>由释放 montage 的 GameplayEvent notify 触发的 module 链（锁敌追踪弹常放这里，见 §5.3）</td>
+</tr>
+<tr>
+<td><code>CanConfirmHoldingSkillModule</code>（<code>FInstancedStruct</code> of <code>FCanDoAbilityTriggerModule</code>）</td>
+<td>Holding 释放时的<strong>确认门</strong>；填 <code>FAbilityHasTSCTargetTrigger</code> = 无 Armed target 时不确认（不放、不进 CD、不耗蓝），见 §3.4 / §7.1</td>
+</tr>
+</tbody>
+</table>
+<h3>3.3 <code>UGameInputDataAsset</code>（GameInputData_Global）里的 V2.1 字段</h3>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>默认绑定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SelfCastModifierInputAction</code>（<code>UInputAction*</code>）</td>
+<td>Alt 修饰键（全局 modifier，见 §6）</td>
+<td><code>IA_SelfCastModifier</code> → LeftAlt(IMC_Default + IMC_Default_AltKeys 各一条）</td>
+</tr>
+<tr>
+<td><code>CancelHoldingInputAction</code>（<code>UInputAction*</code>）</td>
+<td>Holding 中取消（右键）</td>
+<td><code>IA_CancelHolding</code> → RMB</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注：</strong> <code>IA_SelfCastModifier</code> 自身 <code>ValueType=Boolean</code>，<code>Triggers/Modifiers</code> 都为空；
+Started/Completed 由 <code>MatchPlayerController::Input_SelfCastModifier</code> 维护
+<code>bSelfCastModifierActive</code> 状态。</p>
+<h3>3.4 Armed target 结算模块（Holding 锁敌技能用）</h3>
+<p>Holding 蓄力锁定的 Armed target，最终由下面任一（可组合）结算模块消费。它们的
+<code>UpdateTargetData(）</code> 在构建 EventData 时读 <code>TSC.GetCurrentTarget(）</code> <strong>快照</strong>进
+<code>EventData.TargetData</code>（时序见 §5.3)，<code>Execute(）</code> 只认快照、不再 query TSC。</p>
+<table>
+<thead>
+<tr>
+<th>结算模块</th>
+<th>锁敌配置项</th>
+<th>效果</th>
+<th>范例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SkillModuleApplyBuffToTarget</code></td>
+<td>目标类型 = <code>ArmedTarget</code></td>
+<td>给 Armed target 挂 buff / 伤害</td>
+<td>Muriel 大盾（给友方）</td>
+</tr>
+<tr>
+<td><code>SkillModuleLaunchProjectile</code></td>
+<td><code>ProjectileHomingType = EProjectileHomingType::BasedOnArmedTarget</code></td>
+<td>子弹追踪 Armed target(Instant 投掷物每帧朝目标修正，到点强制 hit）</td>
+<td>Twinblast 手炮</td>
+</tr>
+<tr>
+<td><code>SkillModuleTeleportToTarget</code></td>
+<td><code>TeleportType = ESkillTeleportToTargetType::BasedOnArmedTarget</code></td>
+<td>瞬移到 Armed target 附近（可配 <code>RelativeLocation</code> 偏移、<code>bFaceToTargetAfterTeleport</code>）</td>
+<td>Kallari Mark</td>
+</tr>
+<tr>
+<td><code>SkillModuleRootMotionSource</code></td>
+<td><code>RootMotionForceType = ERootMotionForceType::BasedOnArmedTarget</code></td>
+<td>RootMotion 冲向 Armed target（可配 <code>DistantceToTargetToEndRootMotion</code> 提前结束）</td>
+<td>冲刺类位移</td>
+</tr>
+</tbody>
+</table>
+<p><strong>命名不一致（注意）：</strong> <code>ApplyBuffToTarget</code> 用的枚举值叫 <code>ArmedTarget</code>，另外三个叫
+<code>BasedOnArmedTarget</code>，语义相同（都读 <code>TSC.CurrentTarget</code>）。</p>
+<p><strong>落点 AOE 与瞄准解耦：</strong> 追踪弹命中后的范围伤害 / buff（如手炮落点 AOE)baked 在
+<code>InstantProjectileData</code> 的 <code>HitSkillAreaWithBuffs</code> 里，命中自动触发，与“怎么瞄”无关
+—— 从老的区域瞄准（SAPDA）迁到锁敌时这部分<strong>不用动</strong>。</p>
+</section>
+        <section id="s5"><h2>4. 接入流程（新单体技能怎么挂上 V2.1）</h2>
+<p>按技能形态分两类：<strong>4.1 tap / 自施法类</strong>（Idle Soft + ResolvePolicy）、<strong>4.2 Holding
++ 锁敌结算类</strong>（投掷弹 / 位移 / 冲刺）。两类都<strong>只动数据，不动代码</strong>。</p>
+<h3>4.1 tap / 自施法类（Muriel 大盾范式）</h3>
+<p>步骤：</p>
+<ol>
+<li>
+<p><strong>建 <code>TSP_&lt;Hero&gt;&lt;Skill&gt；</code></strong>（<code>UTargetSelectionPreviewDataAsset</code> 实例）
+   - 填硬过滤、评分权重、粘滞参数（可拷贝 <code>TSP_MurielShield</code> 作为模板）
+   - <code>ResolvePolicy</code> 选 <code>NoCastOnEmpty</code> 还是 <code>AllowSelfFallback</code>（见 §7)
+   - <code>TargetIndicatorWidgetClass</code> 选通用 <code>W_MarkTargetIndicator</code> 或做技能专属版
+     （专属版必须<strong>跟 TSP 同 CL 提交</strong>，提交顺序错会引用断裂）</p>
+</li>
+<li>
+<p><strong>改 <code>HAD_&lt;Hero&gt;&lt;Skill&gt；</code></strong>
+   - <code>TargetSelectionProfile</code> → 上面那个 TSP
+   - <code>bDrivesIdleSoftTarget = true</code>（如果是该英雄的主驱动源；
+     否则只在 Holding 中评分，Idle 时不显 Soft 框）</p>
+</li>
+<li>
+<p><strong>GA 本身一般不动</strong>，除非：
+   - 原本是纯 Holding 技能，想支持 Alt+键"即按即放"(tap-class 入口） →
+     拆出 tap 子能力（参考 <code>GA_MurielShield</code> 的拆分）</p>
+</li>
+<li>
+<p><strong>Alt 是全局的，不需要每个 GA 配</strong> — 只要走 <code>UHeroAbility::ActivateAbility</code>
+   就会自动消费 <code>IsSelfCastModifierActive(）</code>。</p>
+</li>
+<li>
+<p><strong>验证</strong>：跑 §9 的验收清单。</p>
+</li>
+</ol>
+<h3>4.2 Holding + 锁敌结算类（Kallari Mark / Twinblast 手炮范式）</h3>
+<p>蓄力锁敌、释放结算的技能（突进、追踪弹等）。在 4.1 的基础上：</p>
+<ol>
+<li>
+<p><strong>建 <code>TSP_&lt;Hero&gt;&lt;Skill&gt；</code></strong> — 锁敌通常 <code>AllowedTeams = Hostile</code>、<code>ResolvePolicy =
+   NoCastOnEmpty</code>（无目标交给确认门拦，见第 4 步）。可拷 <code>TSP_KallariMark</code> 作模板。</p>
+</li>
+<li>
+<p><strong>改 <code>HAD_&lt;Hero&gt;&lt;Skill&gt；</code></strong>
+   - <code>TargetSelectionProfile</code> → 上面的 TSP
+   - <code>bHoldingAbility = true</code>
+   - <code>bDrivesIdleSoftTarget = false</code> —— <strong>按住才出敌方框</strong>，平时不常驻
+     （Mark / 手炮都是 false；要平时也显 Soft 框才设 true）</p>
+</li>
+<li>
+<p><strong>把结算模块切到 ArmedTarget 模式</strong>（§3.4 选一个）：
+   - 追踪弹：<code>ConfirmHoldingSkillModules</code> 或 <code>CustomizeEventSkillModules</code> 里的
+     <code>SkillModuleLaunchProjectile.ProjectileHomingType = BasedOnArmedTarget</code>
+   - 突进：<code>SkillModuleTeleportToTarget.TeleportType = BasedOnArmedTarget</code>
+   - 冲刺：<code>SkillModuleRootMotionSource.RootMotionForceType = BasedOnArmedTarget</code></p>
+</li>
+<li>
+<p><strong>挂确认门</strong>：<code>CanConfirmHoldingSkillModule = FAbilityHasTSCTargetTrigger(）</code> ——
+   无 Armed target 时释放被拦，不放、不进 CD、不耗蓝（见 §7.1）。</p>
+</li>
+<li>
+<p><strong>摘掉老的区域瞄准残留</strong>（若从 SAPDA 迁来）：删 <code>ActivateSkillModules</code> /
+   <code>ConfirmHoldingSkillModules</code> 里的 <code>SkillModulePreviewData</code>（Add/Remove SAPDA）模块，
+   并把确认门从 <code>FAbilityPreviewTrigger(SAPDA）</code> 换成 <code>FAbilityHasTSCTargetTrigger</code>。
+   否则老区域 decal 会和新 soft-frame 双重 UI。SAPDA 资产本身不必删（留作回滚锚点）。</p>
+</li>
+<li>
+<p><strong>指示器</strong>：<code>TSP.TargetIndicatorWidgetClass</code> 选通用 <code>W_MarkTargetIndicator</code>，或复制
+   技能专属版（如手炮 <code>W_BombTargetIndicator</code>）—— 专属 widget 必须跟 TSP <strong>同 CL
+   提交</strong>，提交顺序错会引用断裂。</p>
+</li>
+<li>
+<p><strong>验证</strong>：跑 §9 验收清单（含 Holding 专项）。</p>
+</li>
+</ol>
+<blockquote>
+<p>⚠ <strong>当前已知行为</strong>：Holding 类释放后，选择框会停留到 <code>EndAbility</code>（释放 montage
+结束，约 1s）才消失 —— indicator 隐藏目前绑在 <code>EndHolding</code> @ <code>EndAbility</code>。
+“释放即隐藏”的解耦优化在排期中（只动指示器可见性，不能提前清 Armed target，原因见
+§5.3 关键推论）。</p>
+</blockquote>
+</section>
+        <section id="s6"><h2>5. 数据流（输入 → EventData → ActivateAbility → Execute）</h2>
+<p>下面这条<strong>时序</strong>决定了所有关键约束：</p>
+<pre><code>AHeroCharacter::Input_AbilityPressed
+  ├─ ★ if (Alt 按下） → TSC-&gt;BeginSelfCast()      &lt;-- 必须在这里
+  ├─ FGameplayEventData ED = AbilityInstance-&gt;GetAbilityInputActivateEventData()
+  │     └─ 内部跑所有 module 的 UpdateTargetData()
+  │           └─ SkillModuleApplyBuffToTarget 读 TSC.CurrentTarget
+  │              → 写进 ED.TargetData  (★从此定型，后续只读不写）
+  │              → 如果 CurrentTarget 为空 + ResolvePolicy=AllowSelfFallback
+  │                → 把 caster 喂进 TargetActors(SkillModuleApplyBuffToTarget L60-67)
+  └─ ASC-&gt;TriggerAbilityFromInput(handle, &amp;ED, idx)
+        └─ replicate to server + 触发 ActivateAbility(client + server)
+              ├─ 兜底再 BeginSelfCast / BeginHolding（网络/AI 路径专用，
+              │   见 HeroAbility::ActivateAbility 的 module loop 前）
+              └─ Module loop:buff / projectile 全部取 ED.TargetData
+</code></pre>
+<h3>5.1 EventData 不可改</h3>
+<p><code>Execute</code> 路径只 <code>Get(...）</code> <code>InEventData.TargetData</code>，<strong>绝不会</strong>再 query TSC 一次。
+所有"修饰键改 target 选择"的逻辑必须发生在 <code>GetAbilityInputActivateEventData(）</code>
+<strong>之前</strong>。详见 §8 约束 3。</p>
+<h3>5.2 ActivateAbility 内的兜底</h3>
+<p><code>HeroAbility::ActivateAbility</code> 入口处的 SelfCast/Holding 通知块<strong>不是</strong>为了影响当帧 EventData
+（已经定型），而是为了：
+- 给生命周期延续的逻辑用（Holding 类的 next-tick <code>ConfirmHolding</code> 调度）
+- 给非 Input_AbilityPressed 触发的激活路径兜底（GameplayEvent / AI 决策）</p>
+<h3>5.3 Holding 类时序（Armed target 何时被读）</h3>
+<pre><code>按住技能键
+  └─ ActivateAbility → TSC-&gt;BeginHolding(TSP)      // 进 Holding 态，开始评分 Armed
+        └─ 蓄力中：TSC 每帧维护 CurrentTarget = Armed target，指示器挂其身上
+松开技能键
+  └─ HeroCharacter 释放分支 → ShouldConfirmHolding?
+        ├─ 确认门 CanConfirmHoldingSkillModule(FAbilityHasTSCTargetTrigger):
+        │    本地端看 TSC.CurrentTarget 是否非空；空 = 不确认（不放、不进 CD)
+        └─ ConfirmHoldingAbility
+             ├─ 构建 ConfirmEventData:ConfirmHoldingSkillModules 各模块 UpdateTargetData
+             │    └─ 结算模块读 TSC.CurrentTarget → 快照进 EventData  (★ 突进/位移在此定型）
+             └─ ConfirmHoldingSkillModules.Execute（只认快照）
+释放 montage 的 GameplayEvent notify（若有）
+  └─ OnAbilityCustomizeSkillModuleEvent → CustomizeEventSkillModules
+        ├─ UpdateTargetData:LaunchProjectile 读 TSC.CurrentTarget → 快照 HomingTarget
+        │    (★ 追踪弹在此定型 —— 发生在 confirm 之后、montage 中途）
+        └─ Execute：发射追踪弹
+EndAbility
+  └─ TSC-&gt;EndHolding()   // 退出 Holding 态；指示器在此隐藏
+</code></pre>
+<p><strong>关键推论：</strong> Armed target 必须从 <code>BeginHolding</code> 一直存活到上面<strong>最后一次</strong>
+<code>UpdateTargetData</code> 读取（追踪弹是 montage 中途，<strong>晚于</strong> confirm）。任何“提前结束
+Holding / 提前隐藏框”的优化都<strong>不能在读取前清掉 <code>TSC.CurrentTarget</code></strong>，只能动指示器
+可见性 —— 这正是 §4.2 末尾那个 1s 滞留优化的约束来源。</p>
+</section>
+        <section id="s7"><h2>6. SelfCast modifier(Alt 强制自施法）</h2>
+<h3>6.1 输入层</h3>
+<p><code>MatchPlayerController</code> 在 <code>SetupPlayerInputComponent</code> 里给
+<code>GameInputData_Global.SelfCastModifierInputAction</code> 绑 <code>Started</code> / <code>Completed</code>：</p>
+<pre><code class="language-cpp">CurrentInputComponent-&gt;BindAction(InputDataAsset-&gt;SelfCastModifierInputAction,
+    ETriggerEvent::Started,   this, &amp;AMatchPlayerController::Input_SelfCastModifier, true);
+CurrentInputComponent-&gt;BindAction(InputDataAsset-&gt;SelfCastModifierInputAction,
+    ETriggerEvent::Completed, this, &amp;AMatchPlayerController::Input_SelfCastModifier, false)；
+</code></pre>
+<p><code>Input_SelfCastModifier(bool）</code> 维护 <code>bSelfCastModifierActive</code>，通过 <code>IsSelfCastModifierActive(）</code> 暴露。</p>
+<h3>6.2 消费层（两处）</h3>
+<p><strong>早期消费（关键 fix）</strong> — <code>HeroCharacter::Input_AbilityPressed</code>，
+在 <code>GetAbilityInputActivateEventData(）</code> 之前：</p>
+<pre><code class="language-cpp">if (PC-&gt;IsLocalController() &amp;&amp; PC-&gt;IsSelfCastModifierActive())
+{
+    if (UTargetSelectionComponent* TSC = PC-&gt;GetTargetSelectionComponent())
+        TSC-&gt;BeginSelfCast();   // → CurrentTarget = owner pawn
+}
+// ↓ 这一行内部 snapshot TargetData 进 EventData
+GetAbilityInputActivateEventData(...)；
+</code></pre>
+<p><strong>兜底消费</strong> — <code>HeroAbility::ActivateAbility</code> module loop 前：</p>
+<pre><code class="language-cpp">if (PC-&gt;IsSelfCastModifierActive())
+    TSC-&gt;BeginSelfCast();
+else if (AbilityData-&gt;bHoldingAbility)
+    TSC-&gt;BeginHolding(AbilityData-&gt;TargetSelectionProfile)；
+</code></pre>
+<h3>6.3 状态化清理</h3>
+<p><code>HeroAbility::EndAbility</code> 必须<strong>按当前状态分支调</strong>，不能两个都调：</p>
+<pre><code class="language-cpp">if (TSC-&gt;GetState() == ETargetSelectionState::SelfCast)   TSC-&gt;EndSelfCast();
+else if (TSC-&gt;GetState() == ETargetSelectionState::Holding) TSC-&gt;EndHolding()；
+</code></pre>
+<p><strong>踩过的坑：</strong> 早期版本 SelfCast/Holding 两个都调，同帧切技能时会误关别人的
+Holding indicator（详见 <code>combat-skill-conventions.md</code> L120 段最终方案）。</p>
+</section>
+        <section id="s8"><h2>7. ResolvePolicy 语义（无候选时怎么办）</h2>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+<th>Execute 行为</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NoCastOnEmpty</code>（默认）</td>
+<td>候选空 → <code>TargetActors</code> 保持空</td>
+<td><strong>Activate 已经跑过</strong>：Commit/Montage/Projectile 全执行，扣 CD/蓝、放动画；只是 ApplyBuff 没目标 = 空炮</td>
+<td>大多数命中技能。无目标按下是策划上"允许的空炮"</td>
+</tr>
+<tr>
+<td><code>AllowSelfFallback</code></td>
+<td>候选空 → <code>SkillModuleApplyBuffToTarget::UpdateTargetData</code> 自动把 caster 喂进 <code>TargetActors</code></td>
+<td>buff 落自己身上，<strong>框架原生支持（ADR-0001）</strong>，GA / module 不用任何特判</td>
+<td>增益类技能（自疗、自护盾、自 buff)；无目标按下应该"打自己"</td>
+</tr>
+</tbody>
+</table>
+<p><strong>重要：</strong> 这两个 enum 是已有的，<strong>不要为了实现“无目标→自施”自己写
+<code>CanActivateAbility</code> gate</strong>；详见 §8 约束 2。</p>
+<h3>7.1 Holding 锁敌类的“无目标不放” = 确认门，不是 ResolvePolicy</h3>
+<p><code>ResolvePolicy</code> 管的是 <strong>tap 类在 Execute 时</strong>候选为空怎么办（空炮 / 给自己）。Holding
+锁敌类的“无目标不放、不进 CD”是另一套：确认门 <code>CanConfirmHoldingSkillModule =
+FAbilityHasTSCTargetTrigger</code>，在<strong>释放确认那一刻</strong>拦截 —— 本地端看
+<code>TSC.GetCurrentTarget(）</code>，空就不进确认链；非本地端信客户端 RPC 已带 TargetData
+（<code>HeroAbilityTypes.cpp::FAbilityHasTSCTargetTrigger::CanDoAbilityTrigger</code>）。</p>
+<table>
+<thead>
+<tr>
+<th>技能形态</th>
+<th>“无目标”机制</th>
+<th>配置位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tap / 自施法</td>
+<td><code>ResolvePolicy</code>（NoCastOnEmpty 空炮 / AllowSelfFallback 给自己）</td>
+<td><code>TSP.ResolvePolicy</code></td>
+</tr>
+<tr>
+<td>Holding 锁敌</td>
+<td>确认门 <code>FAbilityHasTSCTargetTrigger</code>（不确认 = 不放、不进 CD）</td>
+<td><code>HAD.CanConfirmHoldingSkillModule</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+        <section id="s9"><h2>8. 三条架构约束（踩坑红线）</h2>
+<blockquote>
+<p>完整版含历史方案对比、修复代码片段见 <code>memory/combat-skill-conventions.md</code>
+L90–186 "V2.1 单体目标选取 （TSC） — 关键架构约束"。下面是要点。</p>
+</blockquote>
+<h3>约束 1：<code>CanActivateAbility</code> 的 gate <strong>不能</strong>依赖 <code>TSC.CurrentTarget</code> / <code>TSC.State</code></h3>
+<p>会跟 TSC 评分死锁（TSC.Tick → CanActivate → 看 CurrentTarget → 永远 nil）。</p>
+<p><strong>当前防御</strong>：TSC 评分走 <code>UHeroAbility::IsAvailableForIdleSoftTargeting(）</code>
+（不是 <code>CanActivateAbility</code>）；该 helper 的注释里写明"禁止依赖 target"。
+后续给 <code>CanActivateAbility</code> 加新 gate 时：</p>
+<table>
+<thead>
+<tr>
+<th>新 gate 类型</th>
+<th>加到哪</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>与 target 无关（CD/消耗/沉默/等级/被动）</td>
+<td><code>CanActivateAbility</code> <strong>和</strong> <code>IsAvailableForIdleSoftTargeting</code> 都加</td>
+</tr>
+<tr>
+<td>依赖 target</td>
+<td><strong>只</strong>加 <code>CanActivateAbility</code>，绝不加 helper</td>
+</tr>
+</tbody>
+</table>
+<h3>约束 2:"无目标行为"优先 <code>ResolvePolicy</code> enum，不要新发明 gate</h3>
+<p>需求"无目标时不放空炮"或"无目标时给自己"已经在 enum 里。<strong>不要</strong>自己写
+<code>CanActivateAbility</code> 里检查 TSC + 旁路 Alt 那一套 hack（已踩过坑，详见
+memory L113–124）。如果 enum 现有 2 个值不够用，先讨论是否扩 enum，而不是写 hack。</p>
+<h3>约束 3：任何"修饰键改 target 选择"的逻辑必须在 <code>GetAbilityInputActivateEventData</code> <strong>之前</strong>完成</h3>
+<p>EventData 一旦定型整条 GAS 管线（replication / buff target / projectile homing /
+prediction）都认那份快照。<strong>ActivateAbility 内再 BeginSelfCast 救不回来。</strong></p>
+<p>正确切入点：<code>AHeroCharacter::Input_AbilityPressed</code>，在 <code>if (!AbilityInstance-&gt;IsActive()）</code>
+分支内、<code>GetAbilityInputActivateEventData(）</code> 之前。</p>
+</section>
+        <section id="s10"><h2>9. 验收清单</h2>
+<p>任何新接入的单体技能必须<strong>跑全这套矩阵</strong>：</p>
+<ul>
+<li>[ ] 有目标 → tap：打到 Soft target</li>
+<li>[ ] 有目标 → Alt+tap：<strong>打到自己</strong>（不是原 Soft target）— 约束 3 高发区</li>
+<li>[ ] 无目标 → tap：按 <code>ResolvePolicy</code> 表现（<code>NoCastOnEmpty</code> 空炮 / <code>AllowSelfFallback</code> 打自己）</li>
+<li>[ ] 无目标 → Alt+tap：打到自己</li>
+<li>[ ] 驱动源 ability 在 CD / 沉默 / 无蓝 → Soft 框<strong>不显示</strong></li>
+<li>[ ] Holding 类：Holding 中按 RMB 取消正常工作</li>
+<li>[ ] 切换技能时：前一个技能的 Soft/Armed indicator 立刻消失，不残留</li>
+<li>[ ] 队友看不到本机的 Soft 框（client-side only）</li>
+</ul>
+<p><strong>Holding 锁敌类（投掷弹 / 位移 / 冲刺）额外：</strong></p>
+<ul>
+<li>[ ] 面向敌方：按住 → 出敌方框；松手 → 结算命中锁定目标（突进到位 / 追踪弹命中）</li>
+<li>[ ] <code>bDrivesIdleSoftTarget=false</code>：平时（没按）不常驻敌方框，按住才出</li>
+<li>[ ] 无敌方目标按下：<strong>不放、不进 CD、不耗蓝</strong>（确认门 <code>FAbilityHasTSCTargetTrigger</code>）</li>
+<li>[ ] 锁定目标移动：追踪弹飞行中持续跟踪（Instant homing）</li>
+<li>[ ] 落点 AOE / 命中附带 buff 照常触发（与瞄准方式解耦）</li>
+<li>[ ] 从 SAPDA 迁来的：老的地表区域 decal 不再出现</li>
+</ul>
+</section>
+        <section id="s11"><h2>10. 调试与可视化</h2>
+<p>TSC 自带 <code>DrawDebugVisualization(）</code>，由 CVar 控制（关键字搜
+<code>TargetSelectionComponent.cpp</code> 里的 <code>static TAutoConsoleVariable</code>）。</p>
+<p>打开后会在 <code>CurrentTarget</code> 上画 box + 名字，排查"为什么选错 / 为什么不选 / 为什么不切"
+时很有用。</p>
+</section>
+        <section id="s12"><h2>11. 关键文件与接口索引</h2>
+<blockquote>
+<p>2026-05-28 写下时的坐标，行号会漂，以最新代码为准。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>路径</th>
+<th>关键符号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TSC 组件</td>
+<td><code>Source/GameMoba/Targeting/TargetSelectionComponent.{h,cpp}</code></td>
+<td><code>BeginSelfCast</code> / <code>BeginHolding</code> / <code>SetIdleDriveProfile</code> / <code>GetCurrentTarget</code> / <code>RecomputeTarget</code></td>
+</tr>
+<tr>
+<td>TSP 资产基类</td>
+<td><code>Source/GameMoba/Targeting/TargetSelectionPreviewDataAsset.h</code></td>
+<td><code>ETargetResolvePolicy</code> / <code>ETargetTeamFilter</code> / <code>ELineOfSightRule</code></td>
+</tr>
+<tr>
+<td>HAD 字段</td>
+<td><code>Source/GameMoba/AbilitySystem/Abilities/HeroAbilityDataAsset.h</code> L107–113</td>
+<td><code>TargetSelectionProfile</code> / <code>bDrivesIdleSoftTarget</code></td>
+</tr>
+<tr>
+<td>Ability 入口</td>
+<td><code>Source/GameMoba/AbilitySystem/Abilities/HeroAbility.{h,cpp}</code></td>
+<td><code>IsAvailableForIdleSoftTargeting</code> / <code>ActivateAbility</code> SelfCast 兜底 / <code>EndAbility</code> 状态化清理</td>
+</tr>
+<tr>
+<td>Input 早期消费</td>
+<td><code>Source/GameMoba/Character/HeroCharacter.cpp</code> <code>Input_AbilityPressed</code></td>
+<td>约束 3 的修复点</td>
+</tr>
+<tr>
+<td>AllowSelfFallback 兜底</td>
+<td><code>Source/GameMoba/AbilitySystem/Abilities/SkillModuleApplyBuffToTarget.cpp</code> L60–67</td>
+<td><code>UpdateTargetData</code> 候选空时 caster fallback</td>
+</tr>
+<tr>
+<td>Input 字段</td>
+<td><code>Source/GameMoba/Input/GameInputDataAsset.h</code> L83/L87</td>
+<td><code>CancelHoldingInputAction</code> / <code>SelfCastModifierInputAction</code></td>
+</tr>
+<tr>
+<td>Input 回调</td>
+<td><code>Source/GameMoba/Player/MatchPlayerController.cpp</code></td>
+<td><code>Input_SelfCastModifier</code></td>
+</tr>
+<tr>
+<td>全局输入资产</td>
+<td><code>/Game/GlobalSettings/GameInputData_Global</code></td>
+<td>全工程唯一一份 <code>UGameInputDataAsset</code></td>
+</tr>
+<tr>
+<td>IA 绑定资产</td>
+<td><code>/Game/Input/Actions/IA_SelfCastModifier</code> + <code>/Game/Input/Mappings/IMC_Default[_AltKeys]</code></td>
+<td>Alt 键绑定</td>
+</tr>
+<tr>
+<td>首例消费者</td>
+<td><code>/Game/Heroes/Muriel/Shield/{TSP,HAD,GA,W_SoftTargetIndicator}_MurielShield</code></td>
+<td>Muriel 大盾</td>
+</tr>
+<tr>
+<td>确认门 trigger</td>
+<td><code>Source/GameMoba/AbilitySystem/Abilities/HeroAbilityTypes.{h,cpp}</code></td>
+<td><code>FAbilityHasTSCTargetTrigger::CanDoAbilityTrigger</code>（Holding 无目标拦确认）</td>
+</tr>
+<tr>
+<td>锁敌结算模块</td>
+<td><code>Source/GameMoba/AbilitySystem/Abilities/SkillModule{ApplyBuffToTarget,LaunchProjectile,TeleportToTarget,RootMotionSource}.{h,cpp}</code></td>
+<td><code>ArmedTarget</code> / <code>BasedOnArmedTarget</code> 分支读 <code>TSC.GetCurrentTarget(）</code></td>
+</tr>
+<tr>
+<td>Holding 锁敌例（突进）</td>
+<td><code>/Game/Heroes/Kallari/Mark/</code> 下 <code>TSP_KallariMark</code> / <code>HAD_KallariMark</code> / <code>W_MarkTargetIndicator</code></td>
+<td>Kallari Mark（<code>TeleportToTarget BasedOnArmedTarget</code>）</td>
+</tr>
+<tr>
+<td>Holding 锁敌例（追踪弹）</td>
+<td><code>/Game/Heroes/Twinblast/Bomb/</code> 下 <code>TSP_TwinblastBomb</code> / <code>HAD_TwinblastBomb</code> / <code>W_BombTargetIndicator</code></td>
+<td>Twinblast 手炮（<code>LaunchProjectile BasedOnArmedTarget</code> + 落点 AOE）</td>
+</tr>
+</tbody>
+</table>
+</section>
+        <section id="s13"><h2>12. 相关文档</h2>
+<ul>
+<li><code>GameProject/Docs/Skill - 单体施法选取 V2.html</code> — 策划设计文档（玩家语义、UI 规则、设计取向）</li>
+<li><code>GameProject/Docs/range-ground-targeting-spec.md</code> — 姊妹规范（范围/地面/抛投）</li>
+<li><code>memory/combat-skill-conventions.md</code> L90–186 — 踩坑教训完整版（本文档约束 1-3 的来源）</li>
+<li><code>CLAUDE.md</code> — 通用资产编辑铁律（<code>p4 edit</code> → <code>LogSavePackage</code> 检查）</li>
+</ul>
+</section>
+        <section id="s14"><h2>13. 演进历史</h2>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>CL</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-05-25</td>
+<td>5331234</td>
+<td>V2.1 框架落地（<code>UTargetSelectionComponent</code> / TSP 资产 / HAD 字段 / <code>GameInputDataAsset</code> 加 <code>SelfCastModifierInputAction</code> + <code>CancelHoldingInputAction</code>）</td>
+</tr>
+<tr>
+<td>2026-05-25</td>
+<td>5336587</td>
+<td>GameInputData 配套字段补充</td>
+</tr>
+<tr>
+<td>2026-05-28</td>
+<td>5355391</td>
+<td>自施法 modifier(Alt)+ <code>AllowSelfFallback</code> 落地（首例：Muriel 大盾）；关键 fix：<code>Input_AbilityPressed</code> 早期 <code>BeginSelfCast</code>；<code>IsAvailableForIdleSoftTargeting</code> helper 抽出；<code>EndAbility</code> 状态化清理</td>
+</tr>
+<tr>
+<td>2026-05-28</td>
+<td>5358653</td>
+<td>加 <code>FAbilityHasTSCTargetTrigger</code>（Holding 确认门：无 Armed target → 不确认、不放、不进 CD）</td>
+</tr>
+<tr>
+<td>2026-05-29</td>
+<td>5365224</td>
+<td>Kallari Mark 迁入 V2.1（首个 Holding+锁敌例：突进 <code>TeleportToTarget BasedOnArmedTarget</code>）；<code>SkillModule{LaunchProjectile,TeleportToTarget,RootMotionSource}</code> 三个结算模块加 <code>BasedOnArmedTarget</code></td>
+</tr>
+<tr>
+<td>2026-05-29</td>
+<td>5365994(pending）</td>
+<td>Twinblast 手炮迁入 V2.1（锁敌追踪弹 <code>LaunchProjectile BasedOnArmedTarget</code>，Instant homing；独立指示器 <code>W_BombTargetIndicator</code>；落点 AOE 保留）</td>
+</tr>
+</tbody>
+</table></section>
+    </main>
+    </div>
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+<script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

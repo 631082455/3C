@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新增英雄 AI / 动画配置指南（Twinblast 参考） · 接入指南</title>
+<style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+      pre{margin:12px 0 0;padding:14px 16px;overflow:auto;background:var(--code-bg);
+      border:1px solid var(--line);border-radius:var(--radius);font:13px/1.65 var(--mono);color:var(--code);}
+    pre code{background:none;padding:0;color:inherit;font-size:inherit;}
+    section>h2:first-child{margin-top:0;}
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Reference · Movement</div>
+      <h1>新增英雄 AI / 动画配置指南（Twinblast 参考）</h1>
+      
+      <div class="docinfo">
+        <div><i>文档类型</i><b>接入指南</b></div>
+        <div><i>归属</i><b>移动 · 新英雄接入</b></div>
+        <div><i>来源</i><b>战斗 3C 文档区（fdd）</b></div>
+        <div><i>状态</i><b>在用 · 随项目更新</b></div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <a href="#s1"><i>01</i>1. 适用范围</a>
+        <a href="#s2"><i>02</i>2. Twinblast 当前接入架构</a>
+        <a href="#s3"><i>03</i>3. Twinblast 关键资产清单</a>
+        <a href="#s4"><i>04</i>4. 当前实际运行时链路</a>
+        <a href="#s5"><i>05</i>5. 新英雄接入时必须理解的双网格体模型</a>
+        <a href="#s6"><i>06</i>6. 小白人骨骼映射与 Retarget 接入</a>
+        <a href="#s7"><i>07</i>7. ABP_GenericRetarget 的实际意义</a>
+        <a href="#s8"><i>08</i>8. 主角色 ABP 的意义与构建方式</a>
+        <a href="#s9"><i>09</i>9. Overlay ABP 的意义与构建方式</a>
+        <a href="#s10"><i>10</i>10. CombatState 与技能 Montage 用户数据</a>
+        <a href="#s11"><i>11</i>11. CHT_PoseSearchDatabases_Root 的配置意义</a>
+        <a href="#s12"><i>12</i>12. MCD_Twinblast 的意义</a>
+        <a href="#s13"><i>13</i>13. 武器 / MobaUnit 绑定</a>
+        <a href="#s14"><i>14</i>14. 新增英雄的推荐最小接入步骤</a>
+        <a href="#s15"><i>15</i>15. 验证清单</a>
+        <a href="#s16"><i>16</i>16. 当前项目中最容易踩的坑</a>
+        <a href="#s17"><i>17</i>17. 建议的新增英雄模板</a>
+      </nav>
+      <main>
+        <section id="s1"><h2>1. 适用范围</h2>
+<p>本文面向当前项目内“新增一个英雄角色”的接入工作，重点覆盖以下系统：</p>
+<ul>
+<li><code>HeroData</code> 角色主配置</li>
+<li>小白人骨骼（<code>UEFN_Mannequin</code>）驱动 + 目标角色网格体重定向</li>
+<li><code>IK Rig</code> / <code>IK Retargeter</code></li>
+<li><code>ABP_TwinblastCharacter_MM</code> 主角色动画蓝图</li>
+<li><code>ABP_Overlay_TwinblastPistol</code> Overlay 动画蓝图</li>
+<li><code>CHT_PoseSearchDatabases_Root</code> Motion Matching 选库链路</li>
+<li><code>MCD_Twinblast</code> 移动 / Traversal 配置</li>
+<li>技能 Montage 的 <code>UAbilityMontageData</code></li>
+<li>武器挂件 / MobaUnit 绑定</li>
+</ul>
+<p>本文以 Twinblast 当前项目内的<strong>实际生效链路</strong>为准，不以旧说明或注释为准。</p>
+</section>
+        <section id="s2"><h2>2. Twinblast 当前接入架构</h2>
+<p>Twinblast 当前不是“直接让 Paragon 网格体自己跑完整 AnimBP”，而是下面这套双网格体结构：</p>
+<pre><code class="language-text">隐藏驱动网格体（Source）
+/GASPALS/Characters/UEFN_Mannequin/Meshes/SKM_UEFN_Mannequin
+    -&gt; ABP_TwinblastCharacter_MM
+    -&gt; Link Overlay: ABP_Overlay_TwinblastPistol
+    -&gt; Motion Matching / Aim / Traversal / 技能逻辑都跑在这层
+
+可见表现网格体（Target）
+/Game/Characters_Test/Paragon/Heroes/TwinBlast/Meshes/SKM_TwinBlast_ActionHero
+    -&gt; RetargetMeshComponent
+    -&gt; ABP_GenericRetarget
+    -&gt； 通过 RTG_UEFN_to_TwinBlast 实时跟随隐藏驱动网格体
+</code></pre>
+<p>这意味着：</p>
+<ul>
+<li>英雄的“行为逻辑骨架”是小白人骨骼。</li>
+<li>Paragon 角色网格体只是可见表现层。</li>
+<li>主 AnimBP、Overlay、Motion Matching、Traversal、Ability Montage 绝大多数逻辑都仍然围绕小白人这一层构建。</li>
+</ul>
+</section>
+        <section id="s3"><h2>3. Twinblast 关键资产清单</h2>
+<h3>3.1 HeroData 主配置</h3>
+<ul>
+<li><code>HeroData_Twinblast</code>
+  路径：<code>/Game/Heroes/Twinblast/HeroData_Twinblast</code></li>
+<li>当前关键字段：</li>
+<li><code>HeroID = Hero.ID.Twinblast</code></li>
+<li><code>HeroMesh = /GASPALS/Characters/UEFN_Mannequin/Meshes/SKM_UEFN_Mannequin</code></li>
+<li><code>HeroAnimClass = /Game/Heroes/Twinblast/ABP_TwinblastCharacter_MM</code></li>
+<li><code>CombatOverlayPose = /Game/Heroes/Twinblast/ABP_Overlay_TwinblastPistol</code></li>
+<li><code>RetargetMesh = /Game/Characters_Test/Paragon/Heroes/TwinBlast/Meshes/SKM_TwinBlast_ActionHero</code></li>
+<li><code>RetargetAnimClass = /Game/Heroes/ABP_GenericRetarget</code></li>
+<li><code>IkRetargeterAsset = /Game/Characters_Test/Paragon/Heroes/TwinBlast/Rigs/RTG_UEFN_to_TwinBlast</code></li>
+<li><code>MovementConfig = /Game/Heroes/Twinblast/MCD_Twinblast</code></li>
+</ul>
+<h3>3.2 动画蓝图</h3>
+<ul>
+<li>主角色 ABP：</li>
+<li><code>/Game/Heroes/Twinblast/ABP_TwinblastCharacter_MM</code></li>
+<li>Overlay ABP：</li>
+<li><code>/Game/Heroes/Twinblast/ABP_Overlay_TwinblastPistol</code></li>
+<li>通用 Retarget ABP：</li>
+<li><code>/Game/Heroes/ABP_GenericRetarget</code></li>
+<li>主基类 ABP：</li>
+<li><code>/Game/Heroes/ABP_HeroCharacter_MM</code></li>
+<li>Overlay 基类 ABP：</li>
+<li><code>/GASPALS/OverlaySystem/Overlays/Poses/ABP_OverlayPose_Base</code></li>
+</ul>
+<h3>3.3 IK / Retarget</h3>
+<ul>
+<li>Source IKRig：</li>
+<li><code>/GASPALS/Characters/UEFN_Mannequin/Rigs/IK_UEFN_Mannequin</code></li>
+<li>Twinblast Target IKRig：</li>
+<li><code>/Game/Characters_Test/Paragon/Heroes/TwinBlast/Rigs/IK_TwinBlast_Retarget</code></li>
+<li>当前实际使用的 RTG：</li>
+<li><code>/Game/Characters_Test/Paragon/Heroes/TwinBlast/Rigs/RTG_UEFN_to_TwinBlast</code></li>
+</ul>
+<h3>3.4 Motion Matching</h3>
+<ul>
+<li>Root chooser：</li>
+<li><code>/Game/Heroes/Steel/MotionMatchingData/CHT_PoseSearchDatabases_Root</code></li>
+<li>通用 chooser：</li>
+<li><code>/Game/Heroes/Steel/MotionMatchingData/NormalCHT/CHT_PoseSearchDatabases</code></li>
+<li><code>/Game/Heroes/Steel/MotionMatchingData/NormalCHT/CHT_PoseSearchDatabases_Dense</code></li>
+<li><code>/Game/Heroes/Steel/MotionMatchingData/NormalCHT/CHT_PoseSearchDatabases_Sparse</code></li>
+</ul>
+<h3>3.5 其他</h3>
+<ul>
+<li>移动配置：</li>
+<li><code>/Game/Heroes/Twinblast/MCD_Twinblast</code></li>
+<li>武器 Actor：</li>
+<li><code>/Game/Heroes/Twinblast/BP_TwinblastWeapon</code></li>
+<li>Overlay DataAsset（当前未参与运行时）：</li>
+<li><code>/Game/Heroes/Twinblast/DA_Overlay_TwinblastPistol</code></li>
+</ul>
+</section>
+        <section id="s4"><h2>4. 当前实际运行时链路</h2>
+<h3>4.1 HeroData 初始化</h3>
+<p><code>UMobaDataSubsystem::OnHeroDataLoaded(）</code> 会按 <code>HeroData</code> 完成下面几件事：</p>
+<ol>
+<li>给主 <code>Mesh</code> 设置 <code>HeroMesh</code> 和 <code>HeroAnimClass</code></li>
+<li>如果同时配置了 <code>RetargetMesh</code> 和 <code>RetargetAnimClass</code></li>
+<li>隐藏主 <code>Mesh</code></li>
+<li>启用 <code>RetargetMeshComponent</code></li>
+<li>给 <code>RetargetMeshComponent</code> 设置目标角色网格体和 <code>ABP_GenericRetarget</code></li>
+<li>把 <code>HeroData.IkRetargeterAsset</code> 写入 <code>RetargetAnim-&gt;HeroIkRetargeter</code></li>
+<li>给主 <code>Mesh</code> 执行 <code>LinkAnimClassLayers(CombatOverlayPose）</code></li>
+</ol>
+<p>因此，新英雄最核心的入口就是 <code>HeroData_[HeroName]</code>。</p>
+<h3>4.2 主 ABP 与 Overlay ABP 的分工</h3>
+<p>Twinblast 当前并没有大改父类 <code>ABP_HeroCharacter_MM</code> 的整套 AnimGraph，而是在子类里只补“角色特有输入”：</p>
+<ul>
+<li><code>ABP_TwinblastCharacter_MM</code></li>
+<li>父类：<code>ABP_HeroCharacter_MM</code></li>
+<li>
+<p>EventGraph 逻辑：</p>
+<ul>
+<li>调用父类 <code>BlueprintUpdateAnimation</code></li>
+<li>获取已链接的 <code>ABP_Overlay_TwinblastPistol</code></li>
+<li>Cast 到 <code>HeroOverlayPose</code></li>
+<li>读取 <code>bCombatState</code></li>
+<li>写回本体的 <code>InputStateWantsToAim</code></li>
+</ul>
+</li>
+<li>
+<p><code>ABP_Overlay_TwinblastPistol</code></p>
+</li>
+<li>父类：<code>ABP_OverlayPose_Base</code></li>
+<li>EventGraph 逻辑：<ul>
+<li>每帧把 <code>bCombatState</code> 写入 <code>bCanAim</code></li>
+</ul>
+</li>
+</ul>
+<p>这两个子蓝图本质上只是在给父类图提供“这个英雄现在是否处于瞄准 / 战斗态”的输入。</p>
+</section>
+        <section id="s5"><h2>5. 新英雄接入时必须理解的双网格体模型</h2>
+<p>如果你准备新增一个 Paragon 英雄，且仍然走“小白人驱动，目标网格体重定向”的路线，则必须遵守下面这个模型：</p>
+<ul>
+<li><code>HeroMesh</code></li>
+<li>必须是小白人或兼容小白人动作栈的驱动骨架</li>
+<li>
+<p>负责：</p>
+<ul>
+<li>Motion Matching</li>
+<li>Overlay</li>
+<li>Traversal</li>
+<li>技能蒙太奇</li>
+<li>GameplayTag 驱动的动画状态</li>
+</ul>
+</li>
+<li>
+<p><code>RetargetMesh</code></p>
+</li>
+<li>是最终玩家看到的英雄网格体</li>
+<li>负责：<ul>
+<li>跟随 Source 层实时重定向表现</li>
+</ul>
+</li>
+</ul>
+<p>如果你只改 <code>RetargetMesh</code> 那一层，而没有把 Source 层配置好，角色通常会出现：</p>
+<ul>
+<li>有模型，但没有正确动作</li>
+<li>Motion Matching 不工作</li>
+<li>Overlay 不生效</li>
+<li>技能蒙太奇逻辑和表现不同步</li>
+</ul>
+</section>
+        <section id="s6"><h2>6. 小白人骨骼映射与 Retarget 接入</h2>
+<h3>6.1 Twinblast 当前 IKRig 结构</h3>
+<p>Twinblast 的目标 IKRig：<code>IK_TwinBlast_Retarget</code></p>
+<ul>
+<li><code>retarget_root = pelvis</code></li>
+<li><code>chains = 22</code></li>
+<li><code>goals = 4</code></li>
+<li><code>solvers = 1</code></li>
+</ul>
+<p>当前关键链和 Goal：</p>
+<ul>
+<li>腿：</li>
+<li><code>LeftLeg -&gt; LeftFootIK</code></li>
+<li><code>RightLeg -&gt; RightFootIK</code></li>
+<li>手：</li>
+<li><code>LeftArm -&gt; LeftHandIK</code></li>
+<li><code>RightArm -&gt; RightHandIK</code></li>
+<li>躯干：</li>
+<li><code>root</code></li>
+<li><code>Spine</code></li>
+<li><code>Neck</code></li>
+<li><code>head</code></li>
+<li>手指：</li>
+<li><code>LeftThumb/Index/Middle/Ring/Pinky</code></li>
+<li><code>RightThumb/Index/Middle/Ring/Pinky</code></li>
+<li>脚趾：</li>
+<li><code>LeftToe</code></li>
+<li><code>RightToe</code></li>
+</ul>
+<h3>6.2 Twinblast 当前 RTG 设置</h3>
+<p>当前真正被 <code>HeroData</code> 使用的 RTG 是：</p>
+<ul>
+<li><code>/Game/Characters_Test/Paragon/Heroes/TwinBlast/Rigs/RTG_UEFN_to_TwinBlast</code></li>
+</ul>
+<p>其主要配置为：</p>
+<ul>
+<li>Source IKRig：</li>
+<li><code>IK_UEFN_Mannequin</code></li>
+<li>Target IKRig：</li>
+<li><code>IK_TwinBlast_Retarget</code></li>
+<li>Source Mesh：</li>
+<li><code>SKM_UEFN_Mannequin</code></li>
+<li>Target Mesh：</li>
+<li><code>SKM_TwinBlast_ActionHero</code></li>
+</ul>
+<p>Op 栈：</p>
+<ul>
+<li><code>Pelvis Motion</code>：启用</li>
+<li><code>Retarget FK Chains</code>：启用</li>
+<li><code>Retarget IK Goals</code>：启用</li>
+<li><code>Stride Warp IK Goals</code>：关闭</li>
+<li><code>Speed Plant IK Goals</code>：启用</li>
+<li><code>Run IK Rig</code>：启用</li>
+<li><code>Pole Vector Alignment</code>：启用</li>
+<li><code>Remap Curves</code>：启用</li>
+</ul>
+<p>链映射数量：</p>
+<ul>
+<li><code>66</code> 个 chain mappings</li>
+</ul>
+<p>Twinblast 当前映射基本是“同名链对同名链”，所以新增英雄时，<strong>最重要的是 IKRig 链命名尽量对齐 UEFN Mannequin</strong>。</p>
+<h3>6.3 新英雄的推荐做法</h3>
+<p>如果新英雄仍然走 Paragon 风格角色网格体：</p>
+<ol>
+<li>为目标角色创建 <code>IK_[HeroName]_Retarget</code></li>
+<li><code>retarget_root</code> 设为 <code>pelvis</code></li>
+<li>补齐与小白人一致的主要 chains / goals</li>
+<li>创建 <code>RTG_UEFN_to_[HeroName]</code></li>
+<li>Source 选 <code>IK_UEFN_Mannequin</code></li>
+<li>Target 选 <code>IK_[HeroName]_Retarget</code></li>
+<li>先做 Auto Map</li>
+<li>再手工检查手臂、腿、脊柱、脚趾、手指</li>
+<li>最后把 <code>HeroData</code> 的这 3 个字段配齐：
+   - <code>RetargetMesh</code>
+   - <code>RetargetAnimClass</code>
+   - <code>IkRetargeterAsset</code></li>
+</ol>
+<h3>6.4 一个非常重要的当前项目坑</h3>
+<p>项目内还存在另一个同名资产：</p>
+<ul>
+<li><code>/Game/Heroes/Twinblast/RTG_UEFN_to_TwinBlast</code></li>
+</ul>
+<p>它不是 <code>HeroData_Twinblast</code> 当前实际使用的那个，并且它的 Target IKRig 指向的是：</p>
+<ul>
+<li><code>/Game/ParagonCountess/Characters/Heroes/Countess/Skins/Tier1/Count_Carnivale/Meshes/IK_SM_Countess_Carnivale</code></li>
+</ul>
+<p>也就是说：</p>
+<ul>
+<li><strong>不要因为名字一样就直接复制 <code>/Game/Heroes/Twinblast/RTG_UEFN_to_TwinBlast</code></strong></li>
+<li>参考 Twinblast 时，应该以 <code>HeroData_Twinblast</code> 里真正引用的 <code>RTG</code> 为准</li>
+</ul>
+</section>
+        <section id="s7"><h2>7. <code>ABP_GenericRetarget</code> 的实际意义</h2>
+<p><code>ABP_GenericRetarget</code> 是可见目标网格体的通用重定向 ABP。</p>
+<p>当前有效链路是：</p>
+<pre><code class="language-text">HeroData.IkRetargeterAsset
+-&gt; UMobaDataSubsystem::OnHeroDataLoaded
+-&gt; RetargetAnim-&gt;HeroIkRetargeter
+-&gt; ABP_GenericRetarget.EventGraph
+-&gt; Set IKRetargeter
+-&gt; Copy Retarget Profile from Retarget Asset
+-&gt； 更新 RetargetProfile
+</code></pre>
+<h3>7.1 当前有效逻辑</h3>
+<p><code>ABP_GenericRetarget</code> 当前真正使用的是变量：</p>
+<ul>
+<li><code>HeroIkRetargeter</code></li>
+</ul>
+<p>而它的值来自 C++ 注入，不是运行时自己猜出来的。</p>
+<h3>7.2 旧注释 / 旧逻辑不要照搬</h3>
+<p><code>ABP_GenericRetarget</code> 里仍然保留了：</p>
+<ul>
+<li><code>IKRetargeter_Map</code></li>
+<li>通过 <code>ComponentTags</code> 查找 RTG 的注释和节点</li>
+</ul>
+<p>但按当前蓝图连线看，这条 Tag + Map 路径<strong>不是当前主链路</strong>。<br />
+当前项目里新增英雄时，应优先采用：</p>
+<ul>
+<li><code>HeroData.IkRetargeterAsset</code> 直接指定 RTG</li>
+</ul>
+<p>不要把“必须给 Mesh Tag 才会重定向”当成现状结论。</p>
+</section>
+        <section id="s8"><h2>8. 主角色 ABP 的意义与构建方式</h2>
+<h3>8.1 必须继承 <code>ABP_HeroCharacter_MM</code></h3>
+<p>Twinblast 的主角色 ABP：</p>
+<ul>
+<li><code>/Game/Heroes/Twinblast/ABP_TwinblastCharacter_MM</code></li>
+<li>父类：<code>ABP_HeroCharacter_MM</code></li>
+</ul>
+<p>推荐新增英雄也沿用这个模式：</p>
+<ul>
+<li><code>ABP_[HeroName]Character_MM : ABP_HeroCharacter_MM</code></li>
+</ul>
+<p>原因：</p>
+<ul>
+<li>父类已经内置了 Motion Matching、Overlay、Trajectory、Traversal、AimOffset 等主流程</li>
+<li><code>ABP_OverlayPose_Base</code> 在 <code>SetReferences</code> 里会拿“主 AnimInstance”并 Cast 到 <code>ABP_HeroCharacter_MM</code></li>
+<li>你的子类只要继承自它，这条链就能继续工作</li>
+</ul>
+<h3>8.2 Twinblast 子类当前只做什么</h3>
+<p>Twinblast 子类当前只补了一件事：</p>
+<ul>
+<li>读取链接的 <code>HeroOverlayPose.bCombatState</code></li>
+<li>写入本体 <code>InputStateWantsToAim</code></li>
+</ul>
+<p>这意味着新英雄如果也是“战斗态时开启瞄准驱动”的模型，通常只需要：</p>
+<ol>
+<li>继承 <code>ABP_HeroCharacter_MM</code></li>
+<li>保留父类所有主图</li>
+<li>在子类 EventGraph 中补自己的状态输入桥接</li>
+</ol>
+<p>而不是复制整套父类大图重做。</p>
+</section>
+        <section id="s9"><h2>9. Overlay ABP 的意义与构建方式</h2>
+<h3>9.1 Twinblast Overlay 的作用</h3>
+<p>Twinblast 当前 Overlay ABP：</p>
+<ul>
+<li><code>/Game/Heroes/Twinblast/ABP_Overlay_TwinblastPistol</code></li>
+<li>父类：<code>/GASPALS/OverlaySystem/Overlays/Poses/ABP_OverlayPose_Base</code></li>
+</ul>
+<p>父类 <code>ABP_OverlayPose_Base</code> 已经有：</p>
+<ul>
+<li><code>bCanAim</code></li>
+<li><code>AimSweepValue</code></li>
+<li>一整套 <code>Stand / Crouch / Relax / Ready / Aim</code> pose 槽位</li>
+</ul>
+<p>Twinblast 子类当前只补：</p>
+<ul>
+<li><code>bCanAim = bCombatState</code></li>
+</ul>
+<h3>9.2 Overlay 的运行时挂载方式</h3>
+<p>当前运行时不是靠 DataAsset 间接找 Overlay，而是：</p>
+<ul>
+<li><code>HeroData.CombatOverlayPose</code></li>
+<li><code>-&gt; LinkAnimClassLayers(CombatOverlayPose）</code></li>
+</ul>
+<p>所以对新增英雄来说，真正的必配项是：</p>
+<ul>
+<li><code>HeroData_[HeroName].CombatOverlayPose</code></li>
+</ul>
+<h3>9.3 <code>DA_Overlay_TwinblastPistol</code> 当前状态</h3>
+<p><code>/Game/Heroes/Twinblast/DA_Overlay_TwinblastPistol</code> 当前包含：</p>
+<ul>
+<li><code>Overlay Animation Blueprint</code></li>
+<li><code>Static Mesh</code></li>
+<li><code>Skeletal Mesh</code></li>
+<li><code>Weapon Animation Blueprint</code></li>
+<li><code>Left Hand</code></li>
+<li><code>Socket Name</code></li>
+</ul>
+<p>但当前项目内 <code>get_referencers(）</code> 结果为 <code>0</code>，说明它<strong>不是当前运行时主链路必须资产</strong>。<br />
+可把它视为：</p>
+<ul>
+<li>备用编辑器数据</li>
+<li>未来扩展用配置</li>
+<li>或历史遗留资产</li>
+</ul>
+<p>新增英雄时不要把它当成 <code>HeroData.CombatOverlayPose</code> 的替代品。</p>
+</section>
+        <section id="s10"><h2>10. CombatState 与技能 Montage 用户数据</h2>
+<h3>10.1 CombatState 的真正来源</h3>
+<p>Twinblast 当前的战斗态，不是单纯在 ABP 里判断“正在放技能”。</p>
+<p>真实链路是：</p>
+<pre><code class="language-text">AnimMontage 上的 UAbilityMontageData
+-&gt; UHeroAbilitySystemComponent::PlayMontage / OnMontageStartBlendOut
+-&gt; UHeroOverlayPose::EnterCombatState / ExitCombatState
+-&gt; Overlay 内部维护 bCombatState / CombatAbilityTags
+-&gt； 主 ABP / Overlay ABP 读取 bCombatState
+</code></pre>
+<h3>10.2 <code>UHeroOverlayPose</code> 当前逻辑</h3>
+<p><code>UHeroOverlayPose</code> 当前会：</p>
+<ul>
+<li><code>EnterCombatState(AbilityTag）</code></li>
+<li>把技能 Tag 记入 <code>CombatAbilityTags</code></li>
+<li>立即置 <code>bCombatState = true</code></li>
+<li>
+<p>给 ASC 增加 <code>Hero.Animation.CombatState</code></p>
+</li>
+<li>
+<p><code>ExitCombatState(AbilityTag）</code></p>
+</li>
+<li>从 <code>CombatAbilityTags</code> 移除该技能</li>
+<li>当数组清空后，延迟 <code>ExitCombatStateDelay</code></li>
+<li>默认延迟为 <code>3.0f</code></li>
+<li>延迟到期再把 <code>bCombatState</code> 置回 <code>false</code></li>
+</ul>
+<h3>10.3 Twinblast 当前 Montage 示例</h3>
+<p>已确认几个 Twinblast Montage 上的 <code>UAbilityMontageData</code>：</p>
+<ul>
+<li>普攻示例：</li>
+<li><code>DoubleShot_Fire_Lft_Additive_Montage1</code></li>
+<li><code>AbilityTag = Hero.Ability.Skill.Twinblast.Attack</code></li>
+<li><code>bChangeCombatStateOnPlay = true</code></li>
+<li><code>OverrideCombatStateOnPlay = Add</code></li>
+<li><code>bChangeCombatStateOnBlendOut = true</code></li>
+<li>
+<p><code>OverrideCombatStateOnBlendOut = Remove</code></p>
+</li>
+<li>
+<p>炸弹释放示例：</p>
+</li>
+<li><code>AM_TwinblastBomb_ChargeBlastRelease</code></li>
+<li><code>AbilityTag = Hero.Ability.Skill.Twinblast.Bomb</code></li>
+<li><code>bEndAbilityOnMontageEnd = true</code></li>
+<li><code>bUpperBodyStateActive = true</code></li>
+<li><code>bChangeCombatStateOnPlay = true</code></li>
+<li><code>bChangeCombatStateOnBlendOut = true</code></li>
+</ul>
+<p>新增英雄时，如果技能希望驱动战斗姿态或瞄准姿态，<strong>不能只配 Ability，不配 Montage UserData</strong>。</p>
+<h3>10.4 一个当前项目里的隐藏坑</h3>
+<p><code>UHeroAnimInstanceBase::AddOverrideOverlayPose(）</code> 和 <code>RemoveOverrideOverlayPose(）</code> 当前 C++ 里是空实现。</p>
+<p>这意味着：</p>
+<ul>
+<li><code>UAbilityMontageData.bOverrideOverlay</code></li>
+<li><code>OverrideOverlayPoseClass</code></li>
+</ul>
+<p>虽然在接口上存在，但当前项目里<strong>不要把它当作已经可用的正式能力</strong>，除非你先补完这条 C++ 实现。</p>
+<p>Twinblast 当前主链并不依赖这两个空函数。</p>
+</section>
+        <section id="s11"><h2>11. <code>CHT_PoseSearchDatabases_Root</code> 的配置意义</h2>
+<h3>11.1 Root chooser 当前结构</h3>
+<p><code>/Game/Heroes/Steel/MotionMatchingData/CHT_PoseSearchDatabases_Root</code></p>
+<p>当前是一个按 <code>GameplayTag</code> 过滤的 Root chooser：</p>
+<ul>
+<li><code>Hero.ID.Steel</code></li>
+<li><code>Hero.ID.Twinblast</code></li>
+<li><code>Hero.ID.GaspALS</code></li>
+<li><code>Hero.ID.DoublePole</code></li>
+<li><code>Hero.ID.Kallari</code></li>
+<li><code>Hero.ID.Gideon</code></li>
+<li><code>Hero.ID.Muriel</code></li>
+<li><code>Hero.ID.Sevarog</code></li>
+</ul>
+<p>Twinblast 当前已经有：</p>
+<ul>
+<li><code>Hero.ID.Twinblast</code> 对应的一行</li>
+</ul>
+<h3>11.2 Root chooser 的调用位置</h3>
+<p><code>ABP_HeroCharacter_MM</code> 的 <code>Update_MotionMatching</code> 函数里会直接：</p>
+<ul>
+<li><code>EvaluateChooser: CHT_PoseSearchDatabases_Root</code></li>
+<li>把返回的 <code>PoseSearchDatabase</code> 数组喂给 Motion Matching 节点</li>
+</ul>
+<h3>11.3 Root chooser 的上下文来源</h3>
+<p><code>ABP_HeroCharacter_MM::SetReferences</code> 会：</p>
+<ul>
+<li>从 <code>HeroCharacter</code> 读出 <code>HeroId</code></li>
+<li>写入变量 <code>HeroIdTag</code></li>
+</ul>
+<p>Root chooser 的上下文对象是：</p>
+<ul>
+<li><code>ABP_HeroCharacter_MM self</code></li>
+</ul>
+<p>所以新英雄只要 <code>HeroData.HeroID</code> 正确，且 Root chooser 有这一行，Motion Matching 才能走到正确分支。</p>
+<h3>11.4 Root 之后的 chooser 链</h3>
+<p>Twinblast 当前 Root row 实际会继续走通用 chooser：</p>
+<ul>
+<li><code>/Game/Heroes/Steel/MotionMatchingData/NormalCHT/CHT_PoseSearchDatabases</code></li>
+</ul>
+<p>它再按 <code>MMDatabaseLOD</code> 分流到：</p>
+<ul>
+<li><code>CHT_PoseSearchDatabases_Dense</code></li>
+<li><code>CHT_PoseSearchDatabases_Sparse</code></li>
+</ul>
+<p>Dense / Sparse 再根据以下维度选库：</p>
+<ul>
+<li><code>MovementMode</code></li>
+<li><code>Stance</code></li>
+<li><code>MovementState</code></li>
+<li><code>Gait</code></li>
+</ul>
+<p>例如：</p>
+<ul>
+<li>Stand Idles</li>
+<li>Stand Walks</li>
+<li>Stand Runs</li>
+<li>Stand Sprint</li>
+<li>InAir</li>
+<li>Crouch Idle</li>
+<li>Crouch Moving</li>
+</ul>
+<h3>11.5 新英雄该怎么接</h3>
+<p>如果新英雄与 Twinblast 一样，仍然使用通用小白人 Motion Matching 数据：</p>
+<ol>
+<li>在 <code>CHT_PoseSearchDatabases_Root</code> 中新增 <code>Hero.ID.[HeroName]</code></li>
+<li>新行的 Result 类型<strong>必须选择"计算选择器（EvaluateChooser）"</strong>，不能是直接资产引用</li>
+<li>在 EvaluateChooser 的"选择器"字段中指向通用 <code>CHT_PoseSearchDatabases</code></li>
+</ol>
+<blockquote>
+<p><strong>关键坑</strong>：新增行时编辑器默认的 Result 类型可能不是 EvaluateChooser，如果 Result 设置为直接对象引用而非 EvaluateChooser，Motion Matching 将无法正确选库，角色仍会 T-Pose。必须在行属性面板中手动将 Result 切换为"计算选择器"。</p>
+</blockquote>
+<p>如果新英雄需要自己的 PoseSearch 数据：</p>
+<ol>
+<li>复制一套 <code>CHT_PoseSearchDatabases_[HeroName]</code></li>
+<li>再拆成：
+   - <code>CHT_PoseSearchDatabases_Dense_[HeroName]</code>
+   - <code>CHT_PoseSearchDatabases_Sparse_[HeroName]</code></li>
+<li>最后让 Root row 指向你自己的 Hero chooser</li>
+</ol>
+<h3>11.6 当前项目里的一个值得注意的现象</h3>
+<p>项目中存在：</p>
+<ul>
+<li><code>CHT_PoseSearchDatabases_Steel</code></li>
+<li><code>CHT_PoseSearchDatabases_Dense_Steel</code></li>
+<li><code>CHT_PoseSearchDatabases_Sparse_Steel</code></li>
+</ul>
+<p>但当前 Root chooser 并<strong>没有</strong>引用它们，而是仍然引用通用 <code>NormalCHT</code> 版本。<br />
+所以如果你要做英雄专属 PoseSearch 数据，不要假设现有 <code>*_Steel</code> 已经是主链路模板，必须自己再检查 Root 引用是否切过去了。</p>
+</section>
+        <section id="s12"><h2>12. <code>MCD_Twinblast</code> 的意义</h2>
+<p>Twinblast 的 <code>MovementConfig</code>：</p>
+<ul>
+<li><code>/Game/Heroes/Twinblast/MCD_Twinblast</code></li>
+</ul>
+<p>当前关键值：</p>
+<ul>
+<li><code>MaxWalkSpeed = 425</code></li>
+<li><code>MaxWalkSpeedCrouched = 300</code></li>
+<li><code>GravityScale = 1.6</code></li>
+<li><code>JumpZVelocity = 900</code></li>
+<li><code>AirControl = 1.0</code></li>
+<li><code>bUseNewTraversalSystem = true</code></li>
+<li><code>MantleReachHeight = 130 ~ 160</code></li>
+<li><code>MantleCheckDistance = 200</code></li>
+<li><code>MinMantleDepth = 59</code></li>
+<li>Traversal 使用的是 GASPALS 小白人那套 Montage 资源</li>
+</ul>
+<p>对新增英雄的建议：</p>
+<ul>
+<li>如果体型和 Twinblast 类似，先复制 <code>MCD_Twinblast</code></li>
+<li>如果体型差异大，再单独调：</li>
+<li>Traversal 高度阈值</li>
+<li>对齐角度</li>
+<li>Catch / Vault / Climb 阈值</li>
+<li>移动与跳跃参数</li>
+</ul>
+</section>
+        <section id="s13"><h2>13. 武器 / MobaUnit 绑定</h2>
+<p>Twinblast 当前 <code>HeroData.AbilityMobaUnits</code> 会生成两个：</p>
+<ul>
+<li><code>BP_TwinblastWeapon</code> 挂到 <code>hand_l</code></li>
+<li><code>BP_TwinblastWeapon</code> 挂到 <code>hand_r</code></li>
+</ul>
+<p>并带各自 <code>RelativeTransform</code>。</p>
+<p>所以新增英雄如果也有：</p>
+<ul>
+<li>武器 Actor</li>
+<li>枪口 FX</li>
+<li>Socket 发射点</li>
+</ul>
+<p>则必须在 <code>HeroData.AbilityMobaUnits</code> 里把这些附属单元也接起来。<br />
+否则常见结果是：</p>
+<ul>
+<li>技能逻辑能放</li>
+<li>武器模型不出现</li>
+<li>FX / Muzzle Socket 不对</li>
+</ul>
+</section>
+        <section id="s14"><h2>14. 新增英雄的推荐最小接入步骤</h2>
+<h3>14.1 必配资产</h3>
+<p>至少准备下面这些：</p>
+<ol>
+<li><code>HeroData_[HeroName]</code></li>
+<li><code>ABP_[HeroName]Character_MM</code></li>
+<li><code>ABP_Overlay_[HeroName]...</code></li>
+<li><code>IK_[HeroName]_Retarget</code></li>
+<li><code>RTG_UEFN_to_[HeroName]</code></li>
+<li><code>MCD_[HeroName]</code></li>
+<li>技能相关 Montage + <code>UAbilityMontageData</code></li>
+<li>如有武器，<code>BP_[HeroName]Weapon</code> 或对应 MobaUnit</li>
+</ol>
+<h3>14.2 HeroData 填写</h3>
+<p>最少填这些字段：</p>
+<ul>
+<li><code>HeroID</code></li>
+<li><code>HeroMesh</code></li>
+<li><code>HeroAnimClass</code></li>
+<li><code>CombatOverlayPose</code></li>
+<li><code>RetargetMesh</code></li>
+<li><code>RetargetAnimClass</code></li>
+<li><code>IkRetargeterAsset</code></li>
+<li><code>MovementConfig</code></li>
+<li><code>Abilities</code></li>
+<li><code>AbilityMobaUnits</code></li>
+</ul>
+<h3>14.3 Motion Matching</h3>
+<p>必须补：</p>
+<ul>
+<li><code>CHT_PoseSearchDatabases_Root</code> 中的 <code>Hero.ID.[HeroName]</code> 行</li>
+</ul>
+<h3>14.4 主 ABP</h3>
+<p>建议：</p>
+<ul>
+<li>继承 <code>ABP_HeroCharacter_MM</code></li>
+<li>不复制整套父类图</li>
+<li>仅补新英雄自己的输入桥接或特殊状态桥接</li>
+</ul>
+<h3>14.5 Overlay ABP</h3>
+<p>建议：</p>
+<ul>
+<li>继承 <code>ABP_OverlayPose_Base</code></li>
+<li>明确 <code>bCombatState</code> 如何驱动 <code>bCanAim</code> 或其他 Overlay 条件</li>
+</ul>
+<h3>14.6 Montage 用户数据</h3>
+<p>逐个检查关键技能蒙太奇是否配了：</p>
+<ul>
+<li><code>AbilityTag</code></li>
+<li><code>bEndAbilityOnMontageEnd</code></li>
+<li><code>bChangeCombatStateOnPlay</code></li>
+<li><code>bChangeCombatStateOnBlendOut</code></li>
+<li><code>bUpperBodyStateActive</code></li>
+</ul>
+</section>
+        <section id="s15"><h2>15. 验证清单</h2>
+<h3>15.1 角色加载</h3>
+<ul>
+<li><code>HeroData</code> 能正常初始化</li>
+<li>主 <code>Mesh</code> 与 <code>RetargetMeshComponent</code> 切换正确</li>
+<li>可见网格体是目标英雄，不是小白人</li>
+</ul>
+<h3>15.2 Retarget</h3>
+<ul>
+<li>站立、走、跑、冲刺动作都正常</li>
+<li>手脚没有明显漂移或扭曲</li>
+<li>跳跃 / 下落 / Landing 没有明显爆骨</li>
+</ul>
+<h3>15.3 Motion Matching</h3>
+<ul>
+<li><code>ABP_HeroCharacter_MM</code> 能选到 <code>CHT_PoseSearchDatabases_Root</code></li>
+<li><code>Hero.ID.[HeroName]</code> 行生效</li>
+<li>不同 <code>Gait</code> / <code>MovementState</code> 能切到正确数据库</li>
+</ul>
+<h3>15.4 Overlay / 瞄准</h3>
+<ul>
+<li>进入战斗技能时 <code>bCombatState</code> 变为 <code>true</code></li>
+<li>主 ABP 的 <code>InputStateWantsToAim</code> 正确更新</li>
+<li>Overlay 的 <code>bCanAim</code> 正确更新</li>
+<li>退出技能后按延迟恢复</li>
+</ul>
+<h3>15.5 技能蒙太奇</h3>
+<ul>
+<li>关键技能 Montage 有 <code>UAbilityMontageData</code></li>
+<li>战斗态进入 / 退出时机正确</li>
+<li><code>EndAbilityOnMontageEnd</code> 行为符合预期</li>
+</ul>
+<h3>15.6 Traversal</h3>
+<ul>
+<li>Mantle / Vault / Hurdle / Climb / Catch 都能触发</li>
+<li>新英雄体型没有明显穿帮</li>
+<li>MCD 参数与 Montage 匹配</li>
+</ul>
+<h3>15.7 武器与挂点</h3>
+<ul>
+<li>武器 Actor 正确附着</li>
+<li>Socket 名称正确</li>
+<li>FX / 发射点 / 轨迹起点正确</li>
+</ul>
+</section>
+        <section id="s16"><h2>16. 当前项目中最容易踩的坑</h2>
+<h3>16.1 复制了错误的 RTG</h3>
+<p>同名 <code>RTG_UEFN_to_TwinBlast</code> 有两份，只有 <code>HeroData</code> 引用的那份是当前真正生效的。</p>
+<h3>16.2 误以为 <code>DA_Overlay_*</code> 是运行时必配</h3>
+<p>Twinblast 当前运行时真正使用的是：</p>
+<ul>
+<li><code>HeroData.CombatOverlayPose</code></li>
+</ul>
+<p>而不是 <code>DA_Overlay_TwinblastPistol</code>。</p>
+<h3>16.3 误以为 <code>ABP_GenericRetarget</code> 仍然依赖 Mesh Tag</h3>
+<p>当前主链路是 C++ 直接注入 <code>HeroIkRetargeter</code>，不要照着旧注释只配 Tag 不配 <code>HeroData.IkRetargeterAsset</code>。</p>
+<h3>16.4 误以为 <code>bOverrideOverlay</code> 已经可用</h3>
+<p><code>AddOverrideOverlayPose(）</code> / <code>RemoveOverrideOverlayPose(）</code> 当前是空实现，新增英雄不要把关键功能压在这条路上。</p>
+<h3>16.5 Root chooser 行的 Result 类型必须是 EvaluateChooser</h3>
+<p><code>HeroData.HeroID</code> 正确不等于 Motion Matching 就能自动工作。<br />
+在 <code>CHT_PoseSearchDatabases_Root</code> 中新增行后，<strong>必须将 Result 类型切换为"计算选择器（EvaluateChooser）"</strong>，并在其"选择器"字段中指向 <code>CHT_PoseSearchDatabases</code>。</p>
+<p>如果 Result 保留为默认的直接资产引用类型，Chooser 无法正确向下传递选库，角色依然 T-Pose，且不会有任何报错提示。</p>
+<h3>16.6 忘了 Source 层才是“主逻辑层”</h3>
+<p>如果你只盯着目标英雄网格体改 ABP，而没管小白人那层：</p>
+<ul>
+<li>Motion Matching</li>
+<li>Overlay</li>
+<li>Traversal</li>
+<li>技能蒙太奇驱动</li>
+</ul>
+<p>大概率都不会真正接通。</p>
+</section>
+        <section id="s17"><h2>17. 建议的新增英雄模板</h2>
+<p>对于一个“体型接近 Twinblast / 接近小白人”的新英雄，建议直接按下面模板开工：</p>
+<ol>
+<li>复制 <code>HeroData_Twinblast</code></li>
+<li>复制 <code>ABP_TwinblastCharacter_MM</code></li>
+<li>复制 <code>ABP_Overlay_TwinblastPistol</code></li>
+<li>复制 <code>MCD_Twinblast</code></li>
+<li>新建 <code>IK_[HeroName]_Retarget</code></li>
+<li>新建 <code>RTG_UEFN_to_[HeroName]</code></li>
+<li>把 <code>HeroData</code> 中 <code>RetargetMesh / RTG / Overlay / MCD / Ability / Weapon</code> 指向新资产</li>
+<li>在 <code>CHT_PoseSearchDatabases_Root</code> 增加 <code>Hero.ID.[HeroName]</code>，<strong>Result 类型必须选"计算选择器（EvaluateChooser）"，选择器指向 <code>CHT_PoseSearchDatabases</code></strong></li>
+<li>为关键 Montage 补 <code>UAbilityMontageData</code></li>
+<li>最后再做专项微调，而不是一开始重做父类大图</li>
+</ol>
+<hr />
+<p>如果后续要继续扩展本文，建议下一版再补：</p>
+<ul>
+<li>各技能 <code>GA/HAD/IPD/ODB</code> 的完整配置关系</li>
+<li>Hero 专属 PoseSearchDatabase 资产如何创建</li>
+<li>大体型英雄与小体型英雄在 IK / Traversal 上的分叉规则</li>
+</ul></section>
+    </main>
+    </div>
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+<script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

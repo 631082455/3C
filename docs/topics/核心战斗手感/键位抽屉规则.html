@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>键位抽屉规则（字母键施法布局方法论） · 布局方法论</title>
+<style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+      pre{margin:12px 0 0;padding:14px 16px;overflow:auto;background:var(--code-bg);
+      border:1px solid var(--line);border-radius:var(--radius);font:13px/1.65 var(--mono);color:var(--code);}
+    pre code{background:none;padding:0;color:inherit;font-size:inherit;}
+    section>h2:first-child{margin-top:0;}
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Reference · Control</div>
+      <h1>键位抽屉规则（字母键施法布局方法论）</h1>
+      <p class="lede">**数据来源**：Marvel Rivals 48 个英雄完整键位统计 **适用范围**：GameMoba 字母键施法布局（`Skill 1/2/3/4 → RMB / Shift / E / R`） **目的**：建立"键就是角色"的语义一致性，让玩家跨英雄迁移肌肉记忆，策划/程序/动画用同一套语言讨论技能位</p>
+      <div class="docinfo">
+        <div><i>文档类型</i><b>布局方法论</b></div>
+        <div><i>归属</i><b>释放与操控</b></div>
+        <div><i>来源</i><b>战斗 3C 文档区（fdd）</b></div>
+        <div><i>状态</i><b>在用 · 随项目更新</b></div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <a href="#s0"><i>01</i>概述</a>
+        <a href="#s1"><i>02</i>一、底层原理：每个键的"人机成本"和"语义"</a>
+        <a href="#s2"><i>03</i>二、本项目"抽屉规则"</a>
+        <a href="#s3"><i>04</i>三、决策流程（拿到一个英雄怎么分配）</a>
+        <a href="#s4"><i>05</i>四、边界问题 FAQ</a>
+        <a href="#s5"><i>06</i>五、抽屉规则一句话总结</a>
+        <a href="#s6"><i>07</i>附录：与数字键布局的对应关系</a>
+        <a href="#s7"><i>08</i>修订记录</a>
+      </nav>
+      <main>
+        <section id="s0"><h2>概述</h2><hr /></section>
+        <section id="s1"><h2>一、底层原理：每个键的"人机成本"和"语义"</h2>
+<h3>1.1 物理成本（手指要不要离开 WASD？）</h3>
+<table>
+<thead>
+<tr>
+<th>等级</th>
+<th>键</th>
+<th>离手成本</th>
+<th>适合</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>零成本</strong></td>
+<td>LMB / RMB</td>
+<td>右手食指/中指本来就在</td>
+<td>持续/反应性操作</td>
+</tr>
+<tr>
+<td><strong>零成本</strong></td>
+<td>Shift / Space</td>
+<td>左小指/左拇指本来就在</td>
+<td>持续/反应性操作</td>
+</tr>
+<tr>
+<td><strong>低成本</strong></td>
+<td>E / Q</td>
+<td>中指/无名指抬一下，眼睛不离屏</td>
+<td>高频主动技能</td>
+</tr>
+<tr>
+<td><strong>中成本</strong></td>
+<td>R / F</td>
+<td>食指/无名指要拉伸</td>
+<td>中频战术技能</td>
+</tr>
+<tr>
+<td><strong>高成本</strong></td>
+<td>C / V / X / Z</td>
+<td>手掌要下移，Space 弃守</td>
+<td>低频 / Team-Up</td>
+</tr>
+<tr>
+<td><strong>极高成本</strong></td>
+<td>1 / 2 / 3 / 4</td>
+<td>整只手平移，必须低头瞄键盘</td>
+<td>战前/低频/装备/物品</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：传统 MOBA 的 1234 是人机成本最高的方案；<code>RMB / Shift / E / R</code> 让 4 个主动技能都落在零/低成本区，这是 FPS-MOBA 玩起来手感更跟手的根本原因。</p>
+<h3>1.2 语义槽位（MR 48 英雄统计规律）</h3>
+<p>MR 的设计哲学不是"技能1/2/3/4"，而是 <strong>"键就是角色"</strong>——同一个键在不同英雄上承担同样的语义。统计结果：</p>
+<table>
+<thead>
+<tr>
+<th>键</th>
+<th>语义</th>
+<th>典型案例</th>
+<th>占比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LMB</strong></td>
+<td>主输出 / 普攻</td>
+<td>100% 英雄都是普攻</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><strong>RMB</strong></td>
+<td>副武器 / 持续高频技能 / 按住式盾</td>
+<td>Iron Man Unibeam、Doctor Strange Shield、Spider-Man Web-Cluster、Punisher Grenade</td>
+<td>~90%</td>
+</tr>
+<tr>
+<td><strong>Shift</strong></td>
+<td>位移 / 自保 / 形态切换</td>
+<td>Storm Surge、Web-Swing、Diamond Form、Indestructible Guard</td>
+<td>100%（<strong>没有一个英雄留空 Shift</strong>）</td>
+</tr>
+<tr>
+<td><strong>E</strong></td>
+<td>战术技能 / AoE / 控制 / 增益</td>
+<td>Lightning Realm、Pyro-Prison、Healing Bubble、Buddy Barrier</td>
+<td>~95%</td>
+</tr>
+<tr>
+<td><strong>Q</strong></td>
+<td>大招 / 终极技</td>
+<td>Hulk Smash、Reality Erasure、Soul Resurgence</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><strong>F</strong></td>
+<td>特殊冲击技 / 强抉择技</td>
+<td>Karmic Revival（复活）、Liberty Rush、Moonlight Hook</td>
+<td>~30%（备用槽）</td>
+</tr>
+<tr>
+<td><strong>Space</strong></td>
+<td>二段跳 / 飞行 / 攀爬</td>
+<td>Incredible Leap、Hel's Descent、Skyward Leap</td>
+<td>仅有垂直机动的英雄</td>
+</tr>
+<tr>
+<td><strong>C/V/X/Z</strong></td>
+<td>Team-Up 联动技</td>
+<td>Vibranium Bastion、Cosmic Fastball</td>
+<td>联动专属</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+        <section id="s2"><h2>二、本项目"抽屉规则"</h2>
+<p>我们字母键映射 <code>Skill 1/2/3/4 → RMB / Shift / E / R</code>，把 MR 的语义平移过来，并针对 MOBA 特性调整。</p>
+<h3>🔴 RMB 抽屉 — 「持续/高频/瞄准型输出」</h3>
+<p><strong>适合塞进来的技能特征</strong>：
+- 频次高（CD &lt; 8s 或可连按）
+- 需要持续瞄准（按住式 / 多段式）
+- 是英雄的"第二输出手段"
+- 通常<strong>不是控制、不是位移</strong></p>
+<p><strong>典型形态</strong>：
+- 蓄力射击 / 连射弹幕
+- 锥形 / 直线伤害（频繁补刀用）
+- 按住式护盾（DocStrange 类）
+- 持续治疗光束（治疗英雄）</p>
+<p><strong>MR 案例</strong>：Iron Man Unibeam、Hela Piercing Night、Adam Cosmic Cluster、Punisher Scourge Grenade</p>
+<h3>🟡 Shift 抽屉 — 「自保 / 位移 / 形态」<strong>永远不留空</strong></h3>
+<p>这是最重要的规则。Shift 是肌肉记忆里"出事就按"的键，<strong>没有位移的英雄也必须给 Shift 装一个"救命/转换"技能</strong>。</p>
+<p><strong>优先级（按从有到无依次降级）</strong>：
+1. 有传统位移 → 位移（冲刺、闪现、钩拉自己、跳跃）
+2. 没位移但有形态 → 形态切换（Emma Diamond Form、Wolverine Last Stand）
+3. 没位移没形态但有自保 → 短无敌 / 速度爆发 / Cleanse（Hulk Indestructible Guard）
+4. 上面都没有 → 短 CD 治疗自身 / 韧性增益（Venom Symbiotic Resilience）</p>
+<p><strong>❌ 绝对禁止放 Shift</strong>：主输出技能、需要瞄准的指向控、长前摇 AoE。
+<strong>理由</strong>：玩家低血量被追时会无条件本能按 Shift；如果 Shift 是"对敌进攻技"，会死得很糊涂。</p>
+<h3>🟢 E 抽屉 — 「战术 / 控制 / AoE / 团队增益」</h3>
+<p><strong>适合塞进来的技能特征</strong>：
+- CD 中等（10–20s）
+- 团队收益（控制、增益、群伤）
+- 不是救命也不是终极，是"主动开团/打节奏"用的
+- 需要稍微思考时机，不是纯反应性</p>
+<p><strong>典型形态</strong>：
+- 范围控制（束缚 / 眩晕 / 缓速场）
+- AoE 伤害区
+- 队友增益（攻速、护盾、加速）
+- 标记 / 减抗 / 单体硬控</p>
+<p><strong>MR 案例</strong>：Lightning Realm、Pyro-Prison、Healing Bubble、Buddy Barrier、Force Physics</p>
+<h3>🔵 R 抽屉 — 「大招 / 终极技」</h3>
+<p>MOBA 传统沿用，<strong>几乎没有例外</strong>。
+- 长 CD（60s+）
+- 单局可能只放 2–3 次
+- 改变战局的体量
+- 视觉 / 音效最隆重</p>
+<p><strong>为什么 R 不放 Q（哪怕 MR 用 Q）</strong>：MOBA 玩家从 LoL/DotA 起的肌肉记忆就是 R = 大招，强行改成 Q 会让转岗玩家全员翻车。MR 用 Q 是因为它是 FPS 血统。</p>
+<hr />
+</section>
+        <section id="s3"><h2>三、决策流程（拿到一个英雄怎么分配）</h2>
+<p><strong>按这个顺序填，不要乱填</strong>：</p>
+<pre><code>Step 1：找出大招            → 放 R    （不用想）
+Step 2：找出自保/位移技      → 放 Shift（找不到就找形态/无敌/治疗自己）
+Step 3：剩下两个技能中，挑高频/可瞄准/输出向 → 放 RMB
+Step 4：剩下那一个（战术/控制/团辅） → 放 E
+</code></pre>
+<h3>冲突仲裁</h3>
+<ul>
+<li><strong>两个位移</strong>（一个传统位移 + 一个瞬移大招）→ 位移留 Shift，瞬移走 R</li>
+<li><strong>既是输出又是控制</strong>（眩晕弹）→ 按 CD 长短决定：CD &lt; 8s → RMB，CD ≥ 10s → E</li>
+<li><strong>没有大招</strong>（罕见，纯辅助）→ R 放"最长 CD 的战略技"</li>
+</ul>
+<hr />
+</section>
+        <section id="s4"><h2>四、边界问题 FAQ</h2>
+<h3>Q1：高频、输出手段是不是右键好？</h3>
+<p><strong>是。</strong> MR 48 英雄里副武器/高频输出 90% 都在 RMB。右手食指零成本，可以一边走位一边按。规则：<strong>任何 CD &lt; 8s 的输出向技能优先 RMB</strong>。</p>
+<h3>Q2：单体选中的技能也放右键好吗？</h3>
+<p><strong>分情况</strong>：
+- "高频可重复"的单体技（持续射线、可连用钩拉、单体束缚短CD）→ RMB ✓
+- "一次性单体重击 + 长 CD" → 放 E 更合适（节奏感更强，玩家会"攒着用"）
+- "需要选中队友放治疗" → 放 E（治疗英雄通常 RMB 已经被持续治疗光束占了）</p>
+<p>经验法则：<strong>RMB = 频繁、Shift = 救命、E = 抉择、R = 终结</strong>。同样是单体技，<strong>频次</strong>决定塞哪儿。</p>
+<h3>Q3：Shift 如果英雄没有位移放什么好？</h3>
+<p><strong>绝对不能空着</strong>。按优先级降级：
+1. 形态切换（攻防/速度/视觉模式切换，例：钻石形态、暴怒模式）
+2. 短无敌 / 短霸体 / Cleanse 解控
+3. 短 CD 的"治疗自己"或"减伤护盾"
+4. 速度爆发（移速 +50%/2s 之类）</p>
+<p><strong>底线原则</strong>：Shift 上的技能必须满足"玩家半血被追，本能按下去能活更久"。</p>
+<h3>Q4：F 键我们要不要用？</h3>
+<p><strong>暂时不要</strong>。F 在 MR 里是"备用第 6 个槽"。我们 4 技能制如果硬塞 F 进字母键布局，会破坏 <code>RMB/Shift/E/R 对应 1/2/3/4</code> 的清晰映射，玩家要记两套规则。F 留给未来扩展（被动主动化、装备技、英雄专属交互）。</p>
+<h3>Q5：能不能把"治疗"放 Shift？</h3>
+<p><strong>只对治疗自己的技能可以</strong>。给队友的治疗永远放 RMB 或 E：
+- 持续光束治疗 → RMB
+- 范围治疗 / 治疗光环 → E
+- 仅治疗自己的应急回复 → Shift（满足"出事就按"语义）</p>
+<h3>Q6：如果一个英雄有 2 个位移怎么办？</h3>
+<ul>
+<li>主位移（短CD/可重复打节奏）→ Shift</li>
+<li>副位移（长CD/收尾用）→ 看用途：</li>
+<li>是终结/突进/全屏闪现 → R</li>
+<li>是战术性"过墙/绕后" → E</li>
+</ul>
+<h3>Q7：被动技能放在哪？</h3>
+<p><strong>不占字母键抽屉</strong>。被动技能纯属角色机制，不参与按键映射。UI 上单独有"被动图标"显示状态即可。</p>
+<hr />
+</section>
+        <section id="s5"><h2>五、抽屉规则一句话总结</h2>
+<blockquote>
+<p><strong>RMB 是右手枪、Shift 是逃生绳、E 是战术匣、R 是核按钮。</strong></p>
+<p>拿到任何英雄都按这个语义对号入座，<strong>Shift 槽不允许留空</strong>。</p>
+</blockquote>
+<hr />
+</section>
+        <section id="s6"><h2>附录：与数字键布局的对应关系</h2>
+<table>
+<thead>
+<tr>
+<th>技能位</th>
+<th>数字键布局</th>
+<th>字母键布局</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skill 1</td>
+<td><code>1</code></td>
+<td><code>RMB</code></td>
+<td>高频输出</td>
+</tr>
+<tr>
+<td>Skill 2</td>
+<td><code>2</code></td>
+<td><code>Shift</code></td>
+<td>位移/自保</td>
+</tr>
+<tr>
+<td>Skill 3</td>
+<td><code>3</code></td>
+<td><code>E</code></td>
+<td>战术/控制</td>
+</tr>
+<tr>
+<td>Skill 4</td>
+<td><code>4</code></td>
+<td><code>R</code></td>
+<td>大招</td>
+</tr>
+</tbody>
+</table>
+<p>策划填技能表时，<strong>1/2/3/4 的语义就锁定了</strong>——数字键布局是降级方案（给键鼠不熟练或习惯传统 MOBA 的玩家），但<strong>两套布局映射到同一个技能位</strong>，所以本规则同时约束两套布局下的技能设计。</p>
+<hr />
+</section>
+        <section id="s7"><h2>修订记录</h2>
+<table>
+<thead>
+<tr>
+<th>日期</th>
+<th>版本</th>
+<th>修改人</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026/05/26</td>
+<td>v1.0</td>
+<td>likeke + Claude</td>
+<td>基于 Marvel Rivals 48 英雄统计建立初版规则</td>
+</tr>
+</tbody>
+</table></section>
+    </main>
+    </div>
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+<script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

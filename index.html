@@ -119,7 +119,7 @@
     <p class="lede">Character / Camera / Control 的公开方法论知识库：六阶段设计工作流、元规则 M1–M18、反模式 AP1–AP18，以及一组已落地验证的战斗手感设计稿与案例复盘。</p>
     <div class="docinfo">
       <div><i>维护</i><b><a href="https://github.com/631082455">631082455</a></b></div>
-      <div><i>内容</i><b>案例复盘 ×2 · 设计稿 ×22 · 方法论 ×4</b></div>
+      <div><i>内容</i><b>案例复盘 ×2 · 设计稿 ×32 · 方法论 ×4</b></div>
       <div><i>托管</i><b>GitHub Pages</b></div>
       <div><i>源仓库</i><b><a href="https://github.com/631082455/3C">github.com/631082455/3C</a></b></div>
     </div>
@@ -142,12 +142,19 @@
     </section>
 
     <section>
-      <h2><i>02</i>Control / 释放与操控<em>3 DOCS</em></h2>
+      <h2><i>02</i>Control / 释放与操控<em>6 DOCS</em></h2>
       <ul>
         <li>
           <a href="docs/topics/核心战斗手感/Skill - 技能释放关系系统（打断、并行、互斥、缓存）.html">技能释放关系系统（打断、并行、互斥、缓存）<span class="tag html">HTML</span></a>
           <ul class="subl">
             <li><a href="docs/topics/核心战斗手感/Skill - 技能并行表现层协议（动画、镜头、武器状态）.html">并行表现层协议（动画、镜头、武器状态）</a></li>
+            <li><a href="docs/topics/核心战斗手感/长按持续触发规则.html">长按持续触发规则</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="docs/topics/核心战斗手感/键位抽屉规则.html">键位抽屉规则 · 字母键施法布局方法论<span class="tag html">HTML</span></a>
+          <ul class="subl">
+            <li><a href="docs/topics/核心战斗手感/Marvel Rivals 英雄技能键位大全.html">Marvel Rivals 48 英雄键位大全（数据底稿）</a></li>
           </ul>
         </li>
         <li><a href="docs/topics/核心战斗手感/Skill - 战场交互物机制拓展.html">战场交互物机制拓展<span class="tag html">HTML</span></a></li>
@@ -155,7 +162,7 @@
     </section>
 
     <section>
-      <h2><i>03</i>Camera &amp; Targeting / 镜头与瞄准<em>9 DOCS</em></h2>
+      <h2><i>03</i>Camera &amp; Targeting / 镜头与瞄准<em>11 DOCS</em></h2>
       <ul>
         <li>
           <a href="docs/cases/CASE-02 - 镜头动效层.html">镜头动效层 · 增量、叠加、自动归零<span class="tag html">CASE</span></a>
@@ -174,19 +181,21 @@
           <a href="docs/topics/核心战斗手感/Skill - 单体施法选取 V2.1.html">镜头索敌系统 · 单体目标选取 <span class="ver">V2.1</span><span class="tag html">HTML</span></a>
           <ul class="subl">
             <li><a href="docs/topics/核心战斗手感/Skill - 镜头索敌算法.html">算法概览</a></li>
+            <li><a href="docs/topics/核心战斗手感/单体施法目标选取 - 实现规范.html">实现规范（程序向）</a></li>
           </ul>
         </li>
         <li>
           <a href="docs/topics/核心战斗手感/Skill - 范围施法落点.html">范围施法落点选取 <span class="ver">V1</span><span class="tag html">HTML</span></a>
           <ul class="subl">
             <li><a href="docs/topics/核心战斗手感/Skill - 范围施法落点 V1.2 - 程序对齐.html">程序对齐稿 <span class="ver">V1.2</span></a></li>
+            <li><a href="docs/topics/核心战斗手感/范围施法落点 - 接入文档.html">接入文档</a></li>
           </ul>
         </li>
       </ul>
     </section>
 
     <section>
-      <h2><i>04</i>Movement / 移动<em>8 DOCS</em></h2>
+      <h2><i>04</i>Movement / 移动<em>10 DOCS</em></h2>
       <ul>
         <li>
           <a href="docs/topics/移动优化/MM调参手册.html">MM 调参手册<span class="tag html">HTML</span></a>
@@ -199,15 +208,28 @@
           </ul>
         </li>
         <li><a href="docs/topics/移动优化/移动手感量化标准.html">竞技移动手感量化标准 · 验收锚点<span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/移动优化/Travelsal - 翻越系统 — 关卡设计参数手册.html">Twinblast 翻越系统 · 关卡设计参数手册<span class="tag html">HTML</span></a></li>
+        <li>
+          <a href="docs/topics/移动优化/Travelsal - 翻越系统 — 关卡设计参数手册.html">Twinblast 翻越系统 · 关卡设计参数手册<span class="tag html">HTML</span></a>
+          <ul class="subl">
+            <li><a href="docs/topics/移动优化/新角色攀爬翻越接入.html">新角色攀爬翻越接入指南</a></li>
+          </ul>
+        </li>
+        <li><a href="docs/topics/移动优化/新增英雄移动动画配置指南.html">新增英雄移动动画配置指南（Twinblast 参考）<span class="tag html">HTML</span></a></li>
       </ul>
     </section>
 
     <section>
-      <h2><i>05</i>Animation · Projectile · Effect<em>3 DOCS</em></h2>
+      <h2><i>05</i>Animation · Projectile · Effect<em>6 DOCS</em></h2>
       <ul>
         <li><a href="docs/topics/核心战斗手感/Animation - 上半身动作融合部分盆骨表现.html">上半身动作融合 · 盆骨表现<span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/核心战斗手感/Projectile - 弹道双碰撞体系.html">弹道双碰撞体系<span class="tag html">HTML</span></a></li>
+        <li>
+          <a href="docs/topics/核心战斗手感/Projectile - 弹道双碰撞体系.html">弹道双碰撞体系<span class="tag html">HTML</span></a>
+          <ul class="subl">
+            <li><a href="docs/topics/核心战斗手感/子弹双碰撞通道 - 配置文档.html">配置文档（策划向）</a></li>
+          </ul>
+        </li>
+        <li><a href="docs/topics/核心战斗手感/蒙太奇Slot使用说明.html">蒙太奇 Slot 使用说明<span class="tag html">HTML</span></a></li>
+        <li><a href="docs/topics/核心战斗手感/基础普攻攻速配置工具.html">基础普攻攻速配置工具<span class="tag html">HTML</span></a></li>
         <li><a href="docs/topics/核心战斗手感/Effect - 命中特效系统 V1.html">命中特效系统 <span class="ver">V1</span><span class="tag html">HTML</span></a></li>
       </ul>
     </section>

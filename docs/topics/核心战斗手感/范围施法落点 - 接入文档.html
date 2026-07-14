@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>施法落点选取系统 - 接入文档 · 接入文档</title>
+<style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+      pre{margin:12px 0 0;padding:14px 16px;overflow:auto;background:var(--code-bg);
+      border:1px solid var(--line);border-radius:var(--radius);font:13px/1.65 var(--mono);color:var(--code);}
+    pre code{background:none;padding:0;color:inherit;font-size:inherit;}
+    section>h2:first-child{margin-top:0;}
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Reference · Targeting</div>
+      <h1>施法落点选取系统 - 接入文档</h1>
+      <p class="lede">适用范围：召唤物 / 地面部署物 / 范围技能 / 基于落点的位移技能。 一句话：让技能"瞄哪 = 预览 = 落哪"，平地与立体地形都符合直觉。</p>
+      <div class="docinfo">
+        <div><i>文档类型</i><b>接入文档</b></div>
+        <div><i>归属</i><b>镜头与瞄准 · 范围施法落点</b></div>
+        <div><i>来源</i><b>战斗 3C 文档区（fdd）</b></div>
+        <div><i>状态</i><b>在用 · 随项目更新</b></div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <a href="#s0"><i>01</i>概述</a>
+        <a href="#s1"><i>02</i>一、这是什么</a>
+        <a href="#s2"><i>03</i>二、接入步骤（策划三步，不改代码）</a>
+        <a href="#s3"><i>04</i>三、PlacementProfile 字段参考</a>
+        <a href="#s4"><i>05</i>四、Mode 怎么选</a>
+        <a href="#s5"><i>06</i>五、支持的技能模块（消费方）</a>
+        <a href="#s6"><i>07</i>六、落点行为（配参数前先理解）</a>
+        <a href="#s7"><i>08</i>七、复杂立体场景处理</a>
+        <a href="#s8"><i>09</i>八、老资产迁移（零回归）</a>
+        <a href="#s9"><i>10</i>九、反作弊（程序侧，策划了解即可）</a>
+        <a href="#s10"><i>11</i>十、调试</a>
+        <a href="#s11"><i>12</i>十一、注意事项 / FAQ</a>
+      </nav>
+      <main>
+        <section id="s0"><h2>概述</h2><hr /></section>
+        <section id="s1"><h2>一、这是什么</h2>
+<p>一套<strong>统一的落点决策系统</strong>。技能要把东西放到地面上时（召唤一个单位、铺一片 AOE、传送到某点），落点不再各算各的，而是统一交给 <code>UPlacementResolverLibrary</code> 这个<strong>纯函数算法库</strong>决定。</p>
+<p>三个关键特性，接入前先知道：</p>
+<ol>
+<li><strong>三端同源</strong>：客户端预览、客户端释放、服务端反作弊复算，跑的是同一份算法。<strong>你预览看到的落点 = 实际落点</strong>，一帧不差。</li>
+<li><strong>Emergent LOS（撞哪算哪）</strong>：落点由相机射线的几何自然决定——射线被墙挡住就留这侧，越过墙顶就到那侧。无需配任何"视线遮挡"参数。</li>
+<li><strong>永远有合法落点</strong>：任何瞄准都返回一个合理落点，没有"无法施放"的失败态（Deadlock 派设计）。</li>
+</ol>
+<hr />
+</section>
+        <section id="s2"><h2>二、接入步骤（策划三步，不改代码）</h2>
+<p>技能模块（<code>SkillModule</code>）侧已经接好了，策划只需要在技能的 <strong>Preview DataAsset</strong> 上配置：</p>
+<ol>
+<li><strong>打开技能的 Preview 资产</strong>（<code>SummonPreviewDataAsset</code> 或 <code>SkillAreaPreviewDataAsset</code>）。</li>
+<li><strong>填 <code>PlacementProfile</code></strong>：先选 <code>Mode</code>，再调 <code>MaxRange</code> 等参数（见第三、四节）。</li>
+<li><strong>存盘、进游戏验证</strong>：按住技能键看预览虚影，落点即为最终落点。</li>
+</ol>
+<blockquote>
+<p>老技能资产<strong>无需手动改</strong>——加载时 <code>PostLoad</code> 会自动把旧字段迁移到 <code>PlacementProfile</code>（见第八节）。</p>
+</blockquote>
+<hr />
+</section>
+        <section id="s3"><h2>三、PlacementProfile 字段参考</h2>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>参考值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Mode</code></td>
+<td>落点模式</td>
+<td><code>Deployable</code></td>
+<td>见第四节。决定走哪套逻辑</td>
+</tr>
+<tr>
+<td><code>MaxRange</code></td>
+<td>最大水平射程（cm）</td>
+<td><code>2000</code></td>
+<td>超出后沿瞄准方向夹回，再向下找地面</td>
+</tr>
+<tr>
+<td><code>SurfaceChannel</code></td>
+<td>落点检测的碰撞通道</td>
+<td><code>ECC_SummonPreview</code></td>
+<td>决定"哪些物体算地面/墙"。一般不动</td>
+</tr>
+<tr>
+<td><code>UpwardTraceHeight</code></td>
+<td>向上检测高度（cm）</td>
+<td><code>250</code></td>
+<td>夹回/兜底时向上找地面的起点高度</td>
+</tr>
+<tr>
+<td><code>DownwardTraceHeight</code></td>
+<td>向下检测距离（cm）</td>
+<td><code>2000</code></td>
+<td>向下找地面的最大距离，<strong>要足够大能打到地面</strong></td>
+</tr>
+<tr>
+<td><code>MinSurfaceNormalDotUp</code></td>
+<td>"算地面"的法线阈值</td>
+<td><code>0.1</code></td>
+<td>面的朝上程度 ≥ 此值算可站立地面，否则算墙（走墙面逻辑）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+        <section id="s4"><h2>四、Mode 怎么选</h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>用途</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>Deployable</code></strong></td>
+<td>召唤物、部署物（最常用）</td>
+<td>落点接地。走完整落点逻辑（含墙面处理）</td>
+</tr>
+<tr>
+<td><strong><code>GroundAOE</code></strong></td>
+<td>地面范围技能</td>
+<td>同上，落点接地</td>
+</tr>
+<tr>
+<td><strong><code>None</code></strong></td>
+<td><strong>不接入本系统</strong></td>
+<td>保留旧的"相机锚定"预览行为。<strong>零回归</strong>——老 AOE 不想改的就留 None</td>
+</tr>
+<tr>
+<td><code>ProjectileLanding</code></td>
+<td>（V2 预留）</td>
+<td>暂勿使用，V1 会按 Deployable 处理并报 ensure 提醒</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>选择建议：召唤/部署类一律 <code>Deployable</code>；只想要个跟随相机的范围圈、不需要接地的，用 <code>None</code>。</p>
+</blockquote>
+<hr />
+</section>
+        <section id="s5"><h2>五、支持的技能模块（消费方）</h2>
+<p>以下 <code>SkillModule</code> 已接入本系统，配好 Profile 即生效：</p>
+<ul>
+<li><strong><code>SkillModuleSpawnMobaUnit</code></strong> —— 召唤单位（<code>SpawnType = BasedOnPreviewData</code>）</li>
+<li><strong><code>SkillModuleAddSkillAreaWithBuffs</code></strong> —— 范围 + Buff</li>
+<li><strong><code>SkillModuleTeleportToTarget</code></strong> —— 位移（<code>BasedOnSummonPreview</code> / <code>BasedOnSkillAreaPreview</code> 模式，传送到落点）</li>
+</ul>
+<blockquote>
+<p>注：<code>TeleportToTarget</code> 的 <code>RelativeToSelf</code> / <code>BasedOnArmedTarget</code> 模式走各自逻辑，不经本系统。</p>
+</blockquote>
+<hr />
+</section>
+        <section id="s6"><h2>六、落点行为（配参数前先理解）</h2>
+<p>相机射线打到哪，决定落点：</p>
+<ul>
+<li><strong>打到平地</strong>（法线朝上）→ 直接用命中点。涵盖"从高处俯瞄平台顶面"。</li>
+<li><strong>打到墙</strong>（法线偏水平）→ <strong>墙面三段式</strong>：根据瞄准高低，自动判断玩家要"上墙顶/平台"还是"留在墙根地面"。</li>
+<li><strong>打空</strong>（瞄天 / 地图外）→ 沿瞄准方向兜底到 <code>MaxRange</code> 处找地面。</li>
+<li>最后统一做 <code>MaxRange</code> 水平夹回。</li>
+</ul>
+<p><strong>墙面三段式</strong>借鉴了角色攀爬系统（<code>CanMantle</code>）的"探测最近可放置面"思路——瞄墙上部命中点离墙顶近就上去，瞄墙下部离地面近就留下。</p>
+<hr />
+</section>
+        <section id="s7"><h2>七、复杂立体场景处理</h2>
+<p>平地谁都能算对，立体地形才是重点。本系统正确处理：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>玩家意图</th>
+<th>落点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>悬浮桥 / 高架</strong></td>
+<td>瞄桥侧壁上部</td>
+<td>上桥面</td>
+</tr>
+<tr>
+<td></td>
+<td>瞄桥侧壁下部</td>
+<td>桥下地面</td>
+</tr>
+<tr>
+<td></td>
+<td>站桥上俯瞄桥面</td>
+<td>桥面</td>
+</tr>
+<tr>
+<td><strong>夹层 / 二楼</strong></td>
+<td>瞄外墙上部</td>
+<td>上二楼</td>
+</tr>
+<tr>
+<td></td>
+<td>瞄外墙下部</td>
+<td>留当前层地面</td>
+</tr>
+<tr>
+<td><strong>矮墙 / 栏杆</strong></td>
+<td>视线越过矮墙</td>
+<td>落对面地面</td>
+</tr>
+<tr>
+<td></td>
+<td>视线被墙挡</td>
+<td>落墙这一侧</td>
+</tr>
+<tr>
+<td><strong>台阶 / 斜坡</strong></td>
+<td>瞄坡面/台阶</td>
+<td>贴合落点，不悬空不嵌入</td>
+</tr>
+<tr>
+<td><strong>顶棚 / 洞穴</strong></td>
+<td>仰瞄顶棚</td>
+<td>落脚下地面（不卡天花板）</td>
+</tr>
+<tr>
+<td><strong>地图边界</strong></td>
+<td>瞄地图外</td>
+<td>前方射程内找合法地面</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>一句话：凡是"看得到、够得着"的地方落点就符合直觉；立体地形的上下分层，系统能读懂你瞄的是哪一层。</p>
+</blockquote>
+<hr />
+</section>
+        <section id="s8"><h2>八、老资产迁移（零回归）</h2>
+<p><code>SummonPreviewDataAsset</code> 在 <code>PostLoad</code> 自动迁移：旧字段（<code>SummonPreviewRange</code> / <code>UpwardTraceHeight</code> / <code>DownwardTraceHeight</code> 等）会自动复制到 <code>PlacementProfile</code>，且 <code>Mode</code> 设为 <code>Deployable</code>。</p>
+<ul>
+<li><strong>老召唤技能无需手改</strong>，加载即走新逻辑。</li>
+<li>如需保留旧"相机锚定"行为，手动把 <code>Mode</code> 改回 <code>None</code>。</li>
+</ul>
+<hr />
+</section>
+        <section id="s9"><h2>九、反作弊（程序侧，策划了解即可）</h2>
+<p>服务端用同一算法复算落点，与客户端发来的坐标比对：</p>
+<ul>
+<li>偏差 <strong>≤ 200cm</strong> → 采用客户端坐标（手感无突变）。</li>
+<li>偏差 <strong>&gt; 200cm</strong> → 采用服务端坐标 + 记审计日志（挡 cheat）。</li>
+</ul>
+<p>策划无需配置，开箱即用。</p>
+<hr />
+</section>
+        <section id="s10"><h2>十、调试</h2>
+<p>控制台开关，定位落点问题用：</p>
+<pre><code>p.PlacementDebug 1
+</code></pre>
+<p>开启后日志（<code>[PlacementDBG]</code>）会打印：相机射线命中点 / 法线 / 走的分支（平地 / 墙 / 落空）/ 上下探测结果 / 最终决策。</p>
+<blockquote>
+<p>该日志 <code>#if !UE_BUILD_SHIPPING</code> + CVar 默认关，<strong>不影响打包</strong>，平时零开销。</p>
+</blockquote>
+<hr />
+</section>
+        <section id="s11"><h2>十一、注意事项 / FAQ</h2>
+<ul>
+<li><strong>预览和实际不一致？</strong> 不应该发生（三端同源）。若出现，开 <code>p.PlacementDebug</code> 看日志，多半是 <code>SurfaceChannel</code> 配置或 mesh 碰撞设置问题。</li>
+<li><strong>召唤物嵌墙 / 太靠墙？</strong> 落点 XY 贴墙根是预期；若召唤物 mesh 较粗，体积裁切（Footprint）属 V2 范畴，与落点决策无关。</li>
+<li><strong><code>DownwardTraceHeight</code> 设多大？</strong> 要足够从最高可能命中点向下打到地面。默认 2000cm 适用绝大多数场景。</li>
+<li><strong>想让某技能不接入？</strong> <code>Mode = None</code>。</li>
+</ul>
+<hr />
+<p><em>相关：算法规范见 FDD「Skill - 范围施法落点」；本文档聚焦接入与配置。</em></p></section>
+    </main>
+    </div>
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+<script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

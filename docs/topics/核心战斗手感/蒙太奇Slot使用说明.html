@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>蒙太奇 Slot 使用说明 · 使用说明</title>
+<style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+      pre{margin:12px 0 0;padding:14px 16px;overflow:auto;background:var(--code-bg);
+      border:1px solid var(--line);border-radius:var(--radius);font:13px/1.65 var(--mono);color:var(--code);}
+    pre code{background:none;padding:0;color:inherit;font-size:inherit;}
+    section>h2:first-child{margin-top:0;}
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Reference · Animation</div>
+      <h1>蒙太奇 Slot 使用说明</h1>
+      <p class="lede">目标读者：负责做技能 / 受击 / 表演的设计、动画师 目标场景：在 AnimMontage 里 **选哪个 Slot** 放动画，避免出现"上身抽搐 / 飘移 / 完全不跟下半身"等老问题。</p>
+      <div class="docinfo">
+        <div><i>文档类型</i><b>使用说明</b></div>
+        <div><i>归属</i><b>动画管线</b></div>
+        <div><i>来源</i><b>战斗 3C 文档区（fdd）</b></div>
+        <div><i>状态</i><b>在用 · 随项目更新</b></div>
+      </div>
+    </header>
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <a href="#s0"><i>01</i>概述</a>
+        <a href="#s1"><i>02</i>0. 一句话原则</a>
+        <a href="#s2"><i>03</i>1. 当前可用的 Slot 一览</a>
+        <a href="#s3"><i>04</i>2. 怎么选：决策树</a>
+        <a href="#s4"><i>05</i>3. 三种主上半身 Slot 的差异（最常用的就这三个）</a>
+        <a href="#s5"><i>06</i>4. 实战案例（来自项目踩坑）</a>
+        <a href="#s6"><i>07</i>5. 注意事项</a>
+        <a href="#s7"><i>08</i>6. 改 Slot 之后</a>
+        <a href="#s8"><i>09</i>附：相关链接</a>
+      </nav>
+      <main>
+        <section id="s0"><h2>概述</h2><hr /></section>
+        <section id="s1"><h2>0. 一句话原则</h2>
+<blockquote>
+<p><strong>Slot 不是越多越好，它决定的是"这段动画怎么混进当前 base pose"。选错了，再好的资源也是抽搐的。</strong></p>
+</blockquote>
+<hr />
+</section>
+        <section id="s2"><h2>1. 当前可用的 Slot 一览</h2>
+<p>所有 Slot 都在 <code>Skeleton</code> 的 <code>Anim Slot Manager</code> 里，统一挂在 <code>DefaultGroup</code> 下。</p>
+<table>
+<thead>
+<tr>
+<th>Slot 名</th>
+<th>用途</th>
+<th>半身？</th>
+<th>是否会被下半身姿势"带歪"</th>
+<th>在 ABP 里走哪种节点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DefaultSlot</code></td>
+<td>整体替换：mantle、大招、过场、复活</td>
+<td>全身</td>
+<td>—</td>
+<td>直接覆盖（不走 LBPB）</td>
+</tr>
+<tr>
+<td><code>UpperBody</code></td>
+<td><strong>硬上半身</strong>：持盾、瞄准、定身释放等强语义动作</td>
+<td>上半身（spine_01 以上）</td>
+<td>❌ 完全不传导</td>
+<td>LBPB + Mesh-Space Rotation Blend，BlendMask = <code>BP_UpperBody_Hard</code></td>
+</tr>
+<tr>
+<td><code>UpperBodySoft</code></td>
+<td><strong>软上半身</strong>：要求和跑动 / 转身协调的能力动作</td>
+<td>上半身（spine_02 以上，肩→手）</td>
+<td>✅ pelvis / spine_01 跟随 base</td>
+<td>LBPB + Mesh-Space Rotation Blend，BlendMask = <code>BP_UpperBody_Soft</code></td>
+</tr>
+<tr>
+<td><code>UpperBodyAdditive</code></td>
+<td><strong>叠加</strong>：受击反馈、呼吸、轻微反馈</td>
+<td>Mesh-Space Additive</td>
+<td>❌ 不替换，纯 add</td>
+<td>ApplyMeshSpaceAdditive（不走 LBPB）</td>
+</tr>
+<tr>
+<td><code>PreAO_UpperBody</code></td>
+<td>GASPALS overlay 系统专用（持枪叠加等）</td>
+<td>半身</td>
+<td>—</td>
+<td>overlay 内部接线，<strong>业务侧不要用</strong></td>
+</tr>
+<tr>
+<td><code>Transition</code></td>
+<td>MM / 状态机内部过渡</td>
+<td>—</td>
+<td>—</td>
+<td>状态机内部用，<strong>业务侧不要用</strong></td>
+</tr>
+<tr>
+<td><code>Face</code> / <code>Fingers</code></td>
+<td>局部（脸 / 手指）</td>
+<td>极小骨子集</td>
+<td>—</td>
+<td>局部 LBPB（按需启用）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+        <section id="s3"><h2>2. 怎么选：决策树</h2>
+<pre><code>要播的这段动画——
+
+① 是否要替换整个身体？（mantle、大招、过场、死亡复活）
+   ├─ 是 → DefaultSlot
+   └─ 否 → ②
+
+② 这段动画是「叠加」性质吗？（受击抖动、呼吸、轻微反馈、不想替换 base）
+   ├─ 是 → UpperBodyAdditive
+   │       ⚠ 前提：动画文件本身 AdditiveAnimType 必须是 mesh-space additive
+   └─ 否 → ③
+
+③ 释放过程中，角色是否需要继续跑 / 继续转向？
+   ├─ 不需要（定身瞄准、起手蓄力） → UpperBody （硬）
+   └─ 需要继续跑或转向            → UpperBodySoft （软）
+</code></pre>
+<hr />
+</section>
+        <section id="s4"><h2>3. 三种主上半身 Slot 的差异（最常用的就这三个）</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th><code>UpperBody</code></th>
+<th><code>UpperBodySoft</code></th>
+<th><code>UpperBodyAdditive</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>替换 or 叠加</td>
+<td><strong>替换</strong>上半身</td>
+<td><strong>替换</strong>上半身</td>
+<td><strong>叠加</strong>到 base 上</td>
+</tr>
+<tr>
+<td>pelvis / 髋是否被下身带</td>
+<td>❌ 不带</td>
+<td>✅ 跟随下身</td>
+<td>✅ 完全由下身决定</td>
+</tr>
+<tr>
+<td>适合的动画语义</td>
+<td>持盾、瞄准、定身起手</td>
+<td>普攻 release、追击释放</td>
+<td>受击、抖动、反馈</td>
+</tr>
+<tr>
+<td>动画文件要求</td>
+<td>普通动画</td>
+<td>普通动画</td>
+<td><strong>必须是 mesh-space additive</strong>，base 用对应角色 Idle_Combat</td>
+</tr>
+<tr>
+<td>用错的代价</td>
+<td>跑动时上身僵</td>
+<td>起手不够稳</td>
+<td>上身抽搐 / 飘移</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</section>
+        <section id="s5"><h2>4. 实战案例（来自项目踩坑）</h2>
+<h3>案例 A：Steel 普攻"飘"</h3>
+<ul>
+<li><strong>症状</strong>：跑动 / 转身时 Steel 普攻上身不跟，看着像悬浮。</li>
+<li><strong>当时配置</strong>：普攻 montage slot = <code>UpperBody</code>（硬）。</li>
+<li><strong>真因</strong>：普攻动画是要边跑边出招的，硬 mask 把 spine_01 锁死了，导致上身和下身脱节。</li>
+<li><strong>修复</strong>：动画文件改回 <code>AAT_NONE</code> → montage slot 改成 <code>UpperBodyAdditive</code>，并把 base 设成 <code>UEFN_rtgSteel_Idle_Combat</code>。</li>
+<li><strong>教训</strong>：普攻 release 类不要塞 <code>UpperBody</code>。要么走 <code>UpperBodySoft</code>（普通动画），要么走 <code>UpperBodyAdditive</code>（additive 动画）。</li>
+</ul>
+<h3>案例 B：把 additive 类型动画塞进 <code>UpperBody</code></h3>
+<ul>
+<li><strong>症状</strong>：上身整个抽搐 / 扭曲。</li>
+<li><strong>真因</strong>：<code>UpperBody</code> 走的是 <strong>替换型</strong> LBPB，base pose 被直接覆盖成 additive 的 delta。Additive 是"差量"，本来是要 add 在 base 上的，被当成绝对姿势放进去就是抽搐。</li>
+<li><strong>修复</strong>：检查动画的 <code>AdditiveAnimType</code>：</li>
+<li><code>AAT_NONE</code> → 走 <code>UpperBody</code> 或 <code>UpperBodySoft</code></li>
+<li><code>AAT_LocalSpaceBase</code> / <code>AAT_MeshSpaceBase</code> → <strong>只能</strong>走 <code>UpperBodyAdditive</code></li>
+</ul>
+<hr />
+</section>
+        <section id="s6"><h2>5. 注意事项</h2>
+<h3>5.1 选 Slot 之前先看动画的 <code>AdditiveAnimType</code></h3>
+<p>打开动画资源 → <code>Additive Settings</code> → <code>Additive Anim Type</code>：</p>
+<table>
+<thead>
+<tr>
+<th>AdditiveAnimType</th>
+<th>能进哪些 Slot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AAT_NONE</code>（普通动画）</td>
+<td><code>DefaultSlot</code> / <code>UpperBody</code> / <code>UpperBodySoft</code></td>
+</tr>
+<tr>
+<td><code>AAT_LocalSpaceBase</code> 或 <code>AAT_MeshSpaceBase</code>（叠加动画）</td>
+<td><strong>只能</strong> <code>UpperBodyAdditive</code></td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 Additive 动画的 base 要选对</h3>
+<p><code>UpperBodyAdditive</code> 里的动画一定要用对 base：</p>
+<ul>
+<li>战斗态动作 → base 选角色对应的 <code>XXX_Idle_Combat</code></li>
+<li>非战斗 → base 选 <code>XXX_Idle</code></li>
+</ul>
+<p>base 不匹配的话，叠加出来的姿势会偏。</p>
+<h3>5.3 不要碰这些 Slot</h3>
+<ul>
+<li><code>PreAO_UpperBody</code>、<code>Transition</code>：是 overlay 系统 / 状态机内部用的，业务侧 montage 别选它们。</li>
+<li><code>Face</code> / <code>Fingers</code>：表情、手指系统专用。</li>
+</ul>
+<h3>5.4 数值不对就先回到 Slot 这一步排查</h3>
+<p>技能视觉异常的第一排查顺序：</p>
+<ol>
+<li>动画的 <code>AdditiveAnimType</code> 对吗？</li>
+<li>Slot 选对了吗？</li>
+<li>base 选对了吗（<code>UpperBodyAdditive</code> 才需要看）？</li>
+<li>才轮到调 BlendIn / BlendOut 时长。</li>
+</ol>
+<hr />
+</section>
+        <section id="s7"><h2>6. 改 Slot 之后</h2>
+<p>如果你改了任何 montage 的 Slot，做完一个简单自测：</p>
+<ol>
+<li>PIE，角色站定 → 触发这段动画 → 上身正常</li>
+<li>PIE，按住前进让角色跑动 → 触发这段动画 → <strong>上身不该抽搐 / 飘</strong></li>
+<li>PIE，跑动中快速左右转向 → 触发这段动画 → 上身和下身<strong>该协调</strong></li>
+</ol>
+<p>三种情况都正常才算过。</p>
+<hr />
+</section>
+        <section id="s8"><h2>附：相关链接</h2>
+<ul>
+<li>ABP 主图实际接线：<code>/Game/Heroes/ABP_HeroCharacter_MM</code>（AnimGraph，参考 LBPB / ApplyMeshSpaceAdditive 节点位置）</li>
+<li>Skeleton Slot 声明：<code>SK_UEFN_Mannequin</code> 的 <code>Anim Slot Manager</code></li>
+<li>BlendMask 资源：<code>/Game/Heroes/Anim/BP_UpperBody_Hard</code>、<code>BP_UpperBody_Soft</code></li>
+</ul></section>
+    </main>
+    </div>
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+<script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
