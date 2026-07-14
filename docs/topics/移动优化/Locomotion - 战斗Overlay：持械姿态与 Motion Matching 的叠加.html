@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>战斗 Overlay 体系 · 持械姿态与 Motion Matching 的叠加</title>
+  <title>上半身 Overlay 体系 · 持械姿态与 Motion Matching 的叠加</title>
   <style>
     /* ============================================================
        3C Doc Theme v3 — "精装手册 / Hardcover Manual"
@@ -226,7 +226,7 @@
     <header class="hero">
       <button id="themeBtn" title="切换亮/暗主题">☾</button>
       <div class="kicker">Combat 3C · System Design · Doc SYS-XX</div>
-      <h1>战斗 Overlay 体系：持械姿态与 Motion Matching 的叠加</h1>
+      <h1>上半身 Overlay 体系：持械姿态与 Motion Matching 的叠加</h1>
       <p class="lede">Motion Matching 管腿和位移，但"这个英雄拿着锤子、正在戒备、准备开枪"这些信息不该由移动库承担：每个持械姿态都烘进移动库，量产会当场爆炸。我们的答案是<b>三层叠加</b>：MM 打底、Overlay 姿态层管持械与戒备、Slot 管瞬时动作。本篇写清这套体系的状态语义、驱动链、与 MM 的叠加形式，以及一个字段收口的逐英雄接入配方（10 个英雄在用）。</p>
       <div class="tldr">
         <div><i>定位</i><span>移动文档矩阵的姿态层分册：手册管参数、历程管过程、标准管验收，<b>本篇管"移动之上的表达层怎么搭"</b>。</span></div>
