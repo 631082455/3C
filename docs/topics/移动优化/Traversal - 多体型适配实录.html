@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traversal · 多体型适配实录</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Field Log · Traversal</div>
+      <h1>攀爬系统的多体型适配<span style="opacity:.55">·Steel 深潜实录</span></h1>
+      <p class="lede">同一套 GASPALS 翻越动画，放在 TwinBlast 身上能成立，放到 Steel 这种矮粗、大胶囊、骨骼比例差异明显的角色身上，就会依次暴露手脚约束、落点空间和悬挂高度三类问题。最后的解法不是统一缩放动画，而是把差异拆成<b>骨架与 IK、Motion Warping 空间、动作 × 高度 × 角色配置</b>三层分别收口。</p>
+      <div class="tldr">
+        <div><i>起点</i><span>标准 Mannequin 动画与大体型角色的骨骼比例、IK 目标、胶囊半径和手搭边缘后的 Root Motion 位移都不一致。</span></div>
+        <div><i>终案</i><span>手臂回到 FK、脚保留受控 IK；Warp 的 XY 使用角色实际胶囊半径；Z 由 Mantle / Climb × Short / Tall 四格角色配置决定。</span></div>
+        <div><i>实证</i><span>Steel 当前只有高墙 Climb 额外补偿 30cm；TwinBlast 与 Sparrow 四格均为 0。它是角色差异，不是全局推荐值。</span></div>
+        <div><i>范围</i><span>P4 时间线覆盖 IK/MM 基础、Steel Climb 联调、重定向四连改、悬挂分档先撤回再重提，以及后续全英雄 MCD 治理。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>主案例</i><b>Steel（大体型 / 悬挂式 Climb）</b></div>
+        <div><i>基准角色</i><b>TwinBlast · Sparrow</b></div>
+        <div><i>证据</i><b>P4 + 现行 C++ + 编辑器资产实读</b></div>
+        <div><i>定位</i><b>调试实录 + 技术解释</b></div>
+        <div class="wide"><i>配套文档</i><b><a href="Traversal - 攀爬翻越系统接入·完整调试实录.html">完整调试实录 →</a>　<a href="Travelsal - 翻越系统 — 关卡设计参数手册.html">关卡参数手册 →</a>　<a href="新角色攀爬翻越接入.html">新角色接入指南 →</a></b></div>
+      </div>
+    </header>
+
+    <div class="foreword">
+      <p>多体型适配最容易被说成「大角色把动画缩放一下」。实际做下来完全不是这回事。动画里的手搭边缘、角色胶囊中心、骨架 root、Motion Warping 目标点，属于四个不同坐标语义。标准体型上它们差得不多，看起来像一套参数能通用；到了 Steel，这些误差会同时放大。</p>
+      <p>这篇不重复前一份完整调试实录，而是把当时散落在 IK Rig、Retargeter、MCD、Chooser、PoseSearch 数据库和 C++ 里的多体型工作单独捞出来。P4 已经找回了关键链路，其中还保留了一次很真实的过程：第一版「体型差异巨大的悬挂处理」提交后四分钟就撤回，十几分钟后重新提交。</p>
+      <p>旧接入文档里的 Steel 单值偏移已经落后于现行实现。本文以编辑器当前实读和代码为准，同时把旧口径标成历史阶段，不反向篡改当时的记录。</p>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">问题</div>
+        <a href="#problem"><i>01</i>为什么标准方案会失效</a>
+        <a href="#timeline"><i>02</i>证据时间线</a>
+        <div class="grp">三层适配</div>
+        <a href="#rig"><i>03</i>骨架与 IK</a>
+        <a href="#warp"><i>04</i>Motion Warping 空间</a>
+        <a href="#matrix"><i>05</i>四格角色补偿</a>
+        <div class="grp">落地</div>
+        <a href="#steel"><i>06</i>Steel 深潜</a>
+        <a href="#rollout"><i>07</i>从单角色到全英雄</a>
+        <a href="#verify"><i>08</i>验收与排错顺序</a>
+        <a href="#boundary"><i>09</i>边界与旧口径</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>问题</b><span>同一动作，不同身体</span></div>
+
+        <section id="problem">
+          <h2>为什么标准方案会失效</h2>
+          <p>GASPALS 的 Traversal 动画以 UEFN Mannequin 为设计基准。常规体型角色通过运行时重定向复用它时，骨盆高度、肢体长度和胶囊尺寸接近，误差通常还能被 Motion Warping 吃掉。Steel 不一样：躯干宽、四肢比例和标准人形差异明显，胶囊横向占用也更大。标准方案里原本互相接近的四个点开始分家。</p>
+          <div class="grid">
+            <div class="box"><h3>动画语义</h3><p>手在第几帧抓住边缘，抓住后 Root Motion 还会上移多少。</p></div>
+            <div class="box"><h3>骨架语义</h3><p>root、pelvis、手脚末端在该体型上的真实高度和比例。</p></div>
+            <div class="box"><h3>碰撞语义</h3><p>胶囊半径决定身体离墙多远才不会穿墙，不能沿用标准角色常量。</p></div>
+            <div class="box"><h3>Warp 语义</h3><p>FrontLedge 是最终落脚点，还是手搭边缘时的悬挂根位置。</p></div>
+          </div>
+          <svg class="diagram" viewBox="0 0 900 285" role="img" aria-label="多体型适配三层结构">
+            <rect x="40" y="30" width="820" height="58" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="70" y="55" fill="var(--accent-text)" font-size="15" font-weight="700">01 骨架与 IK</text>
+            <text x="250" y="55" fill="var(--muted)" font-size="14">先让手脚不被错误目标拉扯，保住动作形状</text>
+            <rect x="40" y="112" width="820" height="58" rx="6" fill="var(--brass-soft)" stroke="var(--brass)"/>
+            <text x="70" y="137" fill="var(--brass)" font-size="15" font-weight="700">02 Warp 空间</text>
+            <text x="250" y="137" fill="var(--muted)" font-size="14">再让胶囊离墙距离与手搭边缘的坐标语义正确</text>
+            <rect x="40" y="194" width="820" height="58" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/>
+            <text x="70" y="219" fill="var(--ok)" font-size="15" font-weight="700">03 角色配置</text>
+            <text x="250" y="219" fill="var(--muted)" font-size="14">最后按动作与障碍高度补偿剩余的体型差</text>
+            <path d="M450 88V112M450 170V194" stroke="var(--muted)" stroke-width="2"/>
+          </svg>
+          <div class="rule"><p><b>判断顺序不能反。</b>如果手臂已经被 FBIK 拉坏，继续调 Z Offset 只会让一个错误姿势落到更准确的位置；如果胶囊离墙距离不对，改动画高度也解决不了穿墙。先形状，再空间，最后才是数值。</p></div>
+        </section>
+
+        <section id="timeline">
+          <h2>证据时间线</h2>
+          <p>提交记录找回后，能看到多体型适配并不是 4 月突然出现的一个字段，而是三个月里逐层积累：先建 Steel 自己的动画数据底座，再让 Climb 真正跑起来，最后才把体型差抽象成共享机制。</p>
+          <table>
+            <thead><tr><th>阶段</th><th>P4 证据</th><th>改动范围</th><th>这一步解决什么</th></tr></thead>
+            <tbody>
+              <tr><td><b>IK 底座</b></td><td><code>CL 4733442</code></td><td>新建 Steel IKRig 与双向 Retargeter</td><td>第一次把 Steel 的特殊骨架纳入 UEFN 数据链</td></tr>
+              <tr><td><b>MM 数据流</b></td><td><code>CL 4741691</code></td><td>Normalization Set、Chooser、约 20 组 Steel PSD、IK Rig 再调</td><td>不是只让一段动画能播，而是让完整移动数据能被 MM 选择</td></tr>
+              <tr><td><b>移动晃动</b></td><td><code>CL 4865857</code></td><td>ABP、HeroData、MCD、Steel Chooser</td><td>明确记录 Foot Placement 导致的角色移动晃动</td></tr>
+              <tr><td><b>Steel Climb</b></td><td><code>CL 5017949</code></td><td>IK Rig、UEFN→Steel RTG、MCD、HeroData、Root Chooser、Jump PSD</td><td>攀爬不是单资产问题，六类资产必须一起联调</td></tr>
+              <tr><td><b>Retarget 四连改</b></td><td><code>CL 5027176</code><br><code>5028843</code><br><code>5028908</code><br><code>5031382</code></td><td>同一个 <code>RTG_UEFN_to_SteelAuto</code> 连续修改</td><td>auto retarget 只是起点，动作形状与 Overlay 接入继续暴露约束问题</td></tr>
+              <tr><td><b>悬挂分档</b></td><td><code>CL 5043845</code> → 撤回 <code>5043923</code> → 重提 <code>5044201</code></td><td>C++、MCD_Steel、Traverse Ability、MovementConfig</td><td>把「体型差异巨大的悬挂处理」从 Steel 特例抽成动作 × 高度配置</td></tr>
+              <tr><td><b>全英雄治理</b></td><td><code>CL 5202323</code><br><code>5207085</code><br><code>5209620</code></td><td>约 13~15 个英雄 MCD + 分动作 PlayRate 代码</td><td>共享手感参数批量铺开，角色体型差仍留在各自 MCD</td></tr>
+            </tbody>
+          </table>
+          <div class="note"><p><b>撤回不是失败记录里的噪音。</b><code>5043845</code> 的描述已经准确命名问题，但提交后四分钟撤回，十几分钟后再以「重新提交攀爬悬挂处理」落地。本文保留这段，因为它证明最终机制不是一次猜对，而是先把抽象方向定对，再处理实现/提交问题。</p></div>
+        </section>
+
+        <div class="part"><b>三层适配</b><span>形状 → 空间 → 数值</span></div>
+
+        <section id="rig">
+          <h2>第一层：骨架与 IK</h2>
+          <p>Steel 当前的 IKRig 和 Retargeter 已经把「大体型不能照搬标准 IK」写进资产本身。编辑器实读不是一套全开的通用解，而是一组有意识的取舍。</p>
+          <table>
+            <thead><tr><th>约束项</th><th>Steel 当前状态</th><th>设计目的</th></tr></thead>
+            <tbody>
+              <tr><td><b>LeftHandIK / RightHandIK</b></td><td>Goal 存在，但与 FBIK Solver 断开</td><td>手臂回到纯 FK，避免大体型手被强拉向 Mannequin 的世界目标而扭曲</td></tr>
+              <tr><td><b>LeftFootIK / RightFootIK</b></td><td>Goal 绑定 <code>foot_l / foot_r</code>，仍连接 Solver</td><td>脚保留落地约束，防止体型变化后脚底漂浮或穿地</td></tr>
+              <tr><td><b>ik_foot_root</b></td><td>FK Chains 中 <code>EnableFK=false</code></td><td>避免额外的脚根链参与重定向，和腿链重复驱动造成抖动</td></tr>
+              <tr><td><b>Retarget IK Goals op</b></td><td>整层关闭；左右臂链也显式 <code>EnableIK=false</code></td><td>大体型上不让标准角色的手脚世界目标直接接管动作</td></tr>
+              <tr><td><b>腿部 IK 链设置</b></td><td><code>BlendToSource=1</code>，左右腿各有 ±4cm Local Offset</td><td>腿保留源目标语义，并对 Steel 的宽体站距作细调</td></tr>
+              <tr><td><b>Run IK Rig</b></td><td>开启</td><td>把最终需要的脚部约束放回角色自己的 IKRig 求解</td></tr>
+            </tbody>
+          </table>
+          <svg class="diagram" viewBox="0 0 900 330" role="img" aria-label="Steel IK 约束策略">
+            <rect x="35" y="35" width="245" height="250" rx="6" fill="var(--soft)" stroke="var(--line)"/>
+            <text x="60" y="70" fill="var(--ink)" font-size="17" font-weight="700">UEFN 动画源</text>
+            <text x="60" y="105" fill="var(--muted)" font-size="14">标准比例的手脚目标</text>
+            <text x="60" y="135" fill="var(--muted)" font-size="14">标准骨盆与站距</text>
+            <path d="M280 160H390" stroke="var(--brass)" stroke-width="3"/>
+            <polygon points="390,160 375,152 375,168" fill="var(--brass)"/>
+            <rect x="390" y="35" width="220" height="250" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="415" y="70" fill="var(--accent-text)" font-size="17" font-weight="700">Steel Retarget</text>
+            <text x="415" y="108" fill="var(--danger)" font-size="14">手臂 IK 关闭</text>
+            <text x="415" y="138" fill="var(--ok)" font-size="14">脚部 IK 保留</text>
+            <text x="415" y="168" fill="var(--warn)" font-size="14">foot_root 禁用</text>
+            <text x="415" y="198" fill="var(--muted)" font-size="14">腿宽 ±4cm 微调</text>
+            <text x="415" y="228" fill="var(--muted)" font-size="14">角色 IKRig 最终求解</text>
+            <path d="M610 160H720" stroke="var(--brass)" stroke-width="3"/>
+            <polygon points="720,160 705,152 705,168" fill="var(--brass)"/>
+            <rect x="720" y="75" width="145" height="170" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/>
+            <text x="745" y="115" fill="var(--ok)" font-size="17" font-weight="700">Steel</text>
+            <text x="745" y="150" fill="var(--muted)" font-size="14">手不爆骨</text>
+            <text x="745" y="180" fill="var(--muted)" font-size="14">脚不闪烁</text>
+            <text x="745" y="210" fill="var(--muted)" font-size="14">动作形状保住</text>
+          </svg>
+          <div class="rule"><p>这里的核心不是「IK 越多越好」，而是<b>每个 Goal 是否仍然表达目标角色真实需要的约束</b>。手部目标在 Steel 上带来的误差大于收益，所以断开；脚底接触仍是硬约束，所以保留，但交给 Steel 自己的 IKRig 解。</p></div>
+        </section>
+
+        <section id="warp">
+          <h2>第二层：Motion Warping 空间</h2>
+          <p>骨架形状稳定后，第二层才是「角色应该被 Warp 到哪里」。现行代码把目标拆成 XY 与 Z 两个独立问题处理：</p>
+          <p><code>TargetXY = SurfaceXY - WallNormalXY × CharacterCapsuleRadius</code></p>
+          <p><code>TargetZ = SurfaceZ - CharacterZOffset(ActionType, ObstacleHeight)</code></p>
+          <h3>XY：必须读角色真实胶囊半径</h3>
+          <p><code>GetMantleStartLocation()</code> 直接调用 <code>GetScaledCapsuleRadius()</code>。这条看似普通，实际就是横向体型适配：大胶囊要离墙更远，小胶囊可以更贴边。如果写死 Mannequin 的半径，Steel 即使 Z 高度完全正确，胸口和肩仍可能挤进墙体。</p>
+          <h3>Z：先弄清 sync point 说的是什么</h3>
+          <p>现行注释把 FrontLedge 定义为「手抓住边缘时，角色仍在悬挂」的同步点。抓住以后，动画自己的 Root Motion 还会继续把角色向上送一段距离。因此 Warp 目标不能直接落在墙顶，而要从墙顶减去这段剩余上移量。角色体型和动作不同，这段量也不同。</p>
+          <svg class="diagram" viewBox="0 0 900 420" role="img" aria-label="Motion Warping 高度补偿示意">
+            <line x1="70" y1="335" x2="830" y2="335" stroke="var(--line)" stroke-width="3"/>
+            <rect x="560" y="105" width="250" height="230" fill="var(--soft)" stroke="var(--line)"/>
+            <line x1="540" y1="105" x2="835" y2="105" stroke="var(--brass)" stroke-width="4"/>
+            <text x="615" y="82" fill="var(--brass)" font-size="15" font-weight="700">SurfaceHit.Z（墙顶）</text>
+            <circle cx="430" cy="215" r="7" fill="var(--accent)"/>
+            <line x1="430" y1="215" x2="560" y2="105" stroke="var(--accent)" stroke-width="3"/>
+            <text x="195" y="205" fill="var(--accent-text)" font-size="15" font-weight="700">手搭边缘同步帧</text>
+            <path d="M470 215V105" stroke="var(--ok)" stroke-width="3" stroke-dasharray="8 7"/>
+            <polygon points="470,105 462,120 478,120" fill="var(--ok)"/>
+            <text x="275" y="260" fill="var(--ok)" font-size="14">动画余下 Root Motion：ZOffset</text>
+            <line x1="430" y1="215" x2="430" y2="335" stroke="var(--muted)" stroke-width="4"/>
+            <ellipse cx="430" cy="350" rx="80" ry="18" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="340" y="392" fill="var(--muted)" font-size="14">胶囊中心距墙 = 实际 CapsuleRadius</text>
+            <text x="585" y="145" fill="var(--muted)" font-size="14">TargetZ = 墙顶 - ZOffset</text>
+          </svg>
+          <div class="note"><p>旧系统曾用单一 <code>MantleHeightFromMontage</code> 表达这一差值。它能区分「GASPALS 落脚点式」与「Steel 悬挂式」，但无法同时覆盖 Mantle / Climb、矮墙 / 高墙四种组合，所以后面被四格机制取代。</p></div>
+        </section>
+
+        <section id="matrix">
+          <h2>第三层：动作 × 高度 × 角色 MCD</h2>
+          <p>4 月落地的关键抽象，是把 Z 补偿从一个全局数拆成四格。代码先用 <code>ActionType</code> 选行，再用 <code>ObstacleHeight &gt;= HeightTierThreshold</code> 选列：</p>
+          <table>
+            <thead><tr><th>动作 \ 高度</th><th>Short（低于阈值）</th><th>Tall（达到或高于阈值）</th></tr></thead>
+            <tbody>
+              <tr><td><b>Mantle</b></td><td><code>MantleZOffset_Short</code></td><td><code>MantleZOffset_Tall</code></td></tr>
+              <tr><td><b>Climb</b></td><td><code>ClimbZOffset_Short</code></td><td><code>ClimbZOffset_Tall</code></td></tr>
+            </tbody>
+          </table>
+          <p>Hurdle / Vault 与旧系统仍回退到 <code>MantleHeightFromMontage</code>。也就是说，四格不是把所有动作都复杂化，而是只对「手搭边缘后还要完成上墙」的 Mantle / Climb 开启体型补偿。</p>
+          <h3>当前资产实配，而不是历史猜测</h3>
+          <table>
+            <thead><tr><th>角色</th><th>Height Tier</th><th>Mantle Short</th><th>Mantle Tall</th><th>Climb Short</th><th>Climb Tall</th></tr></thead>
+            <tbody>
+              <tr><td><b>Steel</b></td><td>175cm</td><td>0</td><td>0</td><td>0</td><td><b>30cm</b></td></tr>
+              <tr><td><b>TwinBlast</b></td><td>175cm</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+              <tr><td><b>Sparrow</b></td><td>175cm</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            </tbody>
+          </table>
+          <div class="grid">
+            <div class="box blue"><h3>Steel 这 30cm 在说什么</h3><p>只在高墙 Climb 生效。Warp 的悬挂目标比墙顶低 30cm，给 Steel 的高墙攀爬动画留出后续 Root Motion 上移空间。</p></div>
+            <div class="box green"><h3>它不是什么</h3><p>不是所有大体型的推荐值，不是胶囊高度，也不是角色整体缩放。换一个骨架或一套 Climb 动画，都要重新验。</p></div>
+          </div>
+          <svg class="diagram" viewBox="0 0 900 260" role="img" aria-label="Steel 四格补偿矩阵">
+            <text x="42" y="42" fill="var(--muted)" font-size="14">Steel / HeightTier = 175cm</text>
+            <rect x="180" y="60" width="300" height="76" rx="6" fill="var(--soft)" stroke="var(--line)"/>
+            <text x="205" y="91" fill="var(--ink)" font-size="15" font-weight="700">Mantle × Short</text><text x="440" y="110" text-anchor="end" fill="var(--muted)" font-size="24">0</text>
+            <rect x="500" y="60" width="300" height="76" rx="6" fill="var(--soft)" stroke="var(--line)"/>
+            <text x="525" y="91" fill="var(--ink)" font-size="15" font-weight="700">Mantle × Tall</text><text x="760" y="110" text-anchor="end" fill="var(--muted)" font-size="24">0</text>
+            <rect x="180" y="155" width="300" height="76" rx="6" fill="var(--soft)" stroke="var(--line)"/>
+            <text x="205" y="186" fill="var(--ink)" font-size="15" font-weight="700">Climb × Short</text><text x="440" y="205" text-anchor="end" fill="var(--muted)" font-size="24">0</text>
+            <rect x="500" y="155" width="300" height="76" rx="6" fill="var(--brass-soft)" stroke="var(--brass)" stroke-width="2"/>
+            <text x="525" y="186" fill="var(--brass)" font-size="15" font-weight="700">Climb × Tall</text><text x="760" y="207" text-anchor="end" fill="var(--brass)" font-size="30" font-weight="700">30cm</text>
+          </svg>
+          <div class="rule"><p>这套设计把共享逻辑和角色差异分开：<b>C++ 只负责选哪一格，MCD 负责这一格是多少</b>。新增体型不再改代码分支，也不会把 Steel 的补偿污染到所有英雄。</p></div>
+        </section>
+
+        <div class="part"><b>落地</b><span>从 Steel 特例到团队资产</span></div>
+
+        <section id="steel">
+          <h2>Steel 深潜：一次提交动了六层</h2>
+          <p><code>CL 5017949 · STEEL CLIMB</code> 是这条线最能说明工作量的提交。它没有只改一段攀爬蒙太奇，而是同时碰了下面六类资产：</p>
+          <table>
+            <thead><tr><th>资产层</th><th>提交中的文件</th><th>职责</th></tr></thead>
+            <tbody>
+              <tr><td><b>角色约束</b></td><td><code>IK_Steel_new</code></td><td>定义 Steel 手脚 Goal、链与 FBIK 求解边界</td></tr>
+              <tr><td><b>骨架映射</b></td><td><code>RTG_UEFN_to_SteelAuto</code>（新增）</td><td>把 UEFN Traversal 动作转换到 Steel 骨架</td></tr>
+              <tr><td><b>角色配置</b></td><td><code>MCD_Steel</code></td><td>开关、动作槽、阈值、播放速率与体型补偿</td></tr>
+              <tr><td><b>角色数据入口</b></td><td><code>HeroData_Steel</code></td><td>把角色实际接到新的动画/重定向链</td></tr>
+              <tr><td><b>数据库路由</b></td><td><code>CHT_PoseSearchDatabases_Root</code></td><td>让 Steel 命中自己的 MM 数据库分支</td></tr>
+              <tr><td><b>姿势搜索数据</b></td><td><code>PSD_Dense_Jumps_Steel1</code></td><td>补齐 Jump / FromTraversal 相关姿势搜索上下文</td></tr>
+            </tbody>
+          </table>
+          <p>随后三天里，同一个 Retargeter 又连续经历 auto retarget、retarget 修正、动画修正、Overlay 联调四次提交。这个序列说明，<b>自动映射成功不等于体型适配完成</b>：链名能对上，只代表数据能流动；动作是否稳定，还要看手脚约束、角色站距、上半身叠加和运行时落点。</p>
+          <div class="aside"><p>P4 能证明哪些资产一起改、改了几轮，但不能从二进制历史里还原每一轮编辑器画面。因此本文不补造「第几轮具体看见什么」；能坐实的现象只写项目文档和提交描述里留下的：Foot Placement 晃动、手臂扭曲/拉伸、脚部抖动/闪烁、悬挂落点偏差。</p></div>
+        </section>
+
+        <section id="rollout">
+          <h2>从单角色到全英雄治理</h2>
+          <p>Steel 把多体型问题暴露出来后，系统没有停在「给 Steel 写特殊分支」。4 月底三次提交把共享部分铺到全英雄 MCD：</p>
+          <ol>
+            <li><code>CL 5202323</code>「攀爬整体流畅度优化」：一次修改 DoublePole、Gideon、Kallari、Muriel、Phase、Riktor、Sevarog、Sparrow、Steel、TwinBlast 等十多个英雄 MCD。</li>
+            <li><code>CL 5207085</code>「fix traversal」：继续覆盖同一批角色，并补 Narbash、SkyfireMecha 等配置。</li>
+            <li><code>CL 5209320 / 5209620</code>：代码新增 Hurdle / Vault / Mantle / Climb 分动作速率倍率，各英雄 MCD 再批量落值。</li>
+          </ol>
+          <table>
+            <thead><tr><th>适合全英雄共享</th><th>必须保留角色差异</th></tr></thead>
+            <tbody>
+              <tr><td>动作类型判定、Height Tier 选格逻辑、Warp 公式、PlayRate 合成方式、Ability 生命周期</td><td>胶囊尺寸、IK Goal 取舍、Retarget Chain 设置、四格 Z Offset、动作槽和体感倍率</td></tr>
+            </tbody>
+          </table>
+          <div class="rule"><p>可扩展性的关键不是「所有英雄配成一样」，而是<b>所有英雄使用同一种配置语言</b>。Steel 可以只改 Climb Tall，标准体型保持全 0；程序逻辑不需要知道哪个角色叫 Steel。</p></div>
+        </section>
+
+        <section id="verify">
+          <h2>验收矩阵与排错顺序</h2>
+          <p>多体型问题很容易跨层误诊。下面按运行时现象给首查顺序，避免在错误层级里来回调数。</p>
+          <table>
+            <thead><tr><th>现象</th><th>第一检查层</th><th>第二检查层</th><th>不要先做</th></tr></thead>
+            <tbody>
+              <tr><td><b>走路脚部抖动 / 闪烁</b></td><td>FK 中 <code>ik_foot_root</code> 是否重复驱动；脚 Goal 是否连到正确骨骼</td><td>Foot Placement 与 Speed Plant</td><td>不要先调 Climb Z Offset</td></tr>
+              <tr><td><b>跳跃或攀爬时手臂拉长</b></td><td>手部 Goal 是否仍连 FBIK；Arm IK 是否开启</td><td>Retarget Pose 与手臂 Chain</td><td>不要用整体 Mesh Scale 掩盖</td></tr>
+              <tr><td><b>身体挤墙 / 离墙过远</b></td><td>Warp XY 是否使用实际 CapsuleRadius</td><td>Wall Normal 与胶囊尺寸</td><td>不要先改动画 Root 高度</td></tr>
+              <tr><td><b>手搭边缘正确，最终站位偏高/低</b></td><td>动作 × Height Tier 四格 Z Offset</td><td>蒙太奇同步帧后剩余 Root Motion</td><td>不要用一个全局值覆盖四种组合</td></tr>
+              <tr><td><b>攀爬结束 snap / 联网抖动</b></td><td>MovementMode 收口与网络纠正抑制</td><td>碰撞恢复时机、BlendOut</td><td>不要归因于体型后只调 IK</td></tr>
+              <tr><td><b>T-Pose / Ability 秒取消</b></td><td>Primary Mesh 骨骼与蒙太奇骨骼是否匹配</td><td>HeroData RetargetMesh / AnimClass / Retargeter</td><td>不要先钻 AnimBP Blend 节点</td></tr>
+            </tbody>
+          </table>
+          <h3>最小验收场景</h3>
+          <ul>
+            <li>同一角色至少测 Stand / Walk / Run 三种入墙速度，避免只在单一相位成立。</li>
+            <li>至少测矮墙 Mantle 与高墙 Climb，两边跨过 <code>HeightTierThreshold</code>。</li>
+            <li>正面与斜角接近都测，观察手搭点、胶囊离墙距离、最终脚底落点三个时刻。</li>
+            <li>单机通过后再测 Listen Server 客户端，确认没有服务端位置纠正把角色拉回。</li>
+            <li>翻越结束后继续移动，确认 MM 能从最终姿势接回步态而不跳帧。</li>
+          </ul>
+        </section>
+
+        <section id="boundary">
+          <h2>边界、旧口径与可复用结论</h2>
+          <h3>旧文档里的 Steel=120 已经过时</h3>
+          <p>早期《新角色攀爬/翻越系统接入指南》记录 Steel 的 <code>MantleHeightFromMontage=120</code>，代表当时用单值描述悬挂动画余下上移量。现行资产已经不是这套口径：Steel 为新系统，<code>MantleHeightFromMontage=-1</code> 只作为非 Mantle/Climb 或旧系统回退；Mantle / Climb 实际走四格，当前只有 <code>ClimbZOffset_Tall=30</code>。</p>
+          <div class="note"><p><b>-1 不是当前高墙 Climb 的实际补偿。</b>新系统遇到 Mantle / Climb 会覆盖这个回退值。直接盯着旧字段判断 Steel 落点，会得出错误结论。</p></div>
+          <h3>多体型适配没有变成自动缩放</h3>
+          <p>系统自动化的是「差异如何被表达和选择」，不是「自动算出每个角色的正确值」。胶囊半径可以运行时直接读取，动作类型与高度档可以由代码选择；但手臂该不该启用 IK、Climb Tall 应补多少，仍需要拿目标骨架与目标动画在编辑器里验。</p>
+          <h3>最后留下的三条方法</h3>
+          <ol>
+            <li><b>先把问题放回正确坐标系。</b>爆骨是约束问题，穿墙是胶囊空间问题，站位高低才是 Z 补偿问题。</li>
+            <li><b>特例应该变成配置维度，不应该变成角色名分支。</b>动作 × 高度 × 角色 MCD 让 Steel 的差异可表达，也不污染标准体型。</li>
+            <li><b>资产联调要按链路验收。</b>IK Rig、Retargeter、HeroData、Chooser、PSD、MCD 任一层缺失，都可能表现成「攀爬动画不对」。</li>
+          </ol>
+          <h3>证据说明</h3>
+          <table>
+            <thead><tr><th>证据级别</th><th>本文使用方式</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ok">现行实读</span></td><td>C++ 公式、Steel/TwinBlast/Sparrow 当前 MCD、IK Goal 连接、Retarget op 开关与 Chain 设置</td></tr>
+              <tr><td><span class="ok">P4 坐实</span></td><td>提交时间、描述、受影响文件与撤回/重提关系</td></tr>
+              <tr><td><span class="later">旧文档</span></td><td>历史现象与当时口径，若和现行实现冲突则明确标记为旧</td></tr>
+              <tr><td><span class="no">未补造</span></td><td>3 月每一轮的具体画面、缺失的验收原话、没有记录的数值试错</td></tr>
+            </tbody>
+          </table>
+          <p>继续阅读：<a href="Traversal - 攀爬翻越系统接入·完整调试实录.html">攀爬翻越系统完整调试实录</a>、<a href="Travelsal - 翻越系统 — 关卡设计参数手册.html">关卡设计参数手册</a>、<a href="新角色攀爬翻越接入.html">新角色接入指南</a>。</p>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

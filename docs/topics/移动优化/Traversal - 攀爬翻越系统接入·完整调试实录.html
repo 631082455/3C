@@ -233,7 +233,7 @@
         <div><i>涉及角色</i><b>TwinBlast · Sparrow · Steel</b></div>
         <div><i>周期</i><b>三场会话 · 约一周</b></div>
         <div><i>分工</i><b>战斗 3C 策划主导 + AI 协作执行</b></div>
-        <div class="wide"><i>配套文档</i><b><a href="Travelsal - 翻越系统 — 关卡设计参数手册.html">翻越系统 · 关卡设计参数手册 →</a>　<a href="新角色攀爬翻越接入.html">新角色攀爬翻越接入 →</a></b></div>
+        <div class="wide"><i>配套文档</i><b><a href="Traversal - 多体型适配实录.html">多体型适配 · Steel 深潜 →</a>　<a href="Travelsal - 翻越系统 — 关卡设计参数手册.html">翻越系统 · 关卡设计参数手册 →</a>　<a href="新角色攀爬翻越接入.html">新角色攀爬翻越接入 →</a></b></div>
       </div>
     </header>
 
@@ -554,7 +554,7 @@
         <section id="leftovers">
           <h2>遗留问题</h2>
           <ol>
-            <li><b>Steel 的 MantleHeightFromMontage 精确值</b>：临时值 164cm 略偏大，落点偏高导致部分高度刚好翻不过去。需在 PIE 里用 DrawDebug 实测 sync point 的 Z 偏移。优先级最高，纯编辑器可解。</li>
+            <li><b>Steel 多体型适配</b>：单值 <code>MantleHeightFromMontage</code> 已演进为 Mantle / Climb × Short / Tall 四格角色配置，Steel 当前仅高墙 Climb 使用 30cm 补偿。完整证据链与现行参数见<a href="Traversal - 多体型适配实录.html">《多体型适配 · Steel 深潜实录》</a>。</li>
             <li><b>翻越角度判断</b>：目前只支持正面朝墙。斜角接近（与墙面法线夹角大于 30°）时 Motion Warping 会过度旋转角色，与 GASPALS 原版有差距。</li>
             <li><b>Walk 档蒙太奇资产</b>：代码层已支持，DataAsset 里 Walk 槽尚未指定资产，当前回退 Run 档。纯编辑器可解。</li>
             <li><b>左右脚接缝跳变</b>：L/R 版本切换在边缘情况下仍有姿势跳变。GASPALS 原版靠 PoseSearch 自动选最匹配帧回避了此问题。</li>
