@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MM 动画数据和自动化工具（for 动画师）</title>
+<style>
+  /* 3C Doc Theme v3 — 精装手册 / Hardcover Manual(轻量单页版) */
+  :root{
+    --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+    --line:#ddd7c9; --soft:#edeade;
+    --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+    --brass:#a98a4e; --brass-soft:#f4eddc;
+    --ok:#31734d; --ok-soft:#e5f0e8;
+    --warn:#96660a; --warn-soft:#f8efd8;
+    --danger:#a63d33; --danger-soft:#f5e7e4;
+    --code:#2f5573; --code-bg:#eaeeee;
+    --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+    --radius:6px;
+    --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+    --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+    --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+    --line:#2c313a; --soft:#222731;
+    --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+    --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+    --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+    --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+    --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+    --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+    --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+    background:
+      radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+      radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+      linear-gradient(180deg,var(--bg),var(--bgdeep));
+    -webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--accent);color:#fff;}
+  a{color:var(--accent-text);}
+  .page{width:min(1080px,calc(100vw - 32px));margin:28px auto 56px;}
+  .hero{position:relative;overflow:hidden;padding:38px 46px 34px;border-radius:8px;
+    background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+    color:#c6ccd5;box-shadow:var(--shadow);}
+  .hero::before{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.10);border-radius:4px;pointer-events:none;}
+  .hero>*{position:relative;z-index:1;}
+  .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+    letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+  .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+  .hero h1{margin:14px 0 0;font-size:clamp(24px,3.2vw,34px);font-weight:760;line-height:1.3;color:#f3efe6;}
+  .hero p{margin:12px 0 0;max-width:52em;color:#a4abb5;font-size:14.5px;}
+  .hero p b{color:#dbe0e7;}
+  #themeBtn{position:absolute;top:18px;right:18px;z-index:2;width:36px;height:36px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;font-size:15px;cursor:pointer;}
+  #themeBtn:hover{background:rgba(255,255,255,.13);}
+  .anchors{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0;}
+  .anchors a{padding:5px 14px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
+    font:600 12.5px/1.5 var(--mono);color:var(--accent-text);text-decoration:none;}
+  .anchors a:hover{background:var(--soft);}
+  section{padding:32px 40px;margin:16px 0 0;background:var(--paper);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);scroll-margin-top:20px;}
+  h2{display:flex;align-items:center;gap:11px;margin:0 0 4px;font-size:24px;font-weight:780;line-height:1.3;}
+  h2 .no{flex:none;padding:3px 9px;border-radius:6px;font:700 13px/1 var(--mono);color:var(--accent-text);
+    border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+  h3{margin:26px 0 0;font-size:16.5px;font-weight:730;display:flex;align-items:center;gap:9px;}
+  h3::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--brass);flex:none;}
+  .card h3::before{display:none;} .card h3{margin-top:0;}
+  p{margin:10px 0 0;color:var(--muted);} p b,li b,td b{color:var(--ink);}
+  ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+  li::marker{color:var(--brass);}
+  code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);padding:1px 6px;border-radius:5px;}
+  table{width:100%;margin-top:14px;border-collapse:separate;border-spacing:0;border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;font-size:14px;}
+  th,td{padding:10px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+  th{background:var(--soft);color:var(--muted);font:600 11.5px/1.5 var(--mono);letter-spacing:.1em;}
+  tbody tr:last-child td{border-bottom:none;} td{color:var(--muted);}
+  tr.group td{background:var(--soft);color:var(--accent-text);font:700 11.5px/1.5 var(--mono);letter-spacing:.16em;}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;}
+  .b-must{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+  .b-cam{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+  .b-off{color:var(--muted);background:var(--soft);border:1px solid var(--line);}
+  .note{margin-top:16px;padding:14px 18px 12px;border-radius:var(--radius);background:var(--warn-soft);
+    border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-left:4px solid var(--warn);color:var(--ink);}
+  .note::before{content:"⚠ 注意";display:block;margin-bottom:5px;font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+  .rule{margin-top:16px;padding:16px 18px 14px;border-radius:var(--radius);background:var(--accent-soft);
+    border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);border-left:4px solid var(--accent);}
+  .rule::before{content:"◆ 关键";display:block;margin-bottom:5px;font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+  .rule p{color:var(--ink);}
+  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+  .card{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+  .card .head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .card .head code{font-size:13.5px;font-weight:700;}
+  .card .say{margin-top:8px;color:var(--ink);font-size:14.5px;}
+  .card dl{margin:10px 0 0;font-size:13.5px;}
+  .card dt{float:left;clear:left;width:74px;color:var(--brass);font:700 11px/2.3 var(--mono);letter-spacing:.12em;}
+  .card dd{margin:0 0 4px 84px;color:var(--muted);line-height:1.7;}
+  .card dd b{color:var(--ink);}
+  svg.diagram{display:block;max-width:100%;margin-top:12px;}
+  figcaption,.cap{margin-top:6px;font-size:12.5px;color:var(--muted);}
+  .term{margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:6px;
+    background:var(--code-bg);font-family:var(--mono);font-size:12px;line-height:1.75;
+    color:var(--code);overflow-x:auto;white-space:pre;}
+  .term b{color:var(--ink);font-weight:700;}
+  .steps{counter-reset:st;margin-top:6px;}
+  .step{position:relative;margin-top:14px;padding:14px 18px 12px 54px;border:1px solid var(--line);
+    border-radius:var(--radius);background:var(--soft);counter-increment:st;}
+  .step::before{content:counter(st);position:absolute;left:16px;top:14px;width:26px;height:26px;
+    display:flex;align-items:center;justify-content:center;border-radius:50%;
+    background:var(--accent);color:#fff;font:700 13px/1 var(--mono);}
+  .step b{color:var(--ink);}
+  .step p{margin:4px 0 0;font-size:14px;}
+  footer{margin-top:26px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+  @media(max-width:900px){ .cards{grid-template-columns:1fr;} section{padding:24px 18px;} .hero{padding:28px 22px;} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <button id="themeBtn" title="切换亮/暗主题">☾</button>
+    <div class="kicker">Combat 3C · Animator Handbook</div>
+    <h1>MM 动画数据和自动化工具<span style="opacity:.55;font-weight:600">（for 动画师）</span></h1>
+    <p>给动画师的工具书。Motion Matching 的片段上要带哪些曲线、每条是干嘛的、缺了会怎样、用哪个工具一键烘、什么时候可以整层不烘。<b>「缺了会怎样」全部经引擎源码核实，不是猜的。</b>不需要懂 MM 原理，照着做就行。</p>
+  </header>
+
+  <div class="anchors">
+    <a href="#tools">1 工具箱</a>
+    <a href="#model">2 一图看懂</a>
+    <a href="#gallery">3 曲线图鉴</a>
+    <a href="#bake">4 烘焙工作流</a>
+    <a href="#check">5 烘完自查</a>
+    <a href="#verdict">6 什么时候不用烘</a>
+  </div>
+
+  <section id="tools">
+    <h2><span class="no">1</span>工具箱</h2>
+    <p>本管线一个自研工具打底,曲线层用引擎现成件。先认识自研的这个。</p>
+
+    <h3>mm_rootmotion_baker — 原地动画反烘工具（自研）</h3>
+    <p>移动动画 K 出来都是原地的:位移不用 K,也不该 K（K 了也对不上程序里的移动速度）。但 K 完还剩一套数据要定义:这条动画在游戏里该走多快、root 轨迹长什么样、MM 承重层的四个标记怎么配。以前这套靠人肉配,现在自动化了。</p>
+    <p>工具用脚锁法直接从你 K 的脚步里把速度和轨迹量出来:触地的脚往后划多快,角色就该往前走多快。烘出 root 轨迹的同时,四个标记（root motion 开关、锁根、Zero 锁、循环）一次配平——这四个标记漏任何一个都是一类线上事故（身体漂移 / 全程鬼畜）。外来资产、动捕素材同理:原地进,带轨迹出。</p>
+    <p>位置:<code>GameProject/Content/Python/mm_rootmotion_baker.py</code>。编辑器 Python 控制台三条命令,输出都是真实运行记录:</p>
+    <div class="cards">
+      <div class="card">
+        <div class="head"><code>rmb.measure(源片段)</code><span class="badge b-must">只测不改</span></div>
+        <p class="say">测这个片段该走多快。烘之前先看一眼,数值过一遍手感。</p>
+        <div class="term">>>> import mm_rootmotion_baker as rmb
+>>> rmb.measure('/Game/.../Run_Fwd_C')
+[RMBaker] Run_Fwd_C  速度=537.9 cm/s
+  方向=(0.00,1.00)  触地区间=3 个
+[RMBaker] ↑ 数值请过一遍手感:
+  速度感对不对?(工具不会自己报警)</div>
+      </div>
+      <div class="card">
+        <div class="head"><code>rmb.bake(源, 目标, loop=)</code><span class="badge b-must">产出 *_RM</span></div>
+        <p class="say">烘轨迹 + 四标记配平,产出可直接进 MM 库的片段。循环片段匀速保循环,停步片段逐帧积分出减速。</p>
+        <div class="term">>>> rmb.bake('/Game/.../Walk_Fwd_C',
+...   '/Game/Heroes/X/Walk_Fwd_C_RM', loop=True)
+[RMBaker] ✓ Walk_Fwd_C_RM  mode=constant
+  loop=True  末位移=(-2,210)  均速=170.6 cm/s
+[RMBaker] 保存 ...(以日志 LogSavePackage 为准)</div>
+      </div>
+      <div class="card">
+        <div class="head"><code>rmb.audit(目录)</code><span class="badge b-must">一键体检</span></div>
+        <p class="say">扫整个目录:均速、四标记、曲线数。烘完跑一遍,接手别人的资产也先跑一遍。</p>
+        <div class="term">>>> rmb.audit('/Game/Heroes/MarvelTest/_MMSpike')
+  片段              均速  标记            曲线数
+  Run_Fwd_C_RM   566.0  +RM +锁根 +循环    17
+  Walk_Fwd_C_RM  156.7  +RM +锁根 +循环     2
+  <b>Idle_C_RM        0.0  -RM +锁根 +循环     2 ←漏配</b>
+  提醒:均速≈0 的 *_RM = 轨迹没烘上</div>
+      </div>
+      <div class="card">
+        <div class="head">战绩与边界</div>
+        <p class="say">漫威角色的 21 个移动片段就是这条工具链烘的（跑 6 向 492~566、走 6 向 152~170、停 6 向减速轨迹）;audit 首跑就抓出 1 处手工漏配的 root motion 开关。</p>
+        <p class="say" style="margin-top:8px">边界:只适用脚步驱动的地面移动;烘出的<b>速度必须人工过手感</b>（工具算错 40% 也不会自己报警,管线史上真错过一次）;批量几十个片段用 <code>rmb.bake_batch</code>,别手点。</p>
+      </div>
+    </div>
+
+    <h3>曲线层现成件（引擎 / GASP 自带,按第 4 节工作流使用）</h3>
+    <table>
+      <thead><tr><th>做什么</th><th>资产 / 入口</th><th>备注</th></tr></thead>
+      <tbody>
+        <tr><td>烘 FootSpeed 左 / 右</td><td><code>/GASPALS/Blueprints/AnimModifiers/AM_FootSpeed_L</code>、<code>AM_FootSpeed_R</code></td><td>默认骨 <code>ball_l / ball_r</code>,Component Space 平移速度;异骨架先过第 4 节第 1 步</td></tr>
+        <tr><td>打脚步标记</td><td><code>/AnimationLocomotionLibrary/AnimModifiers/SyncMarkerAnimModifier</code></td><td>phase 的前置;标完肉眼核对</td></tr>
+        <tr><td>烘 phase</td><td><code>/GASPALS/Blueprints/AnimModifiers/AM_BakePhaseCurveFromFootstepNotifies</code></td><td>依赖上一行</td></tr>
+        <tr><td>烘 warping 开关</td><td><code>AM_OrientationWarpingAlpha</code>、<code>AM_RateWarpingAlpha</code>（同目录）</td><td>本项目暂不消费</td></tr>
+        <tr><td>对标样本</td><td>在产英雄 Steel 的 MM 片段（<code>/Game/Heroes/Steel/MMAnimation/</code>）</td><td>拿不准合格长相时,开一条 Steel 的同类片段对着看</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="model">
+    <h2><span class="no">2</span>一图看懂：MM 吃两层数据</h2>
+    <p>动画师只需要一个概念：MM 的数据分两层。<b>选片段层</b>决定此刻播哪条动画（靠片段根骨骼的位移轨迹去匹配），<b>修饰曲线层</b>决定播出来精不精（锁脚防滑、切换时脚步对齐）。选片段层缺了直接坏；修饰层缺了只是不够精，而且每条曲线缺失时引擎都会安全降级，不会播出鬼畜。</p>
+    <svg class="diagram" viewBox="0 0 900 190" role="img" aria-label="MM 双层数据模型">
+      <g font-family="var(--sans)" font-size="13">
+        <rect x="10" y="14" width="430" height="76" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+        <text x="26" y="40" fill="var(--accent-text)" font-weight="700" font-size="14">选片段层（承重，缺了直接坏）</text>
+        <text x="26" y="62" fill="var(--muted)" font-size="12">root motion 轨迹 · 速度校准 · 锁根标记 · 循环标记</text>
+        <text x="26" y="80" fill="var(--muted)" font-size="12">→ 决定此刻播哪条、身体贴不贴胶囊</text>
+        <rect x="460" y="14" width="430" height="76" rx="6" fill="none" stroke="var(--brass)" stroke-width="1.5" stroke-dasharray="5 3"/>
+        <text x="476" y="40" fill="var(--brass)" font-weight="700" font-size="14">修饰曲线层（本手册主角，缺了只是不精）</text>
+        <text x="476" y="62" fill="var(--muted)" font-size="12">footspeed_l/r · phase · movedata_speed · 两条 enable 开关</text>
+        <text x="476" y="80" fill="var(--muted)" font-size="12">→ 决定锁脚防滑、切换时脚步齐不齐</text>
+        <rect x="10" y="118" width="880" height="56" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+        <text x="26" y="142" fill="var(--ink)" font-weight="600" font-size="13">本项目现状（远镜头平地 MOBA）</text>
+        <text x="26" y="162" fill="var(--muted)" font-size="12">选片段层全部必做；修饰层经核实可整层不烘（漫威角色 21 个片段零曲线过验收）。镜头拉近、上坡地、第一人称任一出现，按第 4 节裁决表回补。</text>
+      </g>
+    </svg>
+  </section>
+
+  <section id="gallery">
+    <h2><span class="no">3</span>曲线图鉴</h2>
+    <p>六条曲线五张卡（FootSpeed 左右一对算一张）。每张卡：人话一句、典型形状、谁在消费、缺了会怎样、用什么烘。徽章含义：<span class="badge b-cam">近镜头补</span> 按镜头裁决；<span class="badge b-off">本项目不读</span> 当前动画蓝图不消费这条曲线，烘了也没人读。</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="head"><code>footspeed_l / footspeed_r</code><span class="badge b-cam">近镜头补</span></div>
+        <p class="say">这只脚此刻移动多快。踩在地上≈0，甩回去时一个峰，左右脚交替。</p>
+        <svg class="diagram" viewBox="0 0 320 90">
+          <line x1="14" y1="72" x2="308" y2="72" stroke="var(--line)" stroke-width="1"/>
+          <path d="M14,71 L58,71 C74,28 90,28 106,71 L150,71 C166,71 168,71 198,71 L198,71" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <path d="M14,71 C20,71 24,71 60,71 L104,71 C122,26 140,26 152,71 L198,71 C214,30 230,30 246,71 L306,71" fill="none" stroke="var(--brass)" stroke-width="2" stroke-dasharray="5 3" opacity=".85"/>
+          <text x="16" y="20" fill="var(--muted)" font-size="11" font-family="var(--sans)">实线=L 虚线=R，触地段贴 0，摆动段起峰</text>
+        </svg>
+        <dl>
+          <dt>消费端</dt><dd><b>FootPlacement</b>（足部放置）节点，用它判断脚踩没踩实：踩实就锁脚、贴地面。</dd>
+          <dt>缺了</dt><dd>节点当作「永远没踩地」，整个变直通：不锁脚也不贴地，但不出毛病。远镜头看不出，近镜头有厘米级滑步。</dd>
+          <dt>烘焙</dt><dd><code>AM_FootSpeed_L / _R</code>，一键。默认测 <code>ball_l / ball_r</code>（脚趾球）的移动速度。</dd>
+          <dt>反例</dt><dd>整条平 0 = 骨名没指上（见第 4 节第 1 步）。</dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <div class="head"><code>phase</code><span class="badge b-cam">近镜头补</span></div>
+        <p class="say">这一帧走到步态循环的百分之几。每一步从 0 爬到 1，再落回 0。</p>
+        <svg class="diagram" viewBox="0 0 320 90">
+          <line x1="14" y1="72" x2="308" y2="72" stroke="var(--line)" stroke-width="1"/>
+          <path d="M14,70 L100,22 L100,70 L186,22 L186,70 L272,22 L272,70 L306,52" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="100" cy="70" r="3.5" fill="var(--brass)"/><circle cx="186" cy="70" r="3.5" fill="var(--brass)"/><circle cx="272" cy="70" r="3.5" fill="var(--brass)"/>
+          <text x="16" y="16" fill="var(--muted)" font-size="11" font-family="var(--sans)">锯齿爬升，落点（铜点）应对齐脚步 notify</text>
+        </svg>
+        <dl>
+          <dt>消费端</dt><dd>蓝图侧的混合同步：片段切换时用它对齐左右脚相位，避免左脚接左脚。</dd>
+          <dt>缺了</dt><dd>切换瞬间脚步相位可能对不齐，惯性混合会吸掉大半。收益在六条里最低。</dd>
+          <dt>烘焙</dt><dd><code>AM_BakePhaseCurveFromFootstepNotifies</code>。<b>前置：片段上必须先有脚步 notify</b>（第 2 节第 2 步），顺序不能反，反了烘出来是垃圾。</dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <div class="head"><code>movedata_speed</code><span class="badge b-off">本项目不读</span></div>
+        <p class="say">这个片段自己的移动速度。匀速循环是一条平线，起停片段是一条坡。</p>
+        <svg class="diagram" viewBox="0 0 320 90">
+          <line x1="14" y1="72" x2="308" y2="72" stroke="var(--line)" stroke-width="1"/>
+          <line x1="14" y1="34" x2="200" y2="34" stroke="var(--accent)" stroke-width="2"/>
+          <path d="M200,34 C240,34 260,68 306,70" fill="none" stroke="var(--brass)" stroke-width="2" stroke-dasharray="5 3"/>
+          <text x="16" y="20" fill="var(--muted)" font-size="11" font-family="var(--sans)">循环段平线（如跑=565），停步段下坡</text>
+        </svg>
+        <dl>
+          <dt>消费端</dt><dd>步幅/速率缩放的参考值。本项目动画蓝图里速度走的是蓝图值引脚，不读这条曲线。</dd>
+          <dt>缺了</dt><dd>StrideWarping 的保护阈值直接回退为不缩放（1.0），安全。</dd>
+          <dt>烘焙</dt><dd>暂无必要。未来若改成曲线驱动再议。</dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <div class="head"><code>enable_orientationwarping</code><span class="badge b-off">本项目不读</span></div>
+        <p class="say">开关线：这一段允不允许「下半身朝移动方向扭」。循环段常量 1，特殊段落 0。</p>
+        <svg class="diagram" viewBox="0 0 320 90">
+          <line x1="14" y1="72" x2="308" y2="72" stroke="var(--line)" stroke-width="1"/>
+          <path d="M14,30 L180,30 L180,70 L240,70 L240,30 L306,30" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <text x="16" y="18" fill="var(--muted)" font-size="11" font-family="var(--sans)">方波：1=允许扭，0=这段别扭（如急停落地）</text>
+        </svg>
+        <dl>
+          <dt>消费端</dt><dd>OrientationWarping 的开关。<b>本项目是布尔＋速度方向驱动，不读曲线</b>，所以缺了照样扭、strafe 不受影响（已实测）。</dd>
+          <dt>烘焙</dt><dd><code>AM_OrientationWarpingAlpha</code>，一键。仅在未来改回曲线驱动时需要。</dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <div class="head"><code>enable_playratewarping</code><span class="badge b-off">本项目不读</span></div>
+        <p class="say">开关线：这一段允不允许变速播放来贴合实际移速。形状同上一张，方波。</p>
+        <dl>
+          <dt>消费端</dt><dd>播率缩放的开关。本项目播率由蓝图侧驱动，不读曲线；缺了等于不启用播率扭曲，回到原速播放。</dd>
+          <dt>烘焙</dt><dd><code>AM_RateWarpingAlpha</code>，一键。</dd>
+        </dl>
+        <div class="note" style="margin-top:14px">曲线名大小写不用纠结：工具烘出来叫 <code>FootSpeed_L</code>、在产英雄片段上显示 <code>footspeed_l</code>，引擎里是同一个名字（FName 不分大小写）。</div>
+      </div>
+
+      <div class="card">
+        <div class="head"><code>sync marker（脚步同步标记）</code><span class="badge b-cam">近镜头补</span></div>
+        <p class="say">不是曲线，是打在时间轴上的脚步落地标记。它是 phase 曲线的原料，也是传统同步组对齐脚步的依据。</p>
+        <dl>
+          <dt>烘焙</dt><dd><code>SyncMarkerAnimModifier</code>（AnimationLocomotionLibrary 插件自带）自动侦测落脚打标。</dd>
+          <dt>人工位</dt><dd><b>标完必须肉眼过一遍时间轴</b>：转换来的片段（原地反烘 root motion 那种）自动侦测容易错拍，错拍会顺着毒到 phase。这一步是动画师的眼睛值钱的地方，工具替不了。</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="bake">
+    <h2><span class="no">4</span>烘焙工作流</h2>
+    <p>五步，有顺序依赖：<b>notify 在前，phase 在后</b>。FootSpeed 与 enable 两类不依赖别人，可以随时烘。</p>
+    <div class="steps">
+      <div class="step"><b>查骨名（只做一次，每个新骨架）</b>
+        <p>打开目标骨架，确认有没有 <code>ball_l / ball_r</code>。有就直接用；没有（比如叫 <code>toe_l</code> 或别的），把 <code>AM_FootSpeed_L / _R</code> 各复制一份，改 <code>Bone Name</code> 字段指到对应的脚趾球骨。指错或不指的结果是整条曲线平 0。漫威骨架 <code>SK_1043_1043001</code> 实测自带 <code>ball_l / ball_r</code>，直接用原版。</p>
+      </div>
+      <div class="step"><b>打脚步 notify / sync marker</b>
+        <p>动画序列编辑器里挂 <code>SyncMarkerAnimModifier</code>，Apply。然后拖时间轴逐个核对落脚点位，错的手动挪。</p>
+      </div>
+      <div class="step"><b>烘 phase</b>
+        <p>挂 <code>AM_BakePhaseCurveFromFootstepNotifies</code>，Apply。前一步没做或没核对,这一步产出的就是垃圾。</p>
+      </div>
+      <div class="step"><b>烘 FootSpeed 与 enable 开关</b>
+        <p>挂 <code>AM_FootSpeed_L</code>、<code>AM_FootSpeed_R</code>（如第 1 步需要则用复制改骨的版本），按需挂两个 Warping Alpha，Apply。</p>
+      </div>
+      <div class="step"><b>保存并自查</b>
+        <p>保存资产，按第 3 节清单逐条过。批量烘（几十个片段）不要手点，走 AI 批量通道（第 5 节）。</p>
+      </div>
+    </div>
+    <div class="note">挂法：动画序列编辑器 → Window → <b>Animation Data Modifiers</b> → Add Modifier → 选上述资产 → Apply All。Modifier 记录在片段上,改完源动画可以 Reapply 重烘。</div>
+  </section>
+
+  <section id="check">
+    <h2><span class="no">5</span>烘完自查</h2>
+    <table>
+      <thead><tr><th width="220">查什么</th><th>合格长相</th><th>不合格 = 什么坏了</th></tr></thead>
+      <tbody>
+        <tr class="group"><td colspan="3">曲线层</td></tr>
+        <tr><td><b>footspeed 形状</b></td><td>触地段贴 0，摆动段有峰，L / R 交替错开</td><td>整条平 0：骨名没指上。峰值贴地不归零：测错了骨或空间</td></tr>
+        <tr><td><b>phase 形状</b></td><td>每步 0→1 连续爬升、瞬间落回,落点对齐脚步 notify</td><td>乱跳或平线：notify 缺失或错拍,回第 4 节第 2 步</td></tr>
+        <tr class="group"><td colspan="3">承重层顺手带一眼（不是曲线,但同一批片段常见坑）</td></tr>
+        <tr><td><b>循环标记 loop</b></td><td>循环类片段（待机/走/跑）勾上;停步、转身不勾</td><td>不勾:MM 每次重选都从头混入,全程抽搐</td></tr>
+        <tr><td><b>锁根 bForceRootLock</b></td><td>原地反烘 root motion 的转换片段必须勾</td><td>不勾:身体脱离胶囊自己飘出去</td></tr>
+        <tr><td><b>速度手感</b></td><td>进 PIE 跑一圈,脚下不滑</td><td>滑步=烘焙速度错了。工具算出来的速度不会自己报警,曾错过 40%(361 → 实际 565),靠人看出来的</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="verdict">
+    <h2><span class="no">6</span>什么时候可以整层不烘</h2>
+    <p>这一节给你省工的权力。修饰曲线层缺失时引擎全部安全降级（已逐条读源码核实,漫威角色 21 个片段零曲线通过验收）,所以烘不烘看镜头,不看惯例。</p>
+    <table>
+      <thead><tr><th>项目形态</th><th>裁决</th></tr></thead>
+      <tbody>
+        <tr><td>远镜头 ＋ 平地（当前 MOBA 形态）</td><td><b>整层不烘。</b>省下的是每个角色一道工序</td></tr>
+        <tr><td>镜头拉近到看清脚 / 上坡地形 / 第一人称 / 回放模式,任一出现</td><td><b>补 FootSpeed 优先</b>（唯一做实事的一层）,sync marker ＋ phase 次之</td></tr>
+        <tr><td>两条 enable 开关、movedata_speed</td><td>本项目动画蓝图不消费,烘了也没人读。除非蓝图改回曲线驱动,否则任何形态都不用烘</td></tr>
+      </tbody>
+    </table>
+    <div class="rule">
+      <p>一句话记住：<b>选片段层永远必做,修饰层按镜头裁决。</b>拿不准就先不烘,缺失是安全的,补烘随时可以（Modifier 一键）。</p>
+    </div>
+  </section>
+
+  <footer>COMBAT 3C · MM CURVE HANDBOOK · 结论核实方式与来龙去脉见案例复盘《把漫威的原地动画,洗成我们 MM 框架的移动数据》</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement,btn=document.getElementById('themeBtn'),saved=null;
+  try{saved=localStorage.getItem('doc-theme');}catch(e){}
+  var t=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  apply(t);
+  btn.addEventListener('click',function(){t=(root.dataset.theme==='dark')?'light':'dark';apply(t);
+    try{localStorage.setItem('doc-theme',t);}catch(e){}});
+  function apply(x){root.dataset.theme=x;btn.textContent=(x==='dark')?'☀':'☾';}
+})();
+</script>
+</body>
+</html>

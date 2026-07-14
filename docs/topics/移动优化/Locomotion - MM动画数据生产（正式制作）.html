@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Motion Matching 动画数据自动化管线（生产侧） · 案例复盘</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Case Study · Doc CASE-XX</div>
+      <h1>Motion Matching 动画数据自动化管线<span style="opacity:.55">（生产侧）</span></h1>
+      <p class="lede">验证一条管线：动画只管 K（或外采），MM 需要的移动数据（root 轨迹、速度、承重标记）由工具自动定义。压测样本挑了最脏的：漫威角色，异构骨架、全原地、零 MM 元数据。端到端跑通，角色在 PIE 里用它自己的骨架跑我们的 MM。<b>整条工程链由 AI 执行，两次翻车都是人拦下的。</b></p>
+      <!-- TL;DR:快读层。四行各一句,给只有 3 分钟的读者。分工行必须如实写明 人/AI/程序 各做了什么 -->
+      <div class="tldr">
+        <div><i>课题</i><span>外来动画（骨架不是我们的、片段全原地、MM 要的数据一样没有）能不能不经重定向，低成本进项目现有 MM 框架，为未来英雄动画量产探一条管线。</span></div>
+        <div><i>终案</i><span>脚锁法反烘 root motion（361 → 565 cm/s 校准）＋ 逐通道对齐在产英雄建 PoseSearch 库 ＋ 复制动画蓝图换骨架接线；<b>修饰曲线层经源码核实后砍掉</b>。</span></div>
+        <div><i>结果</i><span>PIE 实测：六向 strafe 贴胶囊、急停到位、转向贴镜头；21 个转换片段、旧英雄零影响。<b>验收人=需求方本人，n=1</b>。</span></div>
+        <div><i>分工</i><span>作者（战斗 3C 策划）定方向、守数值与手感两道闸（拦下 2 次错判）；AI agent 执行全部盘点/转换/建库/接线/诊断；程序未介入。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>CASE-XX（由入库时分配，先留 XX）</b></div>
+        <div><i>版本 / 状态</i><b>v0.1 · 迭代中</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>实现方</i><b>AI agent（编辑器自动化通道），作者指挥与验收</b></div>
+        <div class="wide"><i>配套文档</i><b><a href="Locomotion - MM动画数据和自动化工具（for动画师）.html">MM 动画数据和自动化工具手册（for 动画师）→</a></b></div>
+      </div>
+    </header>
+
+    <!-- 成果先看:实录视频置于篇首,3 分钟读者连正文都不用进 -->
+    <figure>
+      <video controls playsinline src="漫威MM-PIE实录.mp4"></video>
+      <figcaption><b>成果先看 · PIE 实录：</b>漫威骨架跑项目 MM。六向 strafe（角色始终面朝镜头方向平移）、急停、贴镜头转向。验收细节见 06。</figcaption>
+    </figure>
+
+    <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
+    <div class="foreword">
+      <p>项目英雄的移动都跑在 Motion Matching 上。我想搞清楚一件事：拿一套完全外来的动画（漫威角色，骨架不是我们的，片段全是原地的，MM 要的元数据一点没有），不重定向到我们的标准骨架，能不能洗成现有框架直接能用的移动数据。能，未来英雄动画的来源就宽了。</p>
+      <p>解法是老手艺的拼装，不是发明：动捕清洗里常用的脚锁法从原地动画反推位移，照着项目在产英雄把数据库逐项对齐，动画蓝图复制一份换骨架。整条链子由 AI 执行，我出方向、把验收。</p>
+      <p>结果是跑通了：角色在 PIE 里用漫威骨架跑我们的 MM，六向 strafe、急停、贴镜头转向都成立。最值钱的发现有两个。一是 MM 其实是两层，「选片段」和「修饰」，远镜头 MOBA 可以砍掉修饰层，这是拿引擎源码核实过的，不是感觉。二是 AI 能扛下整条工程链，但两次数值和判断的翻车都是人拦的，闸不能撤。</p>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">背景</div>
+        <a href="#goal"><i>01</i>体验目标与课题</a>
+        <div class="grp">过程</div>
+        <a href="#research"><i>02</i>业界调研</a>
+        <a href="#decision"><i>03</i>方案排定</a>
+        <a href="#implementation"><i>04</i>实验与落地实录</a>
+        <div class="grp">结果</div>
+        <a href="#solution"><i>05</i>终案分层</a>
+        <a href="#acceptance"><i>06</i>验收实录</a>
+        <div class="grp">资料</div>
+        <a href="#params"><i>07</i>关键参数</a>
+        <a href="#leftovers"><i>08</i>遗留与保险丝</a>
+        <a href="#methodology"><i>09</i>方法论沉淀</a>
+        <a href="#appendix"><i>10</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>背景</b></div>
+
+        <section id="goal">
+          <h2>体验目标与课题</h2>
+          <p>项目是 UE5 的多人英雄射击（MOBA 框架，DS 加客户端），英雄移动动画统一跑在 GASP（Epic 官方 Game Animation Sample，项目动画框架的底子）的 Motion Matching 上。第三人称贴相机视角，角色在屏幕上占的比例不小，移动动画糊不糊、滑不滑步，玩家看得清。</p>
+          <p>课题从一个很实际的处境来：未来英雄的动画来源会很杂。外采资产、动捕素材、别的项目攒下的动画，骨架五花八门，而且这类资产几乎都是原地动画（in-place，位移不写在动画里，靠移动组件推着角色走），MM 需要的轨迹、速度这些数据一样都没有。如果每套外来资产都要动画师手工重定向再手工配库，量产吃不消。</p>
+          <p>所以这不是给某个英雄做移动，是验证一条管线。手上正好有一套现成的「最脏样本」：从漫威某射击游戏导入的双枪角色资产，432 个动画片段，骨架 <code>SK_1043_1043001</code>（跟我们的标准骨架完全两回事）。它要是能进来，别的都能进来。</p>
+          <div class="rule">
+            <h3>核心课题</h3>
+            <p>在不动现有框架、不影响在产英雄的前提下，把一套异构骨架、全原地、零 MM 元数据的外来动画，洗成项目统一 MM 框架直接能用的移动数据。并且要搞清楚这条管线里，哪些步骤是必须的，哪些可以省。</p>
+          </div>
+          <p>课题定性是建设型（0 → 1），没有体验矛盾要调和。过程里长出一条排查型副线（身体和胶囊分家的漂移问题，卡了最久），实录在 04。</p>
+          <h3>分工与工作方式</h3>
+          <p>这个案子还压着第二层验证：整条链交给 AI 能走到哪。我是战斗 3C 策划，不写 C++；AI agent 通过编辑器自动化通道（AIK，能在编辑器里跑脚本改资产、读运行期数据）执行了全部的资产盘点、格式转换、建库、蓝图改线和运行期诊断。我做三件事：定方向（比如否掉重定向路线）、每一步在 PIE 里亲手验、守两道闸——数值常识闸和手感闸。后面会看到，这两道闸各拦下一次实打实的错。</p>
+        </section>
+
+        <div class="part"><b>过程</b></div>
+
+        <section id="research">
+          <h2>业界调研</h2>
+          <p>先回答必答题：业界处理「外来动画进自家管线」最普遍的做法，是重定向（IK Retarget，把动画从源骨架映射到目标骨架）到项目标准骨架，之后一切复用现有管线。UE5 这几年把重定向工具打磨得很顺，这是默认答案，也是省事的答案。</p>
+          <table>
+            <thead><tr><th>路线</th><th>做法</th><th>借了什么 / 为什么没走</th></tr></thead>
+            <tbody>
+              <tr><td><b>重定向派（业界默认）</b></td><td>外来动画 retarget 到项目标准骨架，复用现有 ABP 与数据</td><td>没走。课题要验的恰恰是「不换骨架能不能进」：重定向会损失原资产的动作细节，而且未来有些资产（带特殊比例、特殊挂件的角色）重定向代价不小</td></tr>
+              <tr><td><b>官方样例派</b></td><td>直接用 GASP 自带的 500+ 小白人动画数据</td><td>借了它的框架和数据结构当地基（项目本来就在用）；但它解决不了「外来资产」这个题</td></tr>
+              <tr><td><b>原生骨架洗数据（本案）</b></td><td>保留源骨架，洗数据本身：反烘 root motion、重建 MM 库、蓝图换骨</td><td>终案。核心手艺（脚锁法提取位移）是动捕清洗的老技法，不是新东西</td></tr>
+            </tbody>
+          </table>
+          <p>本案真正的「已知解锚定」做在项目内部：把在产英雄 Steel 的整套 MM 数据逆向了一遍当标尺（它的 PoseSearch schema 有哪些通道、片段上烘了哪些曲线、动画蓝图怎么消费这些数据），新角色逐项对着它建。比对着教程建可靠得多，标尺是出过货的。</p>
+          <div class="note">
+            <p>本节谱系是常识性锚定加项目内逆向，没做专项外部检索。检索有路灯效应，行业里没被写下来的常识（比如各家为什么宁可牺牲细节也要统一骨架：动画共享、皮肤复用、管线只维护一套）恰恰是最重要的背景。这部分靠作者补，谱系已过作者。</p>
+          </div>
+        </section>
+
+        <section id="decision">
+          <h2>方案排定</h2>
+          <p>候选路线三条，取舍标准就两条：第一，是否服务验证目标（原生骨架进 MM）；第二，翻车了能不能整单撤走。</p>
+          <div class="grid">
+            <div class="box">
+              <h3>A · 重定向到标准骨架</h3>
+              <p>最稳的工程路线。被否，理由在 02 说过了：它绕开了要验证的问题本身。这条被否得最早，也否得最干脆。</p>
+            </div>
+            <div class="box">
+              <h3>B · C++ 自研数据层</h3>
+              <p>绕开 MM，用 C++ 写一套自己的移动动画数据结构。起了头（写了两组数据类），中途废弃：越写越像在重造 MM 已经有的东西，且违背「同一框架同一数据结构」的初衷。废稿留在附录。</p>
+            </div>
+            <div class="box blue">
+              <h3>C · 洗数据进现有 MM（终案）</h3>
+              <p>原地片段反烘 root motion，照 Steel 建 PoseSearch 库，复制现有动画蓝图换骨架接线。全程不新增第二套移动技术栈。</p>
+            </div>
+            <div class="box green">
+              <h3>取舍的实质</h3>
+              <p>A 和 C 的分野不是技术优劣，是验证目的；B 和 C 的分野是「造新轮子」还是「喂现有轮子」。C 最大的不确定性在于：复制蓝图换骨架这条捷径，骨架相关的引用会不会留暗伤。后来证明这个担心是对的（04 的漂移长征）。</p>
+            </div>
+          </div>
+          <div class="rule">
+            <h3>回退条款</h3>
+            <p>全部产出锁在独立沙盒目录（<code>/Game/Heroes/MarvelTest/_MMSpike/</code>），共享资产只动一处（英雄注册表加一行，纯新增）。任何时刻整单可撤，在产英雄零感知。收尾时实测核对过：基础动画蓝图、其他英雄的移动配置、原始导入资产全部未动。</p>
+          </div>
+        </section>
+
+        <section id="implementation">
+          <h2>实验与落地实录</h2>
+          <p>时间序展开。每一段先写当时的判断，再写它对不对。执行方式统一说明：改资产、读数据都是 AI 通过编辑器脚本做的，每一轮改完由我进 PIE 亲手验。</p>
+
+          <h3>地基：盘点、对标、换骨</h3>
+          <p>432 个片段先洗出基础移动：剔掉技能和特殊能力（数字前缀技能码加关键词过滤），剩 148 个，最终选 21 个进库（待机 1、走 6 向、跑 6 向、停步 6 向、转身 2）。漫威这套资产的结构本身很干净，站姿 × 方向 × 状态的正交命名，盘点结论单独出了一份资产结构文档（见附录）。</p>
+          <p>然后立标尺：逆向 Steel 的 PoseSearch schema（MM 的特征描述表，定义拿什么去匹配片段），新库逐通道照建，建完比对，完全一致。动画蓝图不能从零脚本生成，走了捷径：复制 Steel 用的基类蓝图，整体替换目标骨架，再改线让 MM 节点吃我们的新库。</p>
+
+          <h3>第一战：速度烘错了，手感闸拦下</h3>
+          <p>原地动画反烘 root motion，用的是脚锁法：假设触地脚不滑，脚在骨骼空间往后划多快，角色就该往前走多快。第一版按逐帧平均算，烘出来 Run_Fwd 是 361 cm/s。我看了一眼就觉得不对，漫威的角色不是这个速度感，跑起来发软。</p>
+          <p>复查发现逐帧平均把摆动相（脚离地甩回去的帧）也算了进去，拉低了均值。改成只取触地区间测速，重烘：Run_Fwd 361 → 565，六向各自校准（492 ~ 565，侧向和后退本来就该慢一点）。这一战定了一条规矩：<b>烘出来的数值必须过一道领域手感校验</b>，脚锁法的输出看着像模像样，错 40% 也不会自己报警。</p>
+
+          <h3>第二战：漂移长征，宣布过一次「天花板」，后来翻案了</h3>
+          <p>最难的一段。现象：角色能跑，但网格体（mesh，看得见的身体）和胶囊（碰撞体，移动组件真正推动的东西）分家，身体飘出去老远。原始验收反馈就一句：</p>
+          <blockquote>跟之前一样，还是飘的。<i>——需求方，第 N 轮 PIE 验收（N 已经数不清了）</i></blockquote>
+          <p>先是盲试穷举：改 root motion 提取模式（改成全局提取，身体是粘住了，但角色动不了，因为项目的位移压根不靠动画驱动）、清骨架残留引用、调 OffsetRootBone（GASP 里负责调和 mesh 和胶囊偏差的节点）的各路参数。全部无效。当时把结论写进了决策日志：这类运行期调和问题需要可视化调试，纯改资产够不着，算 AI 的能力边界。写得很笃定。</p>
+          <p>这个结论是错的。转机来自换方法：不再盲改，转去读运行期数据加翻引擎源码。真正的因果链是：项目的 root motion 模式是 MontagesOnly（只有蒙太奇提取位移），locomotion 片段的 root motion 不会被提取，于是我们烘进片段的根骨骼位移轨迹原封不动地留在动画里，身体就顺着这条轨迹自己跑了。解法一行：片段上开 <code>bForceRootLock</code>（强制锁根骨骼），位移轨迹只用于 MM 匹配，不进姿势。身体当场粘回胶囊。</p>
+          <div class="note">
+            <p>「宣布天花板」这段保留完整，因为它是本案可信度的锚点：错不在做不到，在方法用尽之前就下了结论。盲改资产穷举和读运行期数据加源码，是两种截然不同的排查功力，前者撞墙不等于问题无解。</p>
+          </div>
+
+          <h3>第三战：整个 loop 一直在混入混出</h3>
+          <p>漂移解决后新现象：跑步动画抽搐，验收原话「整个 LOOP 一直在混入混出」。排查发现循环片段没标 loop，MM 每次重选片段都当成一次性动画从头混入。循环类片段（待机加走跑十三个）全部补上循环标记，抽搐消失。剩余的轻微跳变用混合参数收尾：切换混合时间 0.2 秒加惯性混合。这一战便宜，但说明一个事：MM 的数据坑不全在大结构上，一个布尔标记就能让整套库表现得像坏了。</p>
+
+          <h3>第四战：角色转得比镜头慢</h3>
+          <p>验收反馈转向拖沓。这个项目的角色朝向是直接贴控制器 yaw 的（转多快跟多快），但 mesh 的旋转被 OffsetRootBone 的旋转容差拖住了（容差 -1 等于不设限，mesh 可以慢慢追）。把旋转容差设 0，mesh 转向即刻贴住胶囊。跟第二战是同一个节点的两个参数，平移那侧早在漂移排查时就设过 0。</p>
+
+          <h3>搭错地方的跳跃</h3>
+          <p>想补跳跃时踩了一个结构坑：这套从 GASP 继承的动画蓝图里有两套状态机，一套是在用的 MM 主路径，另一套是官方留下的实验性状态机（所有状态都是空壳）。跳跃节点搭进了后者，连线全对，编译通过，运行零反应。从最终输出节点反向追一遍才确认主路径根本不经过它。跳跃需要在 MM 主路径上另建腾空分支，工作量和风险都不小，搁置（进 08）。</p>
+
+          <h3>曲线层缺口：查出来了，但决定不补</h3>
+          <p>对标时发现一个大缺口：Steel 每个移动片段都烘了六条 MM 曲线（脚速、步态相位、几条 warping 开关），我们的 21 个片段一条没有。第一反应是坏了，滑步、僵硬都要来。但没急着补，先把每条曲线的消费端查了个底朝天（读引擎源码，逐个确认「曲线缺失时节点的缺省行为」，用多路独立核查交叉验证）。结论出乎意料：全部安全降级。schema 里根本不采样这些曲线（选片段不受影响）；朝向 warping 在这个项目里是布尔加速度驱动的，不读曲线；唯一真正歇工的是脚部 IK 锁定，而它缺曲线时的缺省行为是「当作未踏地」，直接变成直通节点，不锁脚但也不出毛病。远镜头平地 MOBA 下，这层的缺失看不出来。</p>
+          <p>于是这道工序整个砍掉。省的不只是这次的工时，是未来每个走这条管线的角色都省一道。判断的依据写进了 05 的分层表。</p>
+        </section>
+
+        <div class="part"><b>结果</b></div>
+
+        <section id="solution">
+          <h2>终案分层</h2>
+          <p>尘埃落定后的静态全貌。管线七步：</p>
+          <svg class="diagram" viewBox="0 0 1080 150" role="img" aria-label="管线七步流程图">
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--brass)"/>
+              </marker>
+            </defs>
+            <g font-family="var(--sans)" font-size="13" text-anchor="middle">
+              <rect x="8"   y="38" width="128" height="54" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+              <text x="72"  y="61" fill="var(--ink)" font-weight="600">脏动画</text>
+              <text x="72"  y="80" fill="var(--muted)" font-size="11">异骨架·原地·无元数据</text>
+              <rect x="162" y="38" width="118" height="54" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+              <text x="221" y="61" fill="var(--ink)" font-weight="600">盘点分类</text>
+              <text x="221" y="80" fill="var(--muted)" font-size="11">432→148→21</text>
+              <rect x="306" y="38" width="138" height="54" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="375" y="61" fill="var(--accent-text)" font-weight="700">反烘 root motion</text>
+              <text x="375" y="80" fill="var(--muted)" font-size="11">脚锁法·触地区间测速</text>
+              <rect x="470" y="38" width="128" height="54" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+              <text x="534" y="61" fill="var(--accent-text)" font-weight="700">建 MM 库</text>
+              <text x="534" y="80" fill="var(--muted)" font-size="11">schema 对齐在产英雄</text>
+              <rect x="624" y="38" width="128" height="54" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+              <text x="688" y="61" fill="var(--ink)" font-weight="600">蓝图换骨接线</text>
+              <text x="688" y="80" fill="var(--muted)" font-size="11">复制 ABP·替换骨架</text>
+              <rect x="778" y="38" width="128" height="54" rx="6" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+              <text x="842" y="61" fill="var(--ink)" font-weight="600">运行期校准</text>
+              <text x="842" y="80" fill="var(--muted)" font-size="11">锁根·循环·容差归零</text>
+              <rect x="932" y="38" width="140" height="54" rx="6" fill="none" stroke="var(--ok)" stroke-width="1.5"/>
+              <text x="1002" y="61" fill="var(--ok)" font-weight="700">可用角色</text>
+              <text x="1002" y="80" fill="var(--muted)" font-size="11">PIE 可验·整单可撤</text>
+              <line x1="136" y1="65" x2="158" y2="65" stroke="var(--brass)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="280" y1="65" x2="302" y2="65" stroke="var(--brass)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="444" y1="65" x2="466" y2="65" stroke="var(--brass)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="598" y1="65" x2="620" y2="65" stroke="var(--brass)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="752" y1="65" x2="774" y2="65" stroke="var(--brass)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <line x1="906" y1="65" x2="928" y2="65" stroke="var(--brass)" stroke-width="1.5" marker-end="url(#arr)"/>
+              <text x="540" y="128" fill="var(--muted)" font-size="12">深色两步是这条管线的自有增量，其余各步业界皆有成法</text>
+            </g>
+          </svg>
+          <h3>一个新角色到底需要哪些数据</h3>
+          <p>这张表是本案最想留下的东西：按「缺了会怎样」分层，而不是照单全收官方样例的每一样。</p>
+          <table>
+            <thead><tr><th>层</th><th>数据项</th><th>它守住哪条体验</th><th>裁决</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="4">承重层 · 缺了直接坏</td></tr>
+              <tr><td><b>root motion 轨迹</b></td><td>片段根骨骼位移，速度经触地区间校准</td><td>MM 选片段的全部依据，速度错了脚步全乱</td><td><span class="ok">必做</span></td></tr>
+              <tr><td><b>锁根标记</b></td><td>bForceRootLock，轨迹只供匹配不进姿势</td><td>身体贴住胶囊，不飘</td><td><span class="ok">必做</span></td></tr>
+              <tr><td><b>循环标记</b></td><td>循环类片段标 loop</td><td>不标则 MM 每次重选都从头混入，全程抽搐</td><td><span class="ok">必做</span></td></tr>
+              <tr><td><b>schema 对齐</b></td><td>PoseSearch 通道逐项对齐在产英雄</td><td>同一框架同一数据结构，不分叉</td><td><span class="ok">必做</span></td></tr>
+              <tr class="group"><td colspan="4">体验层 · 缺了手感打折</td></tr>
+              <tr><td><b>混合参数</b></td><td>切换混合 0.2s 加惯性混合</td><td>片段切换不跳帧</td><td><span class="ok">必做</span></td></tr>
+              <tr><td><b>偏移容差归零</b></td><td>OffsetRootBone 平移/旋转容差 → 0</td><td>转向、平移即刻贴住胶囊，跟手</td><td><span class="ok">按镜头定</span></td></tr>
+              <tr class="group"><td colspan="4">修饰层 · 本案核实后砍掉</td></tr>
+              <tr><td><b>六条 MM 曲线</b></td><td>脚速 ×2、相位、速度、两条 warping 开关</td><td>脚锁防滑、相位对齐等厘米级修饰；缺失时全部安全降级为直通</td><td><span class="later">远镜头可砍</span></td></tr>
+              <tr><td><b>同步标记</b></td><td>脚步 sync marker</td><td>跨片段脚步相位对齐，惯性混合已吸收大半</td><td><span class="later">远镜头可砍</span></td></tr>
+            </tbody>
+          </table>
+          <p>修饰层的「可砍」有边界：镜头拉近到能看清脚、地形有坡、要出第一人称或回放模式，这层就得补回来。补法和工序在 08 挂着。</p>
+        </section>
+
+        <section id="acceptance">
+          <h2>验收实录</h2>
+          <p>验收人=需求方本人（作者），n=1，PIE 主观验收，未做多人盲测（局限记入 08）。实录视频见篇首。</p>
+          <table>
+            <thead><tr><th>#</th><th>验收项</th><th>结论</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>身体贴住胶囊，移动不飘</td><td>锁根后当场解决，后续各轮未复发</td><td><span class="ok">通过</span></td></tr>
+              <tr><td>2</td><td>移动速度与动画脚速匹配，不滑步</td><td>触地区间法重烘后目测吻合</td><td><span class="ok">通过</span></td></tr>
+              <tr><td>3</td><td>循环稳定，无混入混出抽搐</td><td>循环标记后消失，残余跳变被混合参数吸收</td><td><span class="ok">通过</span></td></tr>
+              <tr><td>4</td><td>转向贴镜头，不拖</td><td>旋转容差归零后「跟镜头了」（验收原话）</td><td><span class="ok">通过</span></td></tr>
+              <tr><td>5</td><td>六向 strafe 方向片段选取正确</td><td>侧向、后退各用各的片段，无串向</td><td><span class="ok">通过</span></td></tr>
+              <tr><td>6</td><td>旧英雄零影响</td><td>基类蓝图、共享配置逐项比对未动；共享改动仅注册表加一行</td><td><span class="ok">通过</span></td></tr>
+              <tr><td>7</td><td>跳跃</td><td>搭错状态机，未上线，搁置</td><td><span class="later">遗留</span></td></tr>
+              <tr><td>8</td><td>多人 / DS 环境</td><td>未测</td><td><span class="later">遗留</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="params">
+          <h2>关键参数</h2>
+          <details class="fold"><summary>展开参数表</summary>
+            <table>
+              <thead><tr><th>参数</th><th>值</th><th>体验依据</th></tr></thead>
+              <tbody>
+                <tr class="group"><td colspan="3">片段侧（21 个转换片段统一）</td></tr>
+                <tr><td>Run_Fwd 烘焙速度</td><td><b>361 → 565 cm/s</b></td><td>逐帧平均误把摆动相算入；改触地区间测速后与漫威速度感吻合</td></tr>
+                <tr><td>六向跑速</td><td><b>492 ~ 565</b></td><td>侧向、后退天然慢于正前，保留各向差异不强行拉平</td></tr>
+                <tr><td>bForceRootLock</td><td><b>true</b></td><td>轨迹只供 MM 匹配；不锁则身体沿轨迹自走（漂移根因）</td></tr>
+                <tr><td>循环标记</td><td><b>循环类 13 个 = true</b>，停步/转身 = false</td><td>不标则每次重选从头混入，全程抽搐</td></tr>
+                <tr class="group"><td colspan="3">蓝图侧（仅本角色副本，基类未动）</td></tr>
+                <tr><td>MM 切换混合时间</td><td><b>0.2 s</b> + 惯性混合</td><td>吸收片段切换的残余跳变</td></tr>
+                <tr><td>OffsetRootBone 平移容差</td><td><b>30 → 0</b></td><td>mesh 平移贴死胶囊</td></tr>
+                <tr><td>OffsetRootBone 旋转容差</td><td><b>-1（不限）→ 0</b></td><td>转向即刻贴镜头，解决「角色转得比镜头慢」</td></tr>
+                <tr class="group"><td colspan="3">移动配置（本角色专属配置资产）</td></tr>
+                <tr><td>最大走速</td><td><b>565</b></td><td>与 Run_Fwd 烘焙速度锁死，速度对齐是防滑步的第一道</td></tr>
+                <tr><td>加速度 / 地面摩擦</td><td><b>6000 / 8</b></td><td>保持项目默认的干脆手感，不因外来动画软掉</td></tr>
+                <tr><td>起步爆发（start boost）</td><td><b>关闭</b></td><td>爆发段速度超出动画库覆盖范围，会顶出滑步</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+
+        <section id="leftovers">
+          <h2>遗留与保险丝</h2>
+          <details class="fold"><summary>展开清单</summary>
+            <ul>
+              <li><b>跳跃未上线。</b>已确认必须建在 MM 主路径上（实验性状态机是死的），需要新建腾空分支：起跳、滞空、落地三段素材源资产里是全的（7 向）。启动前先从最终输出节点反向确认活跃路径。</li>
+              <li><b>修饰曲线层的回补开关。</b>触发条件任一成立就补：镜头能看清脚、上坡地形、第一人称或回放模式。补法：官方 Animation Modifier 批量烘焙，前置是把脚骨引用从小白人骨名改指到漫威骨架（不改则烘出来是垃圾数据），相位曲线依赖先打脚步 notify。</li>
+              <li><b>源资产没有整身起步和折返（pivot）。</b>起步在这套资产里是附加加速层的设计，急停才是整身片段。要更重的起步表现得动画师补做，管线本身洗不出不存在的东西。</li>
+              <li><b>MM 库里残留 6 条空引用</b>（一批废弃起步片段删除后留下的悬空条目），需在库编辑器手工清理；另有一个废片段资产删除反复失败，待手工删。</li>
+              <li><b>多人 / DS 未测。</b>单机 PIE 验收通过不代表网络同步下表现一致，速度与预测相关的问题（比如客户端预测下的方向突变）没有覆盖。</li>
+              <li><b>保险丝：</b>全部产出在沙盒目录一个变更单内，共享资产仅注册表一行，任何时刻可整单撤走。</li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="methodology">
+          <h2>方法论沉淀</h2>
+          <details class="fold"><summary>展开沉淀条目</summary>
+            <ul>
+              <li><b>M 候选 · MM 双层模型：选片段层与修饰层分开裁决。</b>轨迹匹配选片段是承重结构；脚锁、相位、warping 曲线是厘米级修饰。镜头距离决定修饰层值不值得做，判断依据是逐条查消费端的缺省行为，不是感觉。边界：远镜头平地可砍；近脚镜头、坡地、第一人称必须补。</li>
+              <li><b>M 候选 · 原地动画反烘位移，用触地区间测速，逐帧平均必错。</b>摆动相会拉低均值（本案错了 40%）。且烘出的速度必须过一道领域手感校验，数值管线不会自己报警。边界：仅适用于脚步驱动的地面移动；飞行、滑行类位移另议。</li>
+              <li><b>M 候选 · 有标尺才动手。</b>接外来资产前，先逆向一个出过货的同类当 ground truth（本案用在产英雄 Steel），新数据逐项对着建、建完比对。对着教程或官方样例建，可靠性差一档，因为它们没经过你项目的验收。</li>
+              <li><b>M 候选 · 人机分工的两道闸。</b>工程链（转换、建库、接线、诊断）可全交 AI；人守数值常识闸和手感闸。本案两次翻车（速度烘错、天花板误判）都是闸拦下的，且都不是 AI 能自查出来的类型。边界：有标尺可对照的工作 AI 可靠性高；无标尺的纯审美判断不适用此分工。</li>
+              <li><b>AP 候选 · 往蓝图里搭东西之前，先从最终输出反向确认活跃路径。</b>「存在且编译通过」不等于「在用」，框架自带的实验性结构是死路（本案跳跃全套搭进空壳状态机）。检查动作很便宜：从输出节点回溯一遍主链。</li>
+              <li><b>AP 候选 · 排查手段没换过之前，不要下「无解」结论。</b>盲改资产穷举撞墙后曾误判为能力边界，换成运行期读数加源码追因后一行解决。「穷尽了我会的方法」和「穷尽了方法」是两句话。</li>
+            </ul>
+          </details>
+        </section>
+
+        <section id="appendix">
+          <h2>附录：未入正文的素材</h2>
+          <details class="fold"><summary>展开附录</summary>
+            <h3>变更单与资产路径</h3>
+            <ul>
+              <li>交付变更单：<b>CL 5480631</b>（28 个文件：schema、MM 库、21 个转换片段、动画蓝图 ×2、英雄数据、移动配置、注册表一行），未提交，可整单撤。</li>
+              <li>沙盒目录：<code>/Game/Heroes/MarvelTest/_MMSpike/</code>；源资产（只读）：<code>/Game/Imported/Marvel/1043001/</code>。</li>
+              <li>废弃留档（default changelist，未入交付单）：Path-B 的 C++ 数据类两组（<code>Source/GameMoba/Animation/MarvelTest/</code>）、三个探索期蓝图、一个废起步片段。</li>
+              <li>决策日志：<code>GameProject/Saved/Marvel_1043001_dump/DECISIONS.md</code>（D-001 ~ D-019，含被翻案的 D-018/D-019「天花板」结论，原文保留）。</li>
+              <li>配套文档：<code>GameProject/Docs/Marvel_BaseLocomotion_Structure.html</code>（三角色基础移动资产结构与反推状态机）、<code>GameProject/Docs/Marvel_Pipeline_Slide.html</code>（汇报单页）、<code>GameProject/Docs/Animation - MM动画数据和自动化工具（for动画师）.html</code>。</li>
+              <li>反烘工具已固化：<code>GameProject/Content/Python/mm_rootmotion_baker.py</code>（measure 测速 / bake 烘焙 / audit 体检，承重层标记一次配平）。工具 audit 首跑即抓出 Idle_C_RM 漏开 enable_root_motion 一处；烘焙内核的引擎坑（旧 controller 对新式数据模型强转会 Fatal 崩编辑器等三条）记录在文件头注释。</li>
+            </ul>
+            <h3>源资产盘点摘录</h3>
+            <ul>
+              <li>三个导入角色中 1011001 是空壳（0 动画）；1043001（双枪，恒战斗站姿）148 个基础移动，1021001（远程，三站姿）231 个。</li>
+              <li>命名体系：站姿 <code>_N/_C/_Aim</code> × 方向（走跑停 6 向、跳 7~9 向、转身 L90/R90）× 状态（<code>_Float</code> 原地变体、<code>_MT</code> 带位移变体）；瞄准偏移 9 宫格 <code>_AO_[LCR][UCD]</code>。</li>
+              <li>结构特点：基础移动全原地；起步是附加加速层（<code>Apose_LocoDetail_Accel_*</code>）而非整身片段；没有 pivot 和 180° 转身。</li>
+            </ul>
+            <h3>工具链坑位（编辑器自动化，非 3C 方法论）</h3>
+            <ul>
+              <li>资产保存只信日志里的 LogSavePackage 行，脚本返回值会说谎；PIE 运行中保存、编译、删除全被锁，先退 PIE。</li>
+              <li>MM 库（PoseSearchDatabase）没有「添加片段」的脚本接口，入库一步只能编辑器手动拖，是全管线唯一断点。</li>
+              <li>动画蓝图无法从零脚本生成，「复制 + 换骨架 + 改线」是当前唯一自动化路径；改 CDO 记得编译再保存，漏编译不生效。</li>
+              <li>曲线层影响核实用了多路独立核查（读引擎源码逐条确认缺省行为，再交叉对抗验证），单路结论在这类「缺了到底有没有事」的问题上不可信。</li>
+            </ul>
+            <h3>修订记录</h3>
+            <table>
+              <thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead>
+              <tbody>
+                <tr><td>2026-07-14</td><td>v0.1</td><td>初稿（工作会话产出，待作者亲笔位与入库关）</td></tr>
+                <tr><td>2026-07-14</td><td>v0.2</td><td>实录视频移至篇首；附录补自研反烘工具与动画师手册条目</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
