@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>攀爬翻越系统接入 · 完整调试实录</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Field Log · Traversal</div>
+      <h1>攀爬翻越系统接入<span style="opacity:.55">·完整调试实录</span></h1>
+      <p class="lede">把 GASPALS 的四类翻越（Hurdle / Vault / Mantle / Climb）完整接入自有英雄，替换原来单一的 Mantle 逻辑，并顺手修完被牵连的旧攀爬系统。三场会话、28 个子阶段，<b>所有误判、失败尝试和无效循环原样保留</b>——这是一份流水实录，不是提纯后的成功学。</p>
+      <div class="docinfo">
+        <div><i>系统</i><b>GASPALS Traversal + 旧版 GA_Mantle</b></div>
+        <div><i>涉及角色</i><b>TwinBlast · Sparrow · Steel</b></div>
+        <div><i>周期</i><b>三场会话 · 约一周</b></div>
+        <div><i>分工</i><b>战斗 3C 策划主导 + AI 协作执行</b></div>
+        <div class="wide"><i>配套文档</i><b><a href="Travelsal - 翻越系统 — 关卡设计参数手册.html">翻越系统 · 关卡设计参数手册 →</a>　<a href="新角色攀爬翻越接入.html">新角色攀爬翻越接入 →</a></b></div>
+      </div>
+    </header>
+
+    <!-- 成果先看:四段对比实录,布局沿用原始报告的 2×2 网格 -->
+    <div class="grid">
+      <figure>
+        <video controls playsinline preload="metadata" src="攀爬-早期接入版.mp4"></video>
+        <figcaption>早期完成接入后，问题比较多的版本</figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline preload="metadata" src="攀爬-70版本.mp4"></video>
+        <figcaption>逐轮修复后，70% 完成度的版本</figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline preload="metadata" src="攀爬-旧逻辑局内.mp4"></video>
+        <figcaption>此前单一攀爬逻辑在局内的问题</figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline preload="metadata" src="攀爬-优化后局内.mp4"></video>
+        <figcaption>此轮优化后在局内的攀爬体验</figcaption>
+      </figure>
+    </div>
+
+    <div class="foreword">
+      <p>原来的系统只有一种攀爬：不管面前是半人高的箱子、一堵薄墙还是两米五的高台，都播同一套 Mantle。目标是把 GASPALS 的四类翻越完整移植进来，同时兼容项目已有的 GAS 框架、CharacterMovement 组件和 Motion Matching 动画系统。</p>
+      <p>这篇按时间顺序记录整个过程。写法上遵守一条纪律：走错的方向、失败的尝试、编译没生效白调一晚上的蠢事，全部保留原样。因为后来翻回去看，这些弯路本身比结论有用——同类系统再接一次，大概率还会在同样的地方掉坑。</p>
+      <p>全文整理自当期的调试报告与功能文档，参数与时序均为当时实测值，未做追改。</p>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">背景</div>
+        <a href="#overview"><i>01</i>工程背景与系统全貌</a>
+        <a href="#index"><i>02</i>阶段索引</a>
+        <div class="grp">实录</div>
+        <a href="#s1"><i>03</i>第一场：从接入到能玩</a>
+        <a href="#s2"><i>04</i>第二场：CHT 对齐与深度探针</a>
+        <a href="#s3"><i>05</i>第三场：打磨与旧系统连修</a>
+        <div class="grp">结果</div>
+        <a href="#params"><i>06</i>最终参数速查</a>
+        <a href="#lessons"><i>07</i>误判与效率账</a>
+        <a href="#workflow"><i>08</i>研发链路的变化</a>
+        <a href="#leftovers"><i>09</i>遗留问题</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>背景</b></div>
+
+        <section id="overview">
+          <h2>工程背景与系统全貌</h2>
+          <p>项目是 UE5 多人英雄射击，英雄移动动画统一跑在 Motion Matching 上。翻越这件事在此之前只有一个 <code>GA_Mantle</code>：单一蒙太奇、固定高度假设、Motion Warping 目标手动配置。GASPALS 提供了完整的四类翻越动画资产与分选设计，本次工程的目标就是把这套东西移植到自有英雄身上，同时不动现有 GAS 框架与 MM 框架。</p>
+          <p>涉及模块：<code>UHeroAbility_Traverse</code>（新建）、<code>UHeroCharacterMovementComponent::CanTraverse()</code>、<code>FMantleSetting</code>（扩展）、<code>HeroCharacter::CheckHeroInput()</code>、Motion Warping Warp Targets、AnimBP 与 GASPALS 蒙太奇适配。</p>
+
+          <h3>一次翻越的完整链路</h3>
+          <p>按住空格到翻越完成，系统按这条链走：</p>
+          <ol>
+            <li>玩家按住空格，<code>bHeroInputJumpHeld</code> 每帧为 true（持续窗口，不是单帧脉冲）</li>
+            <li><code>CheckHeroInput()</code> 检测：基础距离 80cm + 速度加成（最大扩到 450cm）</li>
+            <li><code>CanTraverse()</code> 探针：FrontHit → 高度探针 → 顶面向下的深度步进探针</li>
+            <li>按高度 + 深度 + 背面地板分类出动作类型（见下方决策表）</li>
+            <li><code>StartTraversal()</code>：设 <code>MOVE_Flying</code>，注册 FrontLedge / BackLedge Warp Target</li>
+            <li><code>GA_Traverse</code> 激活：按速度与深度分选蒙太奇，StartTime = MotionWarping notify 时间提前 2 帧</li>
+            <li>Motion Warping 把角色平滑推到目标点，安全结束点到达后 <code>Montage_Stop(0.25f)</code> → <code>EndAbility()</code></li>
+            <li><code>SetMovementMode(MOVE_Falling)</code>，物理接管落地，自然切回 Walking</li>
+          </ol>
+          <div class="rule">
+            <h3>MOVE_Flying 是全篇最大的雷区</h3>
+            <p>翻越期间角色处于 <code>MOVE_Flying</code>（无重力，位移全靠 Root Motion / Motion Warping 驱动）。任何一条 Ability 路径（正常完成、被打断、Task 为 null）只要漏掉 EndAbility，这个状态就会泄露：角色永久悬浮、滑步、且 <code>CanTraverse()</code> 检测到 Flying 直接拒绝，系统整体挂死。后面的实录里，这个模式反复出现了四次。</p>
+          </div>
+
+          <h3>翻越类型决策</h3>
+          <p>每次触发按以下优先级判断，第一个满足的分支生效：</p>
+          <table>
+            <thead><tr><th>判定条件</th><th>动作类型</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>高度 &gt; 160cm</td><td><b>Climb</b></td><td>高墙攀爬，用 _2_5（250cm 设计高度）系列动画</td></tr>
+              <tr><td>高度 80~160cm 且深度 ≥ 59cm</td><td><b>Mantle</b></td><td>厚墙，爬上去站立</td></tr>
+              <tr><td>高度 60~80cm，无背面地板</td><td><b>Vault</b></td><td>薄墙撑跳翻过</td></tr>
+              <tr><td>高度 &lt; 60cm，背面下落 ≥ 50cm</td><td><b>Hurdle</b></td><td>低障碍跨越</td></tr>
+              <tr><td>背面下落 &lt; 22cm</td><td><b>拒绝</b></td><td>视为楼梯，交给 UE 原生 StepUp</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="index">
+          <h2>阶段索引</h2>
+          <p>全程 3 场会话、28 个子阶段。此表是全文的地图，每一行都能在实录章里找到对应小节。</p>
+          <table>
+            <thead><tr><th>阶段</th><th>场次</th><th>模块</th><th>问题简述</th><th>结果</th></tr></thead>
+            <tbody>
+              <tr><td>1~2</td><td>第一场</td><td>控制</td><td>系统搭建 / 空格无反应</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>3~5</td><td>第一场</td><td>动作</td><td>T-Pose / 原地播动画 / 高度偏差</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>6~8</td><td>第一场</td><td>动作</td><td>高度分类 / 薄厚墙 / 跑走档</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>9</td><td>第一场</td><td>控制</td><td>跑步输入延迟</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>10~13</td><td>第一场</td><td>手感/时序</td><td>视觉延迟 0.5s / 滑步 / 翻不过去 / Climb 时序</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>14</td><td>第二场</td><td>运动</td><td>起步/折返加速迁移到 C++</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>15~18</td><td>第二场</td><td>动作</td><td>V2 蒙太奇 / CHT 规则对齐 / 深度探针归零</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>19</td><td>第三场</td><td>手感/时序</td><td>WarpPhaseDelay 与 PlayRate 不同步</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>20</td><td>第三场</td><td>控制</td><td>MaxDepthScan 不随配置</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>21</td><td>第三场</td><td>动作</td><td>Vault 缺 Walk 档</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>22</td><td>第三场</td><td>手感/时序</td><td>日志降级 / Cooldown 低帧率失效</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>23</td><td>第三场</td><td>运动</td><td>落地步态跳变</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>24</td><td>第三场</td><td>控制</td><td>楼梯误触发翻越</td><td><span class="ok">修复</span></td></tr>
+              <tr><td>25~28</td><td>第三场</td><td>动作/运动</td><td>旧版 GA_Mantle 四连修（Sparrow / Steel）</td><td><span class="ok">修复</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="part"><b>实录</b></div>
+
+        <section id="s1">
+          <h2>第一场：从接入到能玩</h2>
+          <p>第一场从零搭到基本可玩，13 个阶段。前半是骨架与蒙太奇的架构问题，后半是手感与时序，其中视觉延迟一战打了三次败仗。</p>
+
+          <h3>阶段 1：搭建，看起来顺利，实际埋了三颗雷</h3>
+          <p>扩展 <code>FMantleSetting</code>、新建 <code>UHeroAbility_Traverse</code>（GAS Tag <code>Event.Input.Traverse</code> 触发）、接入输入逻辑、批量重定向 GASPALS 蒙太奇。当时以为一切正常，实际埋了三颗雷，后面逐个爆：重定向方向搞反了（把 UEFN Mannequin 动画重定向到 TwinBlast 骨骼，而 TwinBlast 的 Primary Mesh 本来就用 UEFN Mannequin 骨骼）；Warp Target 名字沿用了旧系统的 <code>MantleTarget</code>；<code>FMantleSetting</code> 改结构后热重载会丢 DataAsset 字段。</p>
+
+          <h3>阶段 2：按空格完全没反应</h3>
+          <p>根因是委托绑定顺序的竞争条件：<code>OnCancelled</code> / <code>OnInterrupted</code> 绑定在 <code>ReadyForActivation()</code> 之后。蒙太奇若在第一帧就被取消，委托还没挂上，回调永不执行，EndAbility 永不调用，角色永久停在 <code>MOVE_Flying</code>。而 <code>CanTraverse()</code> 检测到 Flying 直接返回 false，于是空格再按也没用，整个 Ability 挂死。修复：所有委托绑定移到 <code>ReadyForActivation()</code> 之前，补齐全部四个回调。</p>
+
+          <h3>阶段 3：T-Pose 加空中悬浮</h3>
+          <p><span class="no">误判 1</span>　怀疑 ABP 里 <code>BlendListByBool</code> 没激活 DefaultSlot 链路，花了较长时间分析节点图，最后确认这条路是错的，DefaultSlot 一直正常。</p>
+          <p><b>真根因：双 Mesh 架构没弄清。</b>播放的蒙太奇是重定向出来的 TwinBlast 骨骼版本，而 Primary Mesh 用的是 UEFN Mannequin 骨骼。骨骼不匹配，UE 拒绝播放，触发 OnCancelled，角色回到无动画驱动的 T-Pose。</p>
+          <p><span class="no">误判 2</span>　弄清双 Mesh 后又试了一条歪路：改用 <code>MovementModeChangedDelegate</code> 监听状态变化，删掉了蒙太奇播放代码。结果角色完全不动。GASPALS 的翻越必须由 GAS 主动播蒙太奇驱动，ABP 不会自己进入翻越状态。</p>
+          <p>最终修复：直接用 GASPALS 原生 UEFN Mannequin 骨骼的蒙太奇，不再要重定向版本。教训一句话：<b>T-Pose 加 Ability 秒取消，先查骨骼匹配性，别先跳进 AnimBP 节点图。</b></p>
+
+          <h3>阶段 4：动画播了，角色原地不动</h3>
+          <p>又先后怀疑了 LayeredBoneBlend 权重、PoseSearch 的取消日志，都不是。真根因很朴素：<b>Warp Target 名字对不上</b>。GASPALS 全套蒙太奇里 Motion Warping Notify 的目标名是 <code>FrontLedge</code>，代码注册的却是旧系统的 <code>MantleTarget</code>。找不到目标，Motion Warping 不执行，角色原地播完整段动画。修复：全部注册改为 <code>FrontLedge</code>，Hurdle / Vault 的后向落点改为 <code>BackLedge</code>。</p>
+
+          <h3>阶段 5：能动了，但飞到墙顶上方</h3>
+          <p>FrontLedge 位置公式沿用旧系统，假设根骨骼在髋部，所以给落点加了 HalfHeight 偏移。GASPALS 骨骼的根在脚底，FrontLedge 本身就是落脚点。修复后公式一行：<code>SurfaceHit.Location - FrontHit.Normal × CapsuleRadius</code>，不加任何 Z 偏移。</p>
+
+          <h3>阶段 6：高度分类阈值混乱</h3>
+          <p>各种高度的墙触发的动作类型随机感很强。原始阈值全是直觉估的，而 GASPALS 动画是按设计高度命名的：<code>_1_0</code> 系列对应 100cm，<code>_2_5</code> 系列对应 250cm。旧配置 MantleMin=150cm 配 100cm 设计高度的动画，Motion Warping 硬拉伸 1.5 倍，动作严重扭曲。按动画设计高度重新校准后的分类见 01 章决策表。</p>
+
+          <h3>阶段 7：薄墙厚墙不区分</h3>
+          <p>同一高度段里，薄墙应该翻过去（Vault），厚墙应该爬上去站住（Mantle），原逻辑不看深度一律同一动作。修复：80~160cm 高度段增加障碍物深度检测，按深度阈值分流。</p>
+
+          <h3>阶段 8：站着不动也播跑步版蒙太奇</h3>
+          <p>Motion Matching 只管平地移动动画，翻越蒙太奇是 GAS 指定播放的，MM 不会替你选版本。修复：<code>FMantleSetting</code> 每种动作新增 Run / Stand 两档蒙太奇字段，按速度阈值选择。</p>
+
+          <h3>阶段 9：跑向墙时按空格没反应</h3>
+          <p>两个问题叠加：<code>bHeroInputJump</code> 只在按下的第一帧为 true，同帧末清零；检测距离固定 80cm。以 300 cm/s 跑速计算，从按下到进入检测范围要 0.27 秒，标志早归零了。修复：新增 <code>bHeroInputJumpHeld</code> 持续窗口标志（按住每帧为 true）；检测距离动态扩展，<code>SpeedBonus = Min(Speed2D × 0.5, 300)</code>，高速时最大扩到 450cm。修复后主观手感从「贴墙才有反应」变成「快接近就响应」。</p>
+
+          <h3>阶段 10：视觉延迟 0.5 秒，全程最硬的一仗</h3>
+          <p>现象：按下空格后约 0.5 秒才看到翻越动作，GASPALS 原版几乎瞬发。这一仗打了两轮诊断加三次实现失败。</p>
+          <p><span class="later">次要因素</span>　第一轮诊断指向 OffsetRootBone：奔跑时骨骼相对胶囊有累积偏移，翻越开始时要 0.3~0.6 秒衰减回中心。在 <code>Get_OffsetRootTranslationHalfLife</code> 里让 DefaultSlot 激活时返回 0.001，偏移 5 帧内清零。延迟少了约 0.1 秒，主延迟还在。这里误判了主因，耗掉不少时间。</p>
+          <p><span class="ok">根因确认</span>　分析 GASPALS 原版 <code>CBP_SandboxCharacter::PerformTraversalAction()</code>：原版靠 PoseSearch 在 <code>PoseSearchBranchIn</code> notify 范围内（帧 0~16，约 0.53 秒）搜一个与当前跑姿最匹配的帧，直接从那帧起播，把前摇整段跳掉。我们的系统始终从第 0 帧播，0.53 秒前摇一帧不少地走完。</p>
+          <ul>
+            <li><span class="no">失败 1</span>　用 <code>NotifyStateClass != nullptr</code> 找 BranchIn 的结束时间。PoseSearch 插件类在当前模块未被解析，指针恒为 null，条件永远不成立。</li>
+            <li><span class="no">失败 2</span>　改成 <code>GetTriggerTime() &lt; KINDA_SMALL_NUMBER</code> 判断。结果 BranchIn 的触发时间恰好精确等于 KINDA_SMALL_NUMBER（0.0001），0.0001 &lt; 0.0001 恒为 false，条件再次失效。</li>
+            <li><span class="no">失败 3</span>　逻辑终于改对了，但用 <code>unreal.reload()</code> 当作重编译。它只 reload Python 模块，完全不碰 C++。测试的一直是旧代码，「修复 → 测试 → 没变化 → 继续找 bug」空转了好几轮。</li>
+          </ul>
+          <div class="note">
+            <p><b>全程单一最大的效率陷阱就是失败 3。</b>改 C++ 后必须点编辑器 Compile 按钮（或走 Hot Reload），<code>unreal.reload()</code> 无效。这个模式在整场调试里出现了 4~5 次。</p>
+          </div>
+          <p><b>最终修复</b>：放弃从 BranchIn 找结束时间，改为扫描蒙太奇里 MotionWarping notify（ActionWarpIn）的触发时间（通常 0.4~0.6 秒），从该时间提前 2 帧（67ms）开始播放。Motion Warping 在这 67ms 里已经开始推角色，主观上接近瞬发。视觉延迟从约 530ms 降到约 67ms。编译后当场验收通过：「延迟感没了，ok 了。」</p>
+
+          <h3>阶段 11：翻完不落地，空中滑步</h3>
+          <p>重启编辑器后暴露：翻越完成后角色空中滑步，日志持续 Mode=5（MOVE_Flying）。EndAbility 没有任何机制触发。修复：新增 <code>OnWarpPhaseComplete</code> 回调加 <code>UAbilityTask_WaitDelay</code>，在蒙太奇安全结束点依次执行 <code>Montage_Stop(0.25f)</code>、恢复 MovementMode、<code>EndAbility()</code>。</p>
+
+          <h3>阶段 12：结束太早，翻不过去</h3>
+          <p>修完滑步又出新问题：角色爬到墙顶就直接坠落。第一次选的安全点是 MotionWarping notify 结束时间（0.835s）加 50ms，但此刻 Root Motion 还在把角色往前推，提前 Stop 打断了它。修复：改用 <code>PlayMontageNotifyWindow</code>（TraversalBlendOut）的结束时间（1.192s），此时角色已完全越过墙体开始下落，才是真正安全的结束点。</p>
+
+          <h3>阶段 13：Climb 还是翻不过去</h3>
+          <p>Vault / Hurdle 都好了，Climb 独独不行。分层拆开看：Climb 实际播的是 MM 短片段（<code>AM_M_Neutral_Traversal_Climb_Start_2_5_run_F_Lfoot</code>），它没有 PlayMontageNotifyWindow，BlendOut 通知用的类名是 <code>BP_NotifyState_TraversalBlendOut_C</code>。代码用 <code>Contains("MontageBlendOut")</code> 匹配，永远匹配不到，fallback 到 0.9 秒，而 Climb 的安全点在 2.1 秒。修复：匹配条件放宽为 <code>Contains("BlendOut")</code>，两种命名风格都覆盖，自动算出 Climb run ≈ 1.70 秒。</p>
+        </section>
+
+        <section id="s2">
+          <h2>第二场：CHT 对齐与深度探针</h2>
+          <p>第一场结束时系统「能玩」，第二场解决「选得对不对」：蒙太奇分选规则与 GASPALS 原版对齐，顺带挖出一个从第一天就存在的底层 Bug。</p>
+
+          <h3>阶段 14：起步/折返加速从 ABP 迁到 C++</h3>
+          <p>原版起步加速逻辑写在 AnimBP 状态机里，参数硬编码，运行时不可调，角色间无法独立配置。迁移到 <code>UHeroCharacterMovementComponent</code> 作纯运动层逻辑：起步检测（静止转有输入）和折返检测（速度方向与输入方向的点积低于 <code>PivotDotThreshold</code>）触发时把 <code>StartBoostTimer</code> 重置为 <code>BoostDuration</code>，每帧在 <code>GetMaxSpeed()</code> 里按剩余比例线性叠加峰值速度。三个参数（<code>BoostMaxSpeed</code> / <code>BoostDuration</code> / <code>PivotDotThreshold</code>）全部进 DataAsset，按角色独立配置。迁移后 AnimBP 只读速度播动画，调参不再重编蓝图。</p>
+
+          <h3>阶段 15~17：V2 蒙太奇始终被选中</h3>
+          <p>现象：不管速度和墙的深度，永远播 V2 版本（<code>run_F_V2_Lfoot</code>）。<span class="no">初始误判</span>把 V2 和非 V2 当成互斥替换关系，试图直接换掉。正确做法是回头读懂 GASPALS 原版 CHT（Chooser Table）Hurdles 子表的分选规则，逐格核对截图后确认了完整规则：</p>
+          <table>
+            <thead><tr><th>ObstacleDepth</th><th>速度档</th><th>选用蒙太奇</th></tr></thead>
+            <tbody>
+              <tr><td rowspan="3">[0, 25) cm 薄</td><td>&lt; 100 站立</td><td>stand_F_V2_Lfoot</td></tr>
+              <tr><td>100~250 行走</td><td>walk_F_Lfoot / Rfoot</td></tr>
+              <tr><td>≥ 250 奔跑</td><td>run_F_Lfoot / Rfoot</td></tr>
+              <tr><td rowspan="3">[25, 60) cm 厚</td><td>&lt; 100 站立</td><td>stand_F_V2_Rfoot</td></tr>
+              <tr><td>100~250 行走</td><td>walk_F_V2_Lfoot / Rfoot</td></tr>
+              <tr><td>≥ 250 奔跑</td><td>run_F_V2_Lfoot / Rfoot</td></tr>
+            </tbody>
+          </table>
+          <p>三个颠覆原认知的发现：<b>V2 不是厚墙专属</b>（薄墙站立也用 V2）；<b>速度是三档不是两档</b>（行走 100~250 是独立一档）；<b>V2 分界在 25cm</b>，与 60cm 的 Mantle 分界、与高度分类都无关。据此把 Hurdle 蒙太奇槽从 4 个扩到 12 个（3 速度档 × 2 深度档 × 左右脚），选择逻辑带完整 fallback 链（某档未配则回退上一档）。</p>
+
+          <h3>阶段 18：ObstacleDepth 恒为 0，从第一天就错的底层 Bug</h3>
+          <p>对齐 CHT 后发现：明明是厚墙，日志里 <code>ObstacleDepth = 0.0</code>，分选永远走薄墙路径。根因：原深度探针从 FrontHit 碰撞点向障碍物背面做水平反向 Line Trace，而测试场景的 <code>LevelBlock_Traversable</code> 背面不响应 MantleCheck 碰撞通道，探针永远不命中。</p>
+          <div class="note">
+            <p><b>这个 Bug 从系统搭建第一天就存在，却活到了第二场。</b>因为早期测试场景恰好全是薄墙，深度 0 的结果凑巧「正确」，系统勉强能跑，把底层错误盖住了。影响面：深度分选、厚墙分类、地板探针位置、BackLedge 目标计算，全部建立在一个恒为 0 的输入上。</p>
+          </div>
+          <p>修复方案换了探测思路：<b>顶面向下步进探针</b>。从障碍物顶面沿前进方向每 5cm 一步、向下打短射线（最大 70cm），命中则更新深度，落空即为背边缘。不依赖背面碰撞响应，还顺带拿到背边缘精确位置供 BackLedge 使用。</p>
+        </section>
+
+        <section id="s3">
+          <h2>第三场：打磨与旧系统连修</h2>
+          <p>第三场做两件事：把新系统的边角磨平（阶段 19~24），以及收拾一个连带后果——新系统改动的底层逻辑把旧版 GA_Mantle 弄出了一串新 Bug，Sparrow 和 Steel 两个角色逐一排修（阶段 25~28）。</p>
+
+          <h3>阶段 19：PlayRate 加速播放后角色多悬浮一截</h3>
+          <p><code>SafeEndTime</code> 是蒙太奇内部时间，<code>WaitDelay</code> 等的是真实时间。PlayRate=1.2 时蒙太奇 1.0 秒处实际只要 0.833 秒，差值就是角色在 MOVE_Flying 里多挂的时间。修复一行：所有等待统一用 <code>WarpPhaseDelay ÷ PlayRate</code>。</p>
+
+          <h3>阶段 20：MaxDepthScan 不随配置</h3>
+          <p>DataAsset 里调大 <code>MinMantleDepth</code>，深度扫描上限却写死不动，超过旧上限的厚墙识别不出来。修复：<code>MaxDepthScan = Max(100, MinMantleDepth × 1.5)</code>，探针范围随配置自动扩展。</p>
+
+          <h3>阶段 21：Vault 补 Walk 档</h3>
+          <p>Vault 只有 Stand / Run 两档，与 Hurdle 的三档不一致，行走速度贴近障碍时播 Run 版突兀。新增 Walk 档蒙太奇槽，选择逻辑与 Hurdle 完全对齐，Walk 未配置时回退 Run 保持兼容。</p>
+
+          <h3>阶段 22：低帧率下连续触发两次翻越</h3>
+          <p><code>PostTraversalCooldown = 0.1s</code>，帧率低于 30fps 时一帧的 deltaTime 就可能吃掉整个冷却，落地前检测又通过了一次。提到 0.25 秒，20fps 下也有足够窗口。同期做了日志分级整理：流程确认降 Verbose，非预期状态保持 Warning，系统性错误升 Error。</p>
+
+          <h3>阶段 23：落地后步态跳变</h3>
+          <p>翻越结束落地，步态循环和翻越末姿势接不上，有明显错位。先排除了 Foot IK / Foot Placement（它们只管踝关节贴地，不管步频相位）。真根因在 MM 节点属性：<code>bResetOnBecomingRelevant = true</code>，蒙太奇结束、MM 重新激活时从零开始搜索，与当前姿势差距大，直接跳变。改为 false 后，MM 基于蒙太奇结束那一帧的姿势就近搜索，衔接平滑。</p>
+
+          <h3>阶段 24：楼梯误触发翻越</h3>
+          <p><span class="no">初次误判</span>想改楼梯的碰撞通道，那只是绕过症状。真正的洞在 <code>CanTraverse()</code> 的 step-up 分支：没检查背面下落高度。楼梯台阶背面下落通常不到 22cm，本该由 UE 原生 StepUp 处理。修复：增加 <code>MantleMinStepUpDrop</code>（默认 22cm）阈值检查。同时移除了旧的 IsWalkable 法向量检查，它的 0.71 阈值会误拒法向量偏斜的普通箱体（实测 NormalDotUp=0.39 被拒）。</p>
+
+          <h3>阶段 25~28：旧版 GA_Mantle 四连修</h3>
+          <p>新系统开发中动过的底层（MovementMode 管理、EndAbility、移动组件接口）波及了旧攀爬。四个问题按角色逐一排掉：</p>
+          <table>
+            <thead><tr><th>问题</th><th>角色</th><th>根因</th><th>修复</th></tr></thead>
+            <tbody>
+              <tr><td><b>无法触发，日志刷屏</b></td><td>Steel</td><td>LineTraceMulti 返回 true 但无有效 blocking hit，<code>OutSurfaceHit</code> 保持 Reset 状态（Z=0），算出负高度还意外通过了单边检查</td><td>高度探针后补 <code>IsValidBlockingHit()</code> 有效性检查</td></tr>
+              <tr><td><b>触发后永久悬浮</b></td><td>Steel</td><td>蒙太奇缺失时 AbilityTask 为 null，无回调来源，EndAbility 永不触发；且旧代码只绑了 OnBlendOut 一个回调</td><td>null 检查（null 则立即 CancelAbility 恢复状态），补全四个回调绑定</td></tr>
+              <tr><td><b>攀爬完成后空中溜冰</b></td><td>Sparrow</td><td>依赖的 <code>UpdateRootMotionTransitionAfterMovement()</code> 只在有 AnimRootMotion 时才恢复移动模式，旧蒙太奇没有 Root Motion 数据，恢复永不触发</td><td>override EndAbility，检测到 MOVE_Flying 时清速度并显式切 <code>MOVE_Falling</code>，让物理接管落地</td></tr>
+              <tr><td><b>Warp 进墙体内部或严重偏低</b></td><td>Steel</td><td>两个角色的蒙太奇 sync point 含义不同：Sparrow 是最终落脚点（偏移 0），Steel 是悬挂时的根位置（需减去手搭点到站立点的 Z 差）</td><td>新增 <code>MantleHeightFromMontage</code> DataAsset 字段按角色配置，默认 0 兼容 Sparrow 风格</td></tr>
+            </tbody>
+          </table>
+          <div class="rule">
+            <h3>四连修共用同一条结论</h3>
+            <p>不能把 MovementMode 的恢复寄托在任何「正常路径」上。EndAbility 必须显式检查并恢复 MOVE_Flying，且恢复目标选 <code>MOVE_Falling</code> 而不是 Walking：让物理引擎接管落地检测，避免空中直接切 Walking 的位置突变。</p>
+          </div>
+        </section>
+
+        <div class="part"><b>结果</b></div>
+
+        <section id="params">
+          <h2>最终参数速查</h2>
+          <h3>各动作时序（运行时自动计算）</h3>
+          <p>全部时序由代码在 ActivateAbility 时扫描蒙太奇 Notify 自动推算，DataAsset 里不填任何数值，换蒙太奇自动适配。表中时间为蒙太奇内部时间，实际等待需除以 PlayRate。</p>
+          <table>
+            <thead><tr><th>动作</th><th>StartTime</th><th>安全结束基准</th><th>WarpPhaseDelay</th></tr></thead>
+            <tbody>
+              <tr><td><b>Vault</b></td><td>~0.40s</td><td>PlayWindow end（0.63s）</td><td>~0.28s</td></tr>
+              <tr><td><b>Hurdle</b></td><td>~0.53s</td><td>TraversalBlendOut（1.02s）</td><td>~0.54s</td></tr>
+              <tr><td><b>Mantle</b></td><td>~0.07s</td><td>TraversalBlendOut（1.16s）</td><td>~1.14s</td></tr>
+              <tr><td><b>Climb stand</b></td><td>~0.34s</td><td>TraversalBlendOut（1.89s）</td><td>~1.60s</td></tr>
+              <tr><td><b>Climb run</b></td><td>~0.45s</td><td>TraversalBlendOut（2.10s）</td><td>~1.70s</td></tr>
+            </tbody>
+          </table>
+          <h3>关键阈值</h3>
+          <table>
+            <thead><tr><th>字段</th><th>值</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td><code>MantleCheckDistance</code></td><td>80cm 基础，动态最大 450cm</td><td>前方检测距离，速度加成 Min(Speed2D × 0.5, 300)</td></tr>
+              <tr><td><code>MinMantleDepth</code></td><td>59cm</td><td>厚墙阈值，深度达到即判 Mantle（GASPALS 设计值）</td></tr>
+              <tr><td><code>HurdleThickDepthThreshold</code></td><td>25cm</td><td>Hurdle 内 V2 / 非 V2 分界</td></tr>
+              <tr><td><code>HurdleMinBackDrop</code></td><td>50cm</td><td>Hurdle 最小背面下落，过滤假阳性</td></tr>
+              <tr><td><code>MantleMinStepUpDrop</code></td><td>22cm</td><td>step-up 分支最小背面下落，防楼梯误触</td></tr>
+              <tr><td>速度三档</td><td>100 / 250 cm/s 分界</td><td>Stand / Walk / Run 蒙太奇分档（通用 Run 档为 200）</td></tr>
+              <tr><td><code>PostTraversalCooldown</code></td><td>0.25s</td><td>翻越后冷却，低帧率安全窗口</td></tr>
+            </tbody>
+          </table>
+          <p>完整字段说明、CHT 分选全表与新角色接入五步流程，见配套的<a href="Travelsal - 翻越系统 — 关卡设计参数手册.html">关卡设计参数手册</a>与<a href="新角色攀爬翻越接入.html">新角色攀爬翻越接入</a>。</p>
+        </section>
+
+        <section id="lessons">
+          <h2>误判与效率账</h2>
+          <p>整场约 13 个主要阶段，每个阶段内含 1~3 次失败尝试，明显「走错方向再回头」的有三次，编译未生效导致的无效循环至少 4~5 次。误判全录：</p>
+          <table>
+            <thead><tr><th>误判方向</th><th>实际根因</th><th>损耗</th></tr></thead>
+            <tbody>
+              <tr><td>ABP BlendListByBool 链路问题</td><td>蒙太奇骨骼与 Primary Mesh 骨骼不匹配</td><td><span class="no">较长</span></td></tr>
+              <tr><td>LayeredBoneBlend 权重配置</td><td>Warp Target 名字不匹配（MantleTarget vs FrontLedge）</td><td><span class="later">中等</span></td></tr>
+              <tr><td>MovementModeDelegate 监听方案</td><td>GASPALS 翻越必须 GAS 主动播蒙太奇驱动</td><td><span class="later">中等</span></td></tr>
+              <tr><td>OffsetRootBone 是延迟主因</td><td>真根因是 PoseSearchBranchIn 前摇（约 0.53s）</td><td><span class="no">较长</span></td></tr>
+              <tr><td>V2 蒙太奇是厚墙专属</td><td>CHT 规则是三档速度 × 二档深度，薄墙站立也用 V2</td><td><span class="later">中等</span></td></tr>
+              <tr><td>水平扫射深度探针</td><td>背面碰撞通道不响应，应改顶面向下步进</td><td><span class="later">中等</span></td></tr>
+              <tr><td>楼梯误触发改碰撞通道</td><td>应在 CanTraverse() 加背面下落阈值</td><td><span class="ok">短</span></td></tr>
+              <tr><td>IsWalkable 过滤楼梯</td><td>法向量阈值误拒正常箱体（0.39 &lt; 0.71）</td><td><span class="ok">短</span></td></tr>
+            </tbody>
+          </table>
+          <div class="rule">
+            <h3>三条带走的教训</h3>
+            <p><b>一</b>：T-Pose 加 Ability 秒取消，先查骨骼匹配，别先钻节点图。<b>二</b>：「系统勉强能跑」是最危险的状态，恒为 0 的深度探针靠巧合活过了一整场。<b>三</b>：改 C++ 必须确认编译真的发生了，这一条的损耗超过所有技术误判之和。</p>
+          </div>
+        </section>
+
+        <section id="workflow">
+          <h2>研发链路的变化</h2>
+          <p>这一场同时是一次工作流实验：3C 体验问题的传统链路是策划描述问题、程序定位修改、TA 调蒙太奇、策划再验证，每轮都是跨角色的沟通与排期。本次全程没走程序排期，策划确认体验问题后当场分析、当场修改、当场验证。逐环节对比：</p>
+          <table>
+            <thead><tr><th>环节</th><th>传统方式</th><th>本次实际</th></tr></thead>
+            <tbody>
+              <tr><td><b>定位根因</b></td><td>程序介入，1~2 天</td><td>策划提供 log，小时内分析</td></tr>
+              <tr><td><b>读蒙太奇数据</b></td><td>手动逐个打开编辑器查看</td><td>自动化批量读取全部 notify 时序</td></tr>
+              <tr><td><b>C++ 修改</b></td><td>提需求排期</td><td>策划主导，AI 直接写 patch，策划编译验收</td></tr>
+              <tr><td><b>引擎知识</b></td><td>依赖程序经验积累</td><td>GAS / CMC / Motion Warping / AnimNotify 机制现场推导</td></tr>
+            </tbody>
+          </table>
+          <table>
+            <thead><tr><th>能力层</th><th>传统归属</th><th>本次实际归属</th></tr></thead>
+            <tbody>
+              <tr><td>读取蒙太奇 Notify、分析时序</td><td>动画 TA</td><td>策划 + AI（批量查询）</td></tr>
+              <tr><td>定位 GAS Ability 生命周期 Bug</td><td>3C 程序</td><td>策划 + AI（log 分析）</td></tr>
+              <tr><td>修改 C++ 时序计算逻辑</td><td>3C 程序</td><td>策划主导、AI 执行</td></tr>
+              <tr><td>调整 Warp Target / MovementMode 逻辑</td><td>3C 程序</td><td>策划 + AI</td></tr>
+            </tbody>
+          </table>
+          <p>需要人来补的部分同样真实：AI 感知不到编译状态，看不到角色在场景里的实际表现，长对话后上下文会丢失早期决策，也不了解项目与 GASPALS 原版之间已有的 diff。最顺的协作模式固定下来是：<b>人描述期望表现与实际现象（附 log），AI 分析根因并改代码，人编译测试再回报现象</b>，如此循环。附 OutputLog 片段能显著提高定位精度。</p>
+          <p>比省下的排期更值钱的是认知边界的扩展：过完这一场，蒙太奇 Notify 的时序分布、GAS Ability 生命周期、MovementMode 状态机语义，都从「间接听说」变成「亲手读过」。之后对翻越类动作的体验判断、问题描述、调试收敛速度，全都受益于此。</p>
+        </section>
+
+        <section id="leftovers">
+          <h2>遗留问题</h2>
+          <ol>
+            <li><b>Steel 的 MantleHeightFromMontage 精确值</b>：临时值 164cm 略偏大，落点偏高导致部分高度刚好翻不过去。需在 PIE 里用 DrawDebug 实测 sync point 的 Z 偏移。优先级最高，纯编辑器可解。</li>
+            <li><b>翻越角度判断</b>：目前只支持正面朝墙。斜角接近（与墙面法线夹角大于 30°）时 Motion Warping 会过度旋转角色，与 GASPALS 原版有差距。</li>
+            <li><b>Walk 档蒙太奇资产</b>：代码层已支持，DataAsset 里 Walk 槽尚未指定资产，当前回退 Run 档。纯编辑器可解。</li>
+            <li><b>左右脚接缝跳变</b>：L/R 版本切换在边缘情况下仍有姿势跳变。GASPALS 原版靠 PoseSearch 自动选最匹配帧回避了此问题。</li>
+            <li><b>PoseSearch BranchIn 完整移植</b>：当前用 MotionWarping notify 时间近似模拟，不是等价方案。完整接入 PoseSearch 后应替换为真正的 BranchIn 搜索，可同时消除前摇残余与左右脚接缝。</li>
+          </ol>
+          <h3>修订记录</h3>
+          <table>
+            <thead><tr><th>版本</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><b>v1.0</b></td><td>整理归档：合并当期调试报告与三阶段功能文档，视频与参数表随文迁入</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
