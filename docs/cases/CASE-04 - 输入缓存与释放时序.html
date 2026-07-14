@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>《玩家已经按了，技能什么时候算数？》 · 案例复盘</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Case Study · Doc CASE-04</div>
+      <h1>玩家已经按了，技能什么时候算数？</h1>
+      <p class="lede">一套 UE5 多人战斗输入，需要同时回答三件事：技能暂时放不出来时要不要记住这次按键，玩家持续按住时何时补触发，以及蓄力技能延迟出手时究竟按哪个时间算伤害。本文以 Sparrow（项目中的弓箭手英雄）蓄力普攻为主案例，复盘从输入缓存、秒松、长按续触到网络预测竞态的完整释放时序。</p>
+      <div class="tldr">
+        <div><i>课题</i><span>玩家按下、松开和服务端允许激活并不发生在同一帧；系统既不能吞输入，也不能把长按做得比完美手点更强。</span></div>
+        <div><i>终案</i><span><b>短时缓存、物理按住状态、蓄力释放时间分开管理。</b>AttackInterval gate 结束时只消费“仍按住”的事实，新一轮蓄力不回溯。</span></div>
+        <div><i>结果</i><span>通用缓存、最短释放时间、Sparrow 蓄力参数、自动续触与 50 ms 服务端相位保护均完成代码／资产链路核验；未找到正式用户测试样本。</span></div>
+        <div><i>分工</i><span>作者负责 Sparrow 体验目标、时序取舍、资产调优与验收；AI agent 协助当时的代码／ADR 落地及本次历史取证；项目既有 GAS、输入和技能模块提供运行框架。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>CASE-04</b></div>
+        <div><i>版本 / 状态</i><b>v1.0 · 已定稿入库 · 2026-07-14</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>主案例</i><b>Sparrow 蓄力普攻</b></div>
+        <div class="wide"><i>配套文档</i><b><a href="../../docs/topics/核心战斗手感/长按持续触发规则.html">长按持续触发规则</a></b></div>
+      </div>
+    </header>
+
+    <div class="foreword">
+      <p>玩家已经按了，技能却不一定能在这一帧放出来。可能是上一发的攻击间隔没结束，也可能是表现上必须先把弓拉到最低出手点。只用一个“输入缓存”去解释这些情况，很快就会乱。</p>
+      <p>Sparrow 的蓄力普攻把问题摊得很开：按下开始拉弓，松开决定蓄力值，动画和发弹可以稍后执行；射完立刻再按，新的输入又可能撞上攻击间隔。我们最后没有把所有东西塞进一个队列，而是把短时重试、持续按住和蓄力时间拆开，各自在正确的时机被消费。</p>
+      <p>真正难排的是多人网络。客户端认为 gate 已经结束，立刻预测下一发；服务端的计数还差一点才清掉，于是拒绝这次激活，玩家看到的就是偶尔丢一箭。问题只差几十毫秒，手感上却像输入不靠谱。</p>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">背景</div>
+        <a href="#goal"><i>01</i>体验目标与课题</a>
+        <div class="grp">过程</div>
+        <a href="#research"><i>02</i>业界调研</a>
+        <a href="#decision"><i>03</i>方案排定</a>
+        <a href="#implementation"><i>04</i>实验与落地实录</a>
+        <div class="grp">结果</div>
+        <a href="#solution"><i>05</i>终案分层</a>
+        <a href="#acceptance"><i>06</i>验收实录</a>
+        <div class="grp">资料</div>
+        <a href="#params"><i>07</i>关键参数</a>
+        <a href="#leftovers"><i>08</i>遗留与保险丝</a>
+        <a href="#methodology"><i>09</i>方法论沉淀</a>
+        <a href="#appendix"><i>10</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>背景</b></div>
+
+        <section id="goal">
+          <h2>体验目标与课题</h2>
+          <p>项目是 UE5 实现的多人英雄射击游戏，技能激活建立在部分 GAS 与自研模块之上。输入要先经过本地预测，再与服务端权威状态对上；对普攻来说，还叠着攻击间隔、动画、弹道和按键生命周期。</p>
+
+          <p>Sparrow 的普攻不是点一下立刻生成固定箭矢。按下后进入拉弓，松开时的蓄力进度会影响伤害倍率、弹速、重力和准星；射出后又有 1 秒攻击间隔。玩家如果在 gate 期间再次按下并保持，系统既要记得他还想继续，又不能把等待时间偷算进下一箭的蓄力。</p>
+
+          <div class="grid">
+            <div class="box">
+              <h3>别吞输入</h3>
+              <p>上一段状态刚结束时按下，玩家期待下一段自然接上，而不是必须猜中那一帧再按一次。</p>
+            </div>
+            <div class="box blue">
+              <h3>别送强度</h3>
+              <p>长按可以减轻手部负担，但不能回溯被 gate 挡住的时间，否则长按 DPS 会高于完美手点。</p>
+            </div>
+          </div>
+
+          <div class="rule">
+            <p><b>核心课题：</b>一次输入究竟在什么时候成立？物理按键发生、技能允许激活、表现真正出手和服务端接受请求必须各自有清楚的时间源。</p>
+          </div>
+
+          <h3>分工与工作方式</h3>
+          <p>作者主导 Sparrow 3C 改造，确定蓄力、攻击间隔、长按不增益和松手可取消等体验边界，并持续调整动画、弹道、准星、空中缓降与反馈资产。AI agent 协助实现自动续触、记录决策和排查网络竞态；本文再次由 AI agent 按指定账号与开发客户端交叉核对 P4、源码、DataAsset、Montage 与设计文档。正式玩家测试记录没有找到，不补写样本。</p>
+        </section>
+
+        <div class="part"><b>过程</b></div>
+
+        <section id="research">
+          <h2>业界调研</h2>
+          <p>这类问题的已知解并不少，但它们解决的是不同层。动作游戏常用有限输入缓存，让过早一点的按键在状态开放后补执行；蓄力武器通常把按下、保持、松开拆成不同阶段；多人战斗再加一层客户端预测与服务端裁决。危险在于把三者都叫“缓存”，然后互相借时间。</p>
+
+          <table>
+            <thead><tr><th>常见模式</th><th>解决的问题</th><th>不该承担的职责</th><th>本项目对应</th></tr></thead>
+            <tbody>
+              <tr><td><b>有限输入缓存</b></td><td>技能暂时失败时，短时间内自动重试。</td><td>不代表玩家现在仍按着，也不应无限等待。</td><td>按能力选择开启，超时清除，并排除冷却、消耗、网络等失败原因。</td></tr>
+              <tr><td><b>按住状态</b></td><td>表示物理输入仍持续，适合长按和持续瞄准。</td><td>不保存历史按键时刻，也不自动等于蓄力进度。</td><td>Input Press Gameplay Tag 随按下增加、随松开移除。</td></tr>
+              <tr><td><b>蓄力时间戳</b></td><td>计算本次出手的伤害、弹速、曲线和表现。</td><td>不负责下一次技能能否激活。</td><td>由技能激活与释放报告计算，供 projectile、buff 和 UI 消费。</td></tr>
+              <tr><td><b>网络预测</b></td><td>客户端先响应，服务端随后确认。</td><td>不能假定两端 Timer 在同一帧结束。</td><td>续触仍走玩家手点入口，不新增另一条 RPC。</td></tr>
+            </tbody>
+          </table>
+
+          <div class="note">
+            <p>本节是机制谱系，不是完整竞品测评。哪些游戏把长按做到“辅助操作但不增伤”，仍需作者在入库前补一次行业实例复核。</p>
+          </div>
+        </section>
+
+        <section id="decision">
+          <h2>方案排定</h2>
+          <p>关键决定不是“缓存几毫秒”，而是先承认这里有三种状态。通用失败缓存只保存一次待重试的能力；长按续触看当前是否还按着；Sparrow 的蓄力值只认本轮激活到释放的时间。</p>
+
+          <div class="grid">
+            <div class="box green">
+              <h3>采用：gate 结束时续触</h3>
+              <p>AttackInterval 真正结束的瞬间，若输入仍按着，就重新走一次玩家按下入口。它不会提前承诺，也不会错过开放帧。</p>
+            </div>
+            <div class="box">
+              <h3>否决：在 EndAbility 判断</h3>
+              <p>能力可能在 0.2 秒就结束，攻击间隔却要到 1 秒。玩家在中间松手，系统仍会按旧状态错误续触。</p>
+            </div>
+            <div class="box">
+              <h3>否决：复用 ContinuousFire</h3>
+              <p>持续吐弹模块有自己的 FireInterval，会绕开 Montage、combo 和 AttackInterval，也表达不了“按下蓄力、松开射击”。</p>
+            </div>
+            <div class="box">
+              <h3>否决：补偿被吞时刻</h3>
+              <p>如果把 gate 期间的按键时间算进下一轮蓄力，Sparrow 的 DPS 会从“攻击间隔与蓄力共同限制”退化成只看攻击间隔。</p>
+            </div>
+          </div>
+
+          <h3>为什么还要走玩家手点入口</h3>
+          <p>直接调用 GAS 激活看起来更短，但会跳过 Press Tag、同帧双触保护、输入事件与失败处理。自动续触最终调用同一个 <code>Input_AbilityPressed</code>，只用 cached 标记避免重复增加按住 Tag，行为才不会分叉。</p>
+
+          <p>Sparrow 当前 HAD 的通用失败缓存开关是关闭的。它不是先把普攻塞进 0.3 秒缓存，再等机会重试；AttackInterval 到期时消费的是“LMB 现在仍按着”。这正是两套机制不能混用的证据。</p>
+
+          <div class="rule">
+            <p><b>设计保险丝：</b>长按 DPS 不得高于完美手点 DPS。Sparrow 的新一轮蓄力起点等于 gate 结束时刻，不回溯到更早的按键时刻。</p>
+          </div>
+        </section>
+
+        <section id="implementation">
+          <h2>实验与落地实录</h2>
+          <p>这轮工作不是一次提交完成的。先有通用输入缓存，再把 Sparrow 普攻从动画到弹道重新搭起来，随后才遇到秒松、续触和网络丢发。</p>
+
+          <h3>第一轮：给过早输入一个短窗口</h3>
+          <p>通用输入层增加可配置缓存时间。能力激活失败时，只有显式开启缓存的能力才进入重试；冷却、消耗、输入被禁和网络失败被排除。缓存每帧尝试一次，能力成功激活或超过窗口就清掉。它解决的是“差一点按早了”，不是“玩家一直按着”。</p>
+
+          <h3>第二轮：Sparrow 的蓄力不只是一条计时器</h3>
+          <p>普攻激活后进入约 0.71 秒拉弓 Montage；当前资产的满蓄口径是 0.7 秒，伤害、发射速度和重力都从释放报告取曲线。准星用自己的 Tick 对齐同一段 0.7 秒设计口径，从 2.5 倍外圈收至中心；蓄力时移动速度压到 300 cm/s，空中下降重力另做减缓。它们看起来是动画、UI、弹道和移动问题，实际都在问同一件事：这次蓄了多久。</p>
+
+          <h3>第三轮：秒松与延迟释放</h3>
+          <p>Sparrow 设置了最短释放时间，玩家过早松键时，释放模块会等到最低出手点再执行。问题随即出现：物理松手时刻、真正执行释放模块的时刻，以及最终蓄力效果读取的时刻不再相同。历史修复先调整释放时间写入，再补资产曲线取值，说明“延迟表现”与“蓄力语义”必须分别定义，不能默认共用当前帧。</p>
+
+          <h3>第四轮：gate 期间重按不能被吞</h3>
+          <p>射出一箭后，如果玩家在 AttackInterval 尚未结束时再次按下并保持，这次激活会失败，但 Press Tag 仍表示 LMB 处于按下状态。于是 AttackInterval 模块增加 opt-in 开关：Timer 到期先移除 gate，再检查 Press Tag，仍按着就模拟一次玩家手点。Sparrow 开始新一轮蓄力，但起点就是此刻。</p>
+
+          <h3>第五轮：客户端先到，服务端还差一点</h3>
+          <p>自动续触上线后出现偶发“丢一发”。客户端 Timer 先结束并预测下一次激活，服务端的 AttackInterval 计数还没清零，于是服务端拒绝请求。修复让所有权威端的 gate 最多提前 50 ms 结束，客户端视觉节奏不变；当攻击间隔极短时，最多只减原时长的 50%，避免把服务端 gate 减成零或负数。</p>
+
+          <div class="note">
+            <p>50 ms 是针对当时竞态窗口的工程保护，不是通用网络常数。它依赖 Timer、RTT 与预测链路，换项目不能照抄。</p>
+          </div>
+        </section>
+
+        <div class="part"><b>结果</b></div>
+
+        <section id="solution">
+          <h2>终案分层</h2>
+          <p>终案的核心不是一个万能缓存，而是三个时间源只在自己的边界内生效。下图用 Sparrow 射出一箭后立即重按为例。</p>
+
+          <svg class="diagram" width="100%" viewBox="0 0 900 570" role="img" aria-label="Sparrow 蓄力普攻输入与网络时序图">
+            <defs>
+              <marker id="arrowTime" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)" />
+              </marker>
+            </defs>
+            <text x="42" y="42" fill="var(--ink)" font-size="18" font-weight="700">第一次出手</text>
+            <line x1="60" y1="78" x2="840" y2="78" stroke="var(--line)" stroke-width="3" marker-end="url(#arrowTime)" />
+            <circle cx="110" cy="78" r="8" fill="var(--accent)" />
+            <text x="110" y="112" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="700">按下</text>
+            <text x="110" y="134" text-anchor="middle" fill="var(--muted)" font-size="13">开始蓄力</text>
+            <circle cx="390" cy="78" r="8" fill="var(--brass)" />
+            <text x="390" y="112" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="700">松开</text>
+            <text x="390" y="134" text-anchor="middle" fill="var(--muted)" font-size="13">冻结本轮释放语义</text>
+            <circle cx="500" cy="78" r="8" fill="var(--accent)" />
+            <text x="500" y="112" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="700">释放模块</text>
+            <text x="500" y="134" text-anchor="middle" fill="var(--muted)" font-size="13">满足最低出手点</text>
+            <circle cx="590" cy="78" r="8" fill="var(--accent)" />
+            <text x="590" y="112" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="700">发箭</text>
+            <text x="590" y="134" text-anchor="middle" fill="var(--muted)" font-size="13">Notify 约晚 33 ms</text>
+
+            <rect x="70" y="170" width="760" height="86" rx="6" fill="var(--brass)" fill-opacity=".10" stroke="var(--brass)" />
+            <text x="92" y="200" fill="var(--ink)" font-size="17" font-weight="700">AttackInterval gate</text>
+            <text x="92" y="228" fill="var(--muted)" font-size="14">从本轮激活开始计时。gate 内再次按下，激活可以失败，但“现在仍按着”不会丢。</text>
+            <line x1="520" y1="242" x2="760" y2="242" stroke="var(--brass)" stroke-width="4" />
+            <text x="640" y="234" text-anchor="middle" fill="var(--ink)" font-size="13">玩家重新按住 LMB</text>
+
+            <text x="42" y="310" fill="var(--ink)" font-size="18" font-weight="700">gate 结束</text>
+            <rect x="70" y="332" width="360" height="82" rx="6" fill="var(--accent)" fill-opacity=".10" stroke="var(--accent)" />
+            <text x="250" y="362" text-anchor="middle" fill="var(--ink)" font-size="16" font-weight="700">服务端提前清 gate</text>
+            <text x="250" y="389" text-anchor="middle" fill="var(--muted)" font-size="14">最多提前 50 ms，且不少于原时长的 50%</text>
+            <rect x="470" y="332" width="360" height="82" rx="6" fill="var(--accent)" fill-opacity=".10" stroke="var(--accent)" />
+            <text x="650" y="362" text-anchor="middle" fill="var(--ink)" font-size="16" font-weight="700">客户端按原节奏结束</text>
+            <text x="650" y="389" text-anchor="middle" fill="var(--muted)" font-size="14">检查 Press Tag，仍按着则走玩家手点入口</text>
+            <line x1="430" y1="373" x2="470" y2="373" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrowTime)" />
+
+            <line x1="650" y1="414" x2="650" y2="456" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrowTime)" />
+            <rect x="270" y="458" width="560" height="84" rx="6" fill="var(--line)" fill-opacity=".12" stroke="var(--line)" />
+            <text x="550" y="490" text-anchor="middle" fill="var(--ink)" font-size="17" font-weight="700">开始下一轮蓄力</text>
+            <text x="550" y="518" text-anchor="middle" fill="var(--muted)" font-size="14">起点 = gate 结束时刻，不回溯到重按时刻；长按不获得额外 DPS。</text>
+          </svg>
+
+          <div class="grid">
+            <div class="box"><h3>短时缓存层</h3><p>保存“刚才想放这个技能”，有超时、有失败原因过滤，适合瞬时意图。</p></div>
+            <div class="box"><h3>持续输入层</h3><p>Press Tag 只回答“现在是否还按着”，松开立即移除，适合续触判断。</p></div>
+            <div class="box"><h3>释放语义层</h3><p>本轮激活与释放时间供伤害、弹速和重力取值；UI 另按同一设计时长对齐。</p></div>
+            <div class="box blue"><h3>网络相位层</h3><p>服务端 gate 略早收口，避免客户端预测撞上仍未清零的权威状态。</p></div>
+          </div>
+        </section>
+
+        <section id="acceptance">
+          <h2>验收实录</h2>
+          <p>本稿的验收人是作者本人，样本量 n=1。能够确认的是提交记录、当前源码、资产值和 ADR 之间能互相对上；历史提交中的“变更列表已验证”不能替代正式用户测试，也不能证明所有 RTT 下都稳定。</p>
+
+          <table>
+            <thead><tr><th>#</th><th>验收项</th><th>状态</th><th>证据边界</th></tr></thead>
+            <tbody>
+              <tr><td>01</td><td>通用输入缓存有超时与失败原因过滤</td><td><span class="ok">已核验</span></td><td>控制器重试逻辑、能力开关与全局输入资产一致。</td></tr>
+              <tr><td>02</td><td>Sparrow 数值链共享释放报告，准星对齐同一时长</td><td><span class="ok">已核验</span></td><td>HAD、IPD、ODB 与准星 Widget 的 0.7 秒曲线口径均可读取；准星自身按 Tick 累时。</td></tr>
+              <tr><td>03</td><td>gate 期间重按并保持后自动续触</td><td><span class="ok">已核验</span></td><td>AttackInterval 模块与 Sparrow HAD 均启用该链路。</td></tr>
+              <tr><td>04</td><td>松手后不再续触</td><td><span class="ok">代码成立</span></td><td>松手先移除 Press Tag，Timer 到期检查不到即停止。</td></tr>
+              <tr><td>05</td><td>服务端预测竞态保护</td><td><span class="ok">已核验</span></td><td>权威端提前量与极端攻速保护仍在源码中。</td></tr>
+              <tr><td>06</td><td>不同网络延迟下的正式压测</td><td><span class="later">未找到</span></td><td>没有可核实的 RTT 档位、样本数或丢发率记录。</td></tr>
+              <tr><td>07</td><td>玩家对长按与手点强度公平性的感知</td><td><span class="later">未测试</span></td><td>当前结论来自设计约束与时序推导。</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+
+        <section id="params">
+          <h2>关键参数</h2>
+          <details class="fold"><summary>展开参数表</summary>
+            <table>
+              <thead><tr><th>参数</th><th>当前核验值</th><th>作用</th></tr></thead>
+              <tbody>
+                <tr><td><b>通用缓存窗口</b></td><td>全局资产 0.3 s；代码默认 0.5 s</td><td>只影响显式开启的失败重试。历史首次开启时的精确资产值未从文本 diff 取到。</td></tr>
+                <tr><td><b>Sparrow 通用缓存开关</b></td><td>关闭</td><td>证明普攻续触依赖当前按住状态，不依赖通用失败缓存。</td></tr>
+                <tr><td><b>Sparrow AttackInterval</b></td><td>1.0 s</td><td>限制连续普攻的最小激活周期。</td></tr>
+                <tr><td><b>最低释放时间</b></td><td>0.35 s</td><td>过早松键时，释放模块延迟到最低出手点执行。</td></tr>
+                <tr><td><b>满蓄时间</b></td><td>0.7 s</td><td>伤害、弹速、重力与准星的统一进度上限。</td></tr>
+                <tr><td><b>弹速曲线</b></td><td>12000 → 15000 → 20000 cm/s</td><td>分别对应 0、0.35、0.7 秒蓄力。</td></tr>
+                <tr><td><b>重力曲线</b></td><td>-4000 → -200 cm/s²</td><td>蓄得越满，箭矢轨迹越平。</td></tr>
+                <tr><td><b>准星曲线</b></td><td>2.5 → 0，持续 0.7 s</td><td>外圈随蓄力收缩，给出满蓄视觉反馈。</td></tr>
+                <tr><td><b>释放发弹 Notify</b></td><td>释放 Montage 后约 0.033 s</td><td>把真实发箭帧贴近松弦动作。</td></tr>
+                <tr><td><b>蓄力移动速度</b></td><td>300 cm/s</td><td>保留走位，但让拉满弓有明确成本。</td></tr>
+                <tr><td><b>下降重力倍率</b></td><td>0.25</td><td>只在下降段缓降，避免上升段也被拖慢。</td></tr>
+                <tr><td><b>服务端提前量</b></td><td>最多 50 ms</td><td>先清权威 gate，给客户端预测留相位余量。</td></tr>
+                <tr><td><b>极端攻速保护</b></td><td>不少于原时长 50%</td><td>防止提前量把短 gate 减成无效值。</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+
+        <section id="leftovers">
+          <h2>遗留与保险丝</h2>
+          <details class="fold"><summary>展开清单</summary>
+            <table>
+              <thead><tr><th>项目</th><th>状态</th><th>处理建议</th></tr></thead>
+              <tbody>
+                <tr><td><b>秒松时间语义</b></td><td><span class="later">需复核当前终案</span></td><td>历史修复曾移除过早写入释放时间；后续其他改动又重新写入。应由作者确认当前希望伤害取物理松手还是最低出手点。</td></tr>
+                <tr><td><b>FDD 与资产口径</b></td><td><span class="later">存在漂移</span></td><td>FDD 写“松键即射、无前摇”，当前资产有 0.35 秒最低释放。需明确这是表现保护还是设计已经变化。</td></tr>
+                <tr><td><b>高 RTT 与抖动网络</b></td><td><span class="later">无压测数据</span></td><td>50 ms 只覆盖当时观察到的窗口；应按延迟、抖动、丢包分档记录连续续触结果。</td></tr>
+                <tr><td><b>通用缓存容量</b></td><td><span class="later">单能力槽</span></td><td>当前后来的缓存会覆盖前一条待处理能力。若要支持输入序列，需要明确优先级，不能直接改成无界队列。</td></tr>
+                <tr><td><b>UI 与技能时间同源</b></td><td><span class="later">待审计</span></td><td>准星目前按自身 Tick 累加时间。后续可核对它与能力报告的释放时间是否在掉帧和网络修正下保持一致。</td></tr>
+                <tr><td><b>正式用户测试</b></td><td><span class="later">未找到</span></td><td>至少比较手点、gate 内重按保持和纯长按三种操作，记录吞输入、误续触与主观节奏。</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+
+        <section id="methodology">
+          <h2>方法论沉淀</h2>
+          <details class="fold"><summary>展开沉淀条目</summary>
+            <h3>输入缓存不等于按住状态</h3>
+            <p>适用于所有带 gate、蓄力或持续输入的动作系统。瞬时意图需要超时，持续状态需要跟随松手；把两者共用一个缓存，很容易出现松手后还执行。</p>
+
+            <h3>延迟表现前先定义语义时间</h3>
+            <p>适用于最低前摇、动画对点、网络延迟执行等场景。先决定数值读取物理输入时刻还是表现执行时刻，再安排 Timer。顺序反过来，伤害、弹道和 UI 会各取一个时间。</p>
+
+            <h3>辅助操作不能偷偷提高上限</h3>
+            <p>适用于长按连发、自动续招和连点辅助。降低操作负担可以，回溯 gate 内时间则会改变 DPS。除非它本来就是平衡目标，否则应守住“长按 ≤ 完美手点”。</p>
+
+            <h3>预测竞态先画两端状态，不先加重试</h3>
+            <p>适用于客户端预测与服务端 Timer 同时参与的技能。偶发丢发不一定是输入没送到，也可能是客户端先清 gate、服务端晚一帧。先对齐两端计数和时间，再决定提前、延迟或重试。</p>
+
+            <h3>验收矩阵按生命周期展开</h3>
+            <p>至少覆盖按下、秒松、半蓄、满蓄、gate 内重按、重按后松手、极端攻速、Listen Server、Dedicated Server 与不同 RTT。只测“按住能连”不够。</p>
+          </details>
+        </section>
+
+        <section id="appendix">
+          <h2>附录：证据与修订记录</h2>
+          <details class="fold"><summary>展开附录</summary>
+            <h3>历史变更索引</h3>
+            <table>
+              <thead><tr><th>CL</th><th>本案例使用的证据</th></tr></thead>
+              <tbody>
+                <tr><td><code>4717174</code></td><td>开启输入缓存并调整缓存时间。</td></tr>
+                <tr><td><code>5200445</code></td><td>Sparrow 3C 改造，建立持弓、释放与角色动画资产链。</td></tr>
+                <tr><td><code>5267661</code></td><td>整体移动、持弓、释放动画状态优化。</td></tr>
+                <tr><td><code>5272705</code>／<code>5274260</code></td><td>普攻卡手、抖动与预备动画调整。</td></tr>
+                <tr><td><code>5277648</code></td><td>普攻 projectile 相关调优。</td></tr>
+                <tr><td><code>5281335</code></td><td>蓄力普攻卡手修复与准星初始放大至 2.5 倍。</td></tr>
+                <tr><td><code>5281650</code>／<code>5398150</code></td><td>蓄力空中缓降，以及上升段／下降段拆分。</td></tr>
+                <tr><td><code>5287960</code></td><td>秒松时间写入释放时间的问题修复。</td></tr>
+                <tr><td><code>5288019</code></td><td>释放模块延迟后，最终蓄力效果取值修复。</td></tr>
+                <tr><td><code>5289595</code></td><td>满蓄反馈、空中缓降与技能配置补充。</td></tr>
+                <tr><td><code>5342395</code></td><td>AttackInterval 自动续触，明确覆盖 Steel combo 与 Sparrow 充能。</td></tr>
+                <tr><td><code>5387595</code></td><td>修复长按续触偶发丢一发的网络预测竞态。</td></tr>
+                <tr><td><code>5184234</code></td><td>准星目标反馈基础。</td></tr>
+              </tbody>
+            </table>
+
+            <h3>源码、资产与文档路径</h3>
+            <ul>
+              <li><code>GameProject/Source/GameMoba/Character/HeroCharacter.cpp</code>：按下、松开、最低释放、时间戳与同帧保护。</li>
+              <li><code>GameProject/Source/GameMoba/Player/MatchPlayerController.cpp</code>：通用输入缓存重试与超时。</li>
+              <li><code>GameProject/Source/GameMoba/AbilitySystem/Abilities/SkillModuleAttackInterval.*</code>：自动续触与服务端相位保护。</li>
+              <li><code>GameProject/Content/GlobalSettings/GameInputData_Global</code>：缓存窗口与失败原因过滤。</li>
+              <li><code>GameProject/Content/Heroes/Sparrow/Attack/HAD_SparrowAttack</code>：1 秒 gate、0.35 秒最低释放、续触开关与释放模块。</li>
+              <li><code>GameProject/Content/Heroes/Sparrow/Attack/IPD_SparrowAttack</code>：弹速、重力与命中配置。</li>
+              <li><code>GameProject/Content/Heroes/Sparrow/Attack/ODB_SparrowAttack</code>：0.7 秒蓄力伤害公式。</li>
+              <li><code>GameProject/Content/Heroes/Sparrow/Attack/W_SparrowAttack</code>：准星蓄力曲线。</li>
+              <li><code>Document/Design/adr/0004-auto-retrigger-on-hold.md</code>：方案取舍与反例约束。</li>
+              <li><code>Document/Design/fdd/02_战斗/英雄设计/弓箭_Sparrow.md</code>：普攻体验与数值口径。</li>
+            </ul>
+
+            <h3>证据口径</h3>
+            <p>共享账号只采用指定开发客户端中的提交。当前资产值用于核对系统仍如何工作，但不自动归入作者最初成果；后续由其他提交改回的释放时间行为，已在遗留项单独标出。</p>
+
+            <h3>修订记录</h3>
+            <table>
+              <thead><tr><th>日期</th><th>版本</th><th>变更摘要</th></tr></thead>
+              <tbody>
+                <tr><td>2026-07-14</td><td>v0.1</td><td>建立合并稿，以 Sparrow 蓄力普攻串联输入缓存、秒松、自动续触与网络竞态。</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
