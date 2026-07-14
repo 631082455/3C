@@ -90,6 +90,19 @@
   .tag.html{color:var(--accent-text);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);}
   .tag.md{color:var(--brass);border:1px solid color-mix(in srgb,var(--brass) 45%,transparent);}
   .ver{color:var(--muted);font-size:12.5px;flex:none;}
+  /* 子抽屉:主稿行下收纳衍生稿(对齐稿/分期记录) */
+  li details.sub{margin:0 4px 8px 20px;}
+  li details.sub>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:7px;
+    padding:2px 11px;border:1px solid var(--line);border-radius:999px;
+    font:600 11px/1.7 var(--mono);letter-spacing:.06em;color:var(--muted);user-select:none;transition:all .15s;}
+  li details.sub>summary::-webkit-details-marker{display:none;}
+  li details.sub>summary::before{content:"▸";transition:transform .15s;}
+  li details.sub[open]>summary::before{transform:rotate(90deg);}
+  li details.sub>summary:hover{background:var(--soft);color:var(--accent-text);}
+  ul.subl{margin-top:6px;border-left:2px solid var(--line);}
+  ul.subl li{border-bottom:none;}
+  ul.subl li a{padding:5px 8px 5px 14px;font-size:13.5px;color:var(--muted);}
+  ul.subl li a:hover{color:var(--accent-text);background:var(--soft);}
 
   footer{margin-top:28px;text-align:center;font:500 12px/1.8 var(--mono);letter-spacing:.14em;color:var(--muted);}
   footer a{color:var(--brass);text-decoration:none;} footer a:hover{text-decoration:underline;}
@@ -140,8 +153,12 @@
       <ul>
         <li><a href="docs/topics/核心战斗手感/Skill - 技能释放关系系统（打断、并行、互斥、缓存）.html">技能释放关系系统(打断、并行、互斥、缓存)<span class="tag html">HTML</span></a></li>
         <li><a href="docs/topics/核心战斗手感/Skill - 单体施法选取 V2.1.html">单体施法选取 <span class="ver">V2.1</span><span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/核心战斗手感/Skill - 范围施法落点 V1.2 - 程序对齐.html">范围施法落点 · 程序对齐 <span class="ver">V1.2</span><span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/核心战斗手感/Skill - 范围施法落点.html">范围施法落点 <span class="ver">V1</span><span class="tag html">HTML</span></a></li>
+        <li>
+          <a href="docs/topics/核心战斗手感/Skill - 范围施法落点.html">范围施法落点 <span class="ver">V1</span><span class="tag html">HTML</span></a>
+          <details class="sub"><summary>下层展开 ×1</summary><ul class="subl">
+            <li><a href="docs/topics/核心战斗手感/Skill - 范围施法落点 V1.2 - 程序对齐.html">程序对齐稿 <span class="ver">V1.2</span></a></li>
+          </ul></details>
+        </li>
         <li><a href="docs/topics/核心战斗手感/Skill - 战场交互物机制拓展.html">战场交互物机制拓展<span class="tag html">HTML</span></a></li>
       </ul>
     </section>
@@ -158,11 +175,15 @@
     <section>
       <h2><i>04</i>Movement / 移动<em>6 DOCS</em></h2>
       <ul>
-        <li><a href="docs/topics/移动优化/MM优化一期-数据流接入.html">MM 优化一期 · 数据流接入<span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/移动优化/MM优化二期-起停手感.html">MM 优化二期 · 起停手感<span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/移动优化/MM优化三期-战斗上身与分层.html">MM 优化三期 · 战斗上身与分层<span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/移动优化/MM优化五期-收官与全英雄治理.html">MM 优化五期 · 收官与全英雄治理<span class="tag html">HTML</span></a></li>
-        <li><a href="docs/topics/移动优化/MM调参手册.html">MM 调参手册<span class="tag html">HTML</span></a></li>
+        <li>
+          <a href="docs/topics/移动优化/MM调参手册.html">MM 调参手册<span class="tag html">HTML</span></a>
+          <details class="sub"><summary>分期调参记录 ×4</summary><ul class="subl">
+            <li><a href="docs/topics/移动优化/MM优化一期-数据流接入.html">一期 · 数据流接入</a></li>
+            <li><a href="docs/topics/移动优化/MM优化二期-起停手感.html">二期 · 起停手感</a></li>
+            <li><a href="docs/topics/移动优化/MM优化三期-战斗上身与分层.html">三期 · 战斗上身与分层</a></li>
+            <li><a href="docs/topics/移动优化/MM优化五期-收官与全英雄治理.html">五期 · 收官与全英雄治理</a></li>
+          </ul></details>
+        </li>
         <li><a href="docs/topics/移动优化/MM竞技化.html">MM 竞技化 · 三选一才留<span class="tag html">HTML</span></a></li>
       </ul>
     </section>
