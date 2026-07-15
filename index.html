@@ -72,44 +72,17 @@
   .notice b{font-weight:600;color:var(--ink);}
   .notice a{color:var(--accent-text);}
 
-  /* ---- 顺排折叠前言 ---- */
-  .preface-page{margin-top:26px;padding:24px 32px 26px;
-    border:1px solid var(--line);border-top:3px solid var(--brass);border-radius:var(--radius);
+  /* ---- 关于这个工作站 ---- */
+  .about{margin-top:26px;padding:40px 44px 42px;border:1px solid var(--line);border-radius:var(--radius);
     background:var(--paper);box-shadow:var(--shadow);}
-  .preface-head{display:flex;align-items:baseline;gap:13px;}
-  .preface-no{font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-  .preface-head h2{display:block;margin:0;font-size:21px;font-weight:760;
-    line-height:1.2;letter-spacing:.04em;color:var(--ink);}
-  .preface-lead{margin:14px 0 0;font-size:14.5px;line-height:1.85;color:var(--ink);}
-  .preface-details{margin-top:17px;}
-  .preface-details summary{display:flex;align-items:center;gap:10px;padding:11px 14px;
-    border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));border-radius:5px;
-    background:var(--accent-soft);color:var(--accent-text);cursor:pointer;user-select:none;
-    font:650 13px/1.5 var(--sans);transition:border-color .15s,background .15s;}
-  .preface-details summary:hover{border-color:var(--accent);}
-  .preface-details summary::-webkit-details-marker{display:none;}
-  .preface-details summary::marker{content:"";}
-  .preface-details summary::after{content:"↓";margin-left:auto;font:700 14px/1 var(--mono);}
-  .preface-details[open] summary::after{content:"↑";}
-  .preface-details .when-open{display:none;}
-  .preface-details[open] .when-closed{display:none;}
-  .preface-details[open] .when-open{display:inline;}
-  .preface-details summary small{font:500 11.5px/1.5 var(--mono);letter-spacing:.05em;color:var(--muted);}
-  .preface-more{padding:4px 2px 0;}
-  .preface-more p{margin:14px 0 0;font-size:14px;line-height:1.86;color:var(--ink);}
-  @media(max-width:760px){
-    .preface-page{padding:21px 18px 23px;}
-    .preface-head{gap:10px;}
-    .preface-head h2{font-size:20px;}
-    .preface-lead,.preface-more p{font-size:13.5px;line-height:1.82;}
-    .preface-details summary{align-items:flex-start;flex-wrap:wrap;gap:3px 8px;padding:10px 12px;}
-    .preface-details summary small{width:100%;order:2;}
-    .preface-details summary::after{order:1;margin-top:4px;}
-  }
-  @media print{
-    .preface-details summary{display:none;}
-    .preface-details:not([open])>.preface-more{display:block!important;}
-  }
+  .about-head,.about-copy{max-width:760px;margin-left:auto;margin-right:auto;}
+  .about-head{padding-bottom:19px;border-bottom:1px solid var(--line);}
+  .about-head i{display:block;font:700 10.5px/1 var(--mono);font-style:normal;
+    letter-spacing:.2em;color:var(--brass);}
+  .about-head h2{display:block;margin:11px 0 0;font-size:22px;font-weight:750;line-height:1.3;color:var(--ink);}
+  .about-copy{padding-top:5px;}
+  .about-copy p{margin:15px 0 0;font-size:14px;line-height:1.9;color:var(--ink);}
+  .about-copy strong{font-weight:650;color:var(--ink);}
 
   /* ---- 编目区 ---- */
   .shelf{margin-top:26px;border:1px solid var(--line);border-radius:var(--radius);
@@ -143,6 +116,9 @@
     .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
     .docinfo>div:nth-child(2n){border-right:none;}
     .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    .about{padding:28px 20px 30px;}
+    .about-head h2{font-size:20px;}
+    .about-copy p{font-size:13.5px;line-height:1.82;}
     .shelf section{padding:22px 18px;}
     h2 em{display:none;}
   }
@@ -168,30 +144,6 @@
     <i>◆ 声明</i>
     <span><b>本站内容均已脱敏，展示均为商城素材，仅作个人 3C 工作流小站。</b>方法论与案例为个人复盘整理，不含项目资产原件，不涉及任何未公开的玩法与数值；若认为有不妥之处，通过<a href="https://github.com/631082455/3C">源仓库</a>联系我，即刻处理。</span>
   </div>
-
-  <section class="preface-page" aria-labelledby="preface-title">
-    <div class="preface-head">
-      <div class="preface-no">00 / FOREWORD</div>
-      <h2 id="preface-title">前言</h2>
-    </div>
-    <div class="preface-body">
-      <p class="preface-lead">坦白说，3C 很难像战斗技能模块那样，抽出一套模板交给 Agent，就得到一个足够好的结果。3C 最终呈现的是输入、移动、镜头、动画共同形成的体验，高度依赖项目上下文，任何一处变化都可能打破原来的平衡。你会发现你做的每一个功能，输入给 AI 的都是全新的 Prompt。</p>
-      <details class="preface-details">
-        <summary>
-          <span class="when-closed">展开完整前言</span>
-          <span class="when-open">收起完整前言</span>
-          <small>为什么这个站这样写</small>
-        </summary>
-        <div class="preface-more">
-          <p>站里这些规范的 Prompt、markdown 和上下文、足够精炼的元规则和 AI 索引层级，是让 Agent 更快理解项目、给出优雅的 3C 设计框架。至于最终是否符合战斗 Pillar、能够让玩家保持心流体验，仍然需要有人上手裁决。</p>
-          <p>这个工作站首先服务于我自己的 3C 团队和 AI 工作流。我把问题、判断标准、验证过程和失败记录留在这里，让它们能够被下一次任务继续使用。AI 负责检索和执行，我负责体验验收与方案取舍。</p>
-          <p>因此，这里的文档通常比较厚。不只是写给人从头读到尾的，也写给正在执行任务的 agent、相关上下游的同事，以及半年后已经忘记细节的我自己。外部读者不需要逐篇通读。每篇开头的速览和导读会说明问题、处理方式、当前进度与验证边界；对哪一部分感兴趣，再顺着证据和实录往下看。</p>
-          <p>还有一点需要提前说明：站里的具体方案和参数，很少能够原样搬进另一个项目。换一个项目，原来的平衡点通常就不存在了。能够借鉴的是怎么给团队、给自己，建立一套这样的工作站或者说知识库。如果想要单点看移动方案，库里的半身分层、叠加、Overlay 的体系会很有价值，这些启发性、业界未通用的思路是 AI 不会给你提供的。但如果你要一个很好的镜头索敌系统，这里提供的设计架构虽然也全面，我也让它提炼了大量 GDC 与业界案例，但你的 AI Agent 和你的判断也能做到大力出奇迹搓出来，剩下的依然是感官判断和调参手艺活。</p>
-          <p>行业里不缺成熟的方法和案例，缺的是一个具体问题如何在项目中逐步收敛的完整记录。这个站想留下的正是这一层：不只保留答案，也说明答案从哪里来、在哪些条件下成立。</p>
-        </div>
-      </details>
-    </div>
-  </section>
 
   <div class="shelf" id="library">
 
@@ -339,6 +291,21 @@
     </section>
 
   </div>
+
+  <section class="about" aria-labelledby="about-title">
+    <div class="about-head">
+      <i>ABOUT THIS WORKSTATION</i>
+      <h2 id="about-title">为什么建立这个工作站</h2>
+    </div>
+    <div class="about-copy">
+      <p>坦白说，3C 很难像战斗技能模块那样，抽出一套模板交给 Agent，就得到一个足够好的结果。3C 最终呈现的是输入、移动、镜头、动画共同形成的体验，<strong>高度依赖项目上下文</strong>，任何一处变化都可能打破原来的平衡。你会发现你做的每一个功能，输入给 AI 的都是全新的 Prompt。</p>
+      <p>所以我觉得项目的 3C 管线有必要建立这样的一个工作站 / 知识库，把 Prompt、markdown 和上下文、足够精炼的元规则和 AI 索引层级做好，让 Agent 更快理解项目、给出优雅的 3C 设计框架。至于最终是否符合战斗 Pillar、能够让玩家保持心流体验，仍然需要有人上手裁决和判断，这依赖于你的经验。</p>
+      <p>这个工作站首先服务于我自己的 3C 团队和 AI 工作流。我把问题、判断标准、验证过程和失败记录留在这里，让它们能够被下一次任务继续使用。<strong>AI 负责检索和执行，我负责体验验收与方案取舍。</strong></p>
+      <p>因此，这里的文档通常比较厚。不只是写给人从头读到尾的，也写给正在执行任务的 agent、相关上下游的同事，以及半年后已经忘记细节的我自己。外部读者不需要逐篇通读。每篇开头的速览和导读会说明问题、处理方式、当前进度与验证边界；对哪一部分感兴趣，再顺着证据和实录往下看。</p>
+      <p>还有一点需要提前说明：<strong>站里的具体方案和参数，很少能够原样搬进另一个项目。</strong>换一个项目，原来的平衡点通常就不存在了。能够借鉴的是怎么给团队、给自己，建立一套这样的工作站或者说知识库。比如你单点的看移动方案，库里的半身分层、叠加、Overlay 的体系会很有价值，这些启发性、业界未通用的思路是 AI 不会给你提供的。但如果你要一个很好的镜头索敌系统，这里提供的设计架构虽然也全面，我也让它提炼了大量 GDC 与业界案例，但你的 AI Agent 和你的判断也能做到大力出奇迹搓出来，剩下的依然是感官判断和调参手艺活。</p>
+      <p>行业里不缺成熟的方法和案例，缺的是一个具体问题如何在项目中逐步收敛的完整记录。这个站想留下的正是这一层：<strong>不只保留答案，也说明答案从哪里来、在哪些条件下成立。</strong></p>
+    </div>
+  </section>
 
   <footer>KEKE'S COMBAT 3C WORKSTATION · <a href="https://github.com/631082455/3C">SOURCE</a> · HOSTED ON GITHUB PAGES</footer>
 </div>
