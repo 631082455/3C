@@ -1,8 +1,7 @@
-# 3C Combat Design Workflow（战斗 3C 设计工作流）
+# Keke 的战斗 3C 工作站（Keke's Combat 3C Workstation）
 
 > ### 📖 [在线阅读文档站 → 631082455.github.io/3C](https://631082455.github.io/3C/)
 > HTML 文档请从上面的文档站打开（渲染版）。在本仓库页面里点 `.html` 文件只会看到源码——那是 GitHub 的源码视图，不是网页。
-> 直达：[核心战斗手感 · 需求总览](https://631082455.github.io/3C/docs/核心战斗手感/核心战斗手感需求总览.html)
 
 一个面向**动作/MOBA/射击等实时战斗游戏**的 3C（Character / Control / Camera）设计方法论知识库，设计为可被任意 AI agent（Claude Code、Cursor、GPT 等）加载使用的 skill。
 

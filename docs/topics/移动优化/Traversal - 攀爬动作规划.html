@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Traversal 攀爬动作生产视角</title>
+  <style>
+    :root {
+      --ink: #211f1a;
+      --muted: #6a655c;
+      --faint: #edeade;
+      --panel: #fbfaf6;
+      --line: #ddd7c9;
+      --green: #2e526f;
+      --green-soft: #e9eff3;
+      --blue: #31597a;
+      --blue-soft: #e7eef4;
+      --gold: #a98a4e;
+      --gold-soft: #f2ecdd;
+      --red: #a63d33;
+      --red-soft: #f5e7e4;
+      --shadow: 0 22px 60px rgba(55,50,38,.12);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f1eee7;
+      color: var(--ink);
+      font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      line-height: 1.72;
+    }
+
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 34px 28px 70px;
+    }
+
+    .hero {
+      background:
+        radial-gradient(circle at 85% 15%, rgba(46,82,111,.14), transparent 28%),
+        linear-gradient(135deg, rgba(251,250,246,.97), rgba(237,234,222,.92));
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 28px;
+      padding: 34px 36px 28px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .08em;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      margin-top: 8px;
+      font-size: 38px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin-top: 16px;
+      color: #4a463e;
+      font-size: 16px;
+      max-width: 900px;
+    }
+
+    .hero-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(251,250,246,.85);
+      padding: 14px 16px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      margin-top: 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-head {
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fbfaf6, #f3f0e8);
+    }
+
+    .section-no {
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin-top: 6px;
+      font-size: 24px;
+      line-height: 1.28;
+      letter-spacing: 0;
+    }
+
+    .desc {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .section-body {
+      padding: 24px 28px 28px;
+    }
+
+    .diagram-wrap {
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    svg {
+      display: block;
+      min-width: 1120px;
+      width: 100%;
+      height: auto;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfaf6;
+      padding: 18px 18px 16px;
+    }
+
+    .card h3 {
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .card p, .card li {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .card p {
+      margin-top: 8px;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin: 10px 0 0;
+    }
+
+    li + li { margin-top: 6px; }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      color: #2a4d69;
+      background: var(--green-soft);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      font-weight: 800;
+      vertical-align: top;
+    }
+
+    th:first-child {
+      border-left: 1px solid var(--line);
+      border-radius: 10px 0 0 0;
+    }
+
+    th:last-child {
+      border-right: 1px solid var(--line);
+      border-radius: 0 10px 0 0;
+    }
+
+    td {
+      padding: 14px;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      background: #fbfaf6;
+    }
+
+    tr:nth-child(even) td { background: #f6f4ec; }
+
+    td:first-child { border-left: 1px solid var(--line); }
+    td:last-child { border-right: 1px solid var(--line); }
+    tr:last-child td:first-child { border-radius: 0 0 0 10px; }
+    tr:last-child td:last-child { border-radius: 0 0 10px 0; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tag.blue { background: var(--blue-soft); color: var(--blue); }
+    .tag.gold { background: var(--gold-soft); color: var(--gold); }
+    .tag.red { background: var(--red-soft); color: var(--red); }
+
+    .tag.gray {
+      background: #edeade;
+      color: #8a8478;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 12px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .callout {
+      border-left: 5px solid var(--green);
+      background: #edf1f4;
+      border-radius: 6px;
+      padding: 18px 20px;
+      color: #4a463e;
+      font-size: 14px;
+    }
+
+    .deferred-catch,
+    .deferred-row td,
+    .deferred-block {
+      color: #8a8478;
+      text-decoration: line-through;
+      text-decoration-thickness: 1.5px;
+      text-decoration-color: rgba(166,61,51,.6);
+    }
+
+    .deferred-row td {
+      opacity: .72;
+      background: #f2efe8 !important;
+    }
+
+    .deferred-block {
+      border: 1px dashed #d5cfc0;
+      border-radius: 8px;
+      background: #f6f4ee;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .media-panel {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fbfaf6, #f2efe7);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .media-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .media-head strong {
+      font-size: 16px;
+    }
+
+    .inline-video {
+      display: block;
+      width: 100%;
+      max-height: 620px;
+      background: #111;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .media-caption {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .check {
+      border: 1px solid var(--line);
+      background: #fbfaf6;
+      border-radius: 6px;
+      padding: 14px;
+      min-height: 132px;
+    }
+
+    .check b {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .check span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    @media (max-width: 980px) {
+      .page { padding: 18px 12px 48px; }
+      .hero-inner { grid-template-columns: 1fr; padding: 26px 22px; }
+      h1 { font-size: 29px; }
+      .grid-2, .checklist { grid-template-columns: 1fr; }
+      .section-head, .section-body { padding-left: 18px; padding-right: 18px; }
+      table { font-size: 12px; }
+      th, td { padding: 10px; }
+    }
+
+    .eyebrow, .section-no { font-family: "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace; }
+
+    #siteFooter{margin:48px auto 76px;text-align:center;font:500 12px/1.8 "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;letter-spacing:.14em;color:var(--muted,#6a655c);}
+    #siteFooter a{color:#a98a4e;text-decoration:none;} #siteFooter a:hover{text-decoration:underline;}
+    #homeBtn{position:fixed;left:26px;bottom:26px;z-index:60;width:42px;height:42px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;text-decoration:none;
+      border:1px solid var(--line,#ddd7c9);background:var(--panel,#fbfaf6);color:var(--muted,#6a655c);font-size:19px;line-height:1;
+      box-shadow:0 1px 2px rgba(55,50,38,.05);transition:color .15s,border-color .15s;}
+    #homeBtn:hover{color:#2a4d69;border-color:#2a4d69;}
+    @media(max-width:980px){#homeBtn{left:14px;bottom:14px;width:38px;height:38px;font-size:17px;}}
+    @media print{#homeBtn{display:none!important;}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="eyebrow">Traversal Animation Framework</div>
+          <h1>攀爬 / 翻越动作生产视角</h1>
+          <p class="lead">这份文档只讲一个结论：攀爬动画先补齐场景覆盖，再做细节变体。当前生产范围先收敛到 Hurdle / Vault / Mantle / Climb 四类，动画生产先保证每一类都有稳定可用的动作。</p>
+          <p class="hero-note">当前生产决策：只保留 Run 版本作为源资产；低速、贴墙、原地触发不单独列动画资产；Walk / Stand 档和左右脚拆分都不作为基础库必需项。</p>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><b>4</b><span>当前生产动作族：Hurdle / Vault / Mantle / Climb</span></div>
+          <div class="stat"><b>4 + V2</b><span>本轮 Run 母版口径；Hurdle V2 视表现保留，不含 Walk / Stand / Catch / AM</span></div>
+          <div class="stat"><b>3</b><span>主要 Warp 目标：FrontLedge / BackLedge / BackFloor</span></div>
+          <div class="stat"><b>Run Only</b><span>只交付 Run 源资产；不拆 Walk / Stand / 左右脚</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">01 / Abstract Structure</div>
+        <h2>把攀爬系统抽象成动画状态机</h2>
+        <p class="desc">动画同事只需要按下面这条链路理解：先看障碍属于哪一类，再看动作结束是落到后方、站到平台上，还是接回空中。图里的实现名只是为了对齐关系，不是动画生产重点。</p>
+      </div>
+      <div class="section-body diagram-wrap">
+        <div class="media-panel">
+          <div class="media-head">
+            <span class="tag blue">Video</span>
+            <strong>复杂物件攀爬测试：同一套动作分类覆盖不同几何</strong>
+          </div>
+          <video class="inline-video" controls preload="metadata" playsinline>
+            <source src="Traversal-攀爬规划-复杂物件测试.mp4" type="video/mp4">
+            当前浏览器不支持内嵌视频播放。
+          </video>
+          <p class="media-caption">该视频用于展示 Traversal 检测分类与动画动作族的关系：不同物件不需要单独制作状态机，而是先被归入 Hurdle / Vault / Mantle / Climb，再由 Run 源动作与 Motion Warping 对齐具体几何。</p>
+        </div>
+        <svg viewBox="0 0 1220 520" role="img" aria-label="Traversal abstract animation state machine">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e526f"></path>
+            </marker>
+            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#3a352a" flood-opacity=".10"></feDropShadow>
+            </filter>
+          </defs>
+
+          <rect x="20" y="26" width="1180" height="468" rx="10" fill="#fbfaf6" stroke="#ddd7c9"/>
+
+          <g filter="url(#softShadow)">
+            <rect x="58" y="80" width="180" height="100" rx="8" fill="#e9eff3" stroke="#c9d6df"/>
+            <text x="86" y="122" font-size="20" font-weight="800" fill="#211f1a">输入状态</text>
+            <text x="86" y="153" font-size="13" fill="#6a655c">Grounded / Falling</text>
+            <text x="86" y="174" font-size="13" fill="#6a655c">速度、方向</text>
+          </g>
+
+          <g filter="url(#softShadow)">
+            <rect x="300" y="80" width="210" height="100" rx="8" fill="#fbfaf6" stroke="#ddd7c9"/>
+            <text x="330" y="122" font-size="20" font-weight="800" fill="#211f1a">障碍分类</text>
+            <text x="330" y="153" font-size="13" fill="#6a655c">高度、厚度、背面落点</text>
+            <text x="330" y="174" font-size="13" fill="#6a655c">接近角、胶囊体空间</text>
+          </g>
+
+          <g filter="url(#softShadow)">
+            <rect x="580" y="42" width="170" height="78" rx="8" fill="#f2ecdd" stroke="#dccca6"/>
+            <text x="622" y="75" font-size="18" font-weight="800" fill="#211f1a">Hurdle</text>
+            <text x="610" y="101" font-size="12" fill="#6a655c">薄障碍 + 背面落差</text>
+          </g>
+          <g filter="url(#softShadow)">
+            <rect x="580" y="138" width="170" height="78" rx="8" fill="#e7eef4" stroke="#c5d3de"/>
+            <text x="632" y="171" font-size="18" font-weight="800" fill="#211f1a">Vault</text>
+            <text x="615" y="197" font-size="12" fill="#6a655c">薄障碍 + 无背面地面</text>
+          </g>
+          <g filter="url(#softShadow)">
+            <rect x="580" y="234" width="170" height="78" rx="8" fill="#e9eff3" stroke="#c9d6df"/>
+            <text x="624" y="267" font-size="18" font-weight="800" fill="#211f1a">Mantle</text>
+            <text x="609" y="293" font-size="12" fill="#6a655c">厚平台 / 低台阶上爬</text>
+          </g>
+          <g filter="url(#softShadow)">
+            <rect x="580" y="330" width="170" height="78" rx="8" fill="#f5e7e4" stroke="#e2c4bc"/>
+            <text x="632" y="363" font-size="18" font-weight="800" fill="#211f1a">Climb</text>
+            <text x="613" y="389" font-size="12" fill="#6a655c">高平台 160-360cm</text>
+          </g>
+          <g filter="url(#softShadow)">
+            <rect x="580" y="426" width="170" height="44" rx="8" fill="#efece3" stroke="#ddd7c9"/>
+            <text x="620" y="454" font-size="17" font-weight="800" fill="#8a8478" text-decoration="line-through" opacity=".65">Catch 暂缓入口</text>
+          </g>
+
+          <g filter="url(#softShadow)">
+            <rect x="820" y="110" width="180" height="230" rx="8" fill="#fbfaf6" stroke="#ddd7c9"/>
+            <text x="856" y="150" font-size="20" font-weight="800" fill="#211f1a">Motion Warping</text>
+            <text x="856" y="190" font-size="13" fill="#6a655c">FrontLedge：前缘抓取/落脚</text>
+            <text x="856" y="219" font-size="13" fill="#6a655c">BackLedge：翻越后缘</text>
+            <text x="856" y="248" font-size="13" fill="#6a655c">BackFloor：落地位置</text>
+            <text x="856" y="291" font-size="13" fill="#a63d33" text-decoration="line-through" opacity=".65">Catch 暂不纳入本轮，</text>
+            <text x="856" y="314" font-size="13" fill="#a63d33" text-decoration="line-through" opacity=".65">不计入动画数量。</text>
+          </g>
+
+          <g filter="url(#softShadow)">
+            <rect x="1060" y="82" width="110" height="132" rx="8" fill="#e9eff3" stroke="#c9d6df"/>
+            <text x="1082" y="132" font-size="18" font-weight="800" fill="#211f1a">Grounded</text>
+            <text x="1086" y="160" font-size="12" fill="#6a655c">Mantle / Climb</text>
+            <text x="1086" y="181" font-size="12" fill="#6a655c" text-decoration="line-through" opacity=".65">Catch 暂缓</text>
+          </g>
+          <g filter="url(#softShadow)">
+            <rect x="1060" y="270" width="110" height="132" rx="8" fill="#e7eef4" stroke="#c5d3de"/>
+            <text x="1092" y="320" font-size="18" font-weight="800" fill="#211f1a">InAir</text>
+            <text x="1086" y="348" font-size="12" fill="#6a655c">Hurdle / Vault</text>
+            <text x="1086" y="369" font-size="12" fill="#6a655c">保留动量</text>
+          </g>
+
+          <path d="M238 130 C260 130 275 130 300 130" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M510 130 C545 90 550 82 580 82" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M510 130 C545 160 550 176 580 176" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M510 130 C545 220 550 272 580 272" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M510 130 C548 286 550 368 580 368" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M148 180 C175 330 445 450 580 448" stroke="#a63d33" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+
+          <path d="M750 82 C780 98 792 130 820 157" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M750 176 C780 184 792 190 820 198" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M750 272 C780 258 792 248 820 239" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M750 368 C782 330 794 300 820 282" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M750 448 C795 430 812 338 848 318" stroke="#a63d33" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+
+          <path d="M1000 192 C1028 172 1038 150 1060 148" stroke="#2e526f" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+          <path d="M1000 252 C1030 290 1038 330 1060 336" stroke="#31597a" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">02 / Measurement Diagram</div>
+        <h2>测距示意图：高度参数一览</h2>
+        <p class="desc">这张图只表达动画生产边界：同一套 Run 源资产先覆盖四类动作族，真正决定类型的不是“看起来像不像攀爬”，而是高度、厚度和背面是否有落点。</p>
+      </div>
+      <div class="section-body diagram-wrap">
+        <svg viewBox="0 0 1220 560" role="img" aria-label="Traversal height measurement overview">
+          <defs>
+            <marker id="measureArrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0 5 L10 0 L10 10 Z" fill="#31597a"/>
+            </marker>
+            <filter id="diagramShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#3a352a" flood-opacity=".10"/>
+            </filter>
+          </defs>
+
+          <rect x="26" y="20" width="1168" height="500" rx="10" fill="#fbfaf6" stroke="#ddd7c9"/>
+          <line x1="130" y1="402" x2="1080" y2="402" stroke="#4a463e" stroke-width="3"/>
+          <text x="138" y="432" font-size="15" fill="#6a655c">地面 / Floor</text>
+
+          <g opacity=".9">
+            <line x1="170" y1="202" x2="1040" y2="202" stroke="#a98a4e" stroke-dasharray="8 8"/>
+            <text x="912" y="190" font-size="14" fill="#a98a4e" text-anchor="end">Mantle 上限 130cm</text>
+            <line x1="170" y1="152" x2="1040" y2="152" stroke="#a63d33" stroke-dasharray="8 8"/>
+            <text x="912" y="140" font-size="14" fill="#a63d33" text-anchor="end">Climb 起点 160cm</text>
+          </g>
+
+          <g filter="url(#diagramShadow)">
+            <ellipse cx="224" cy="392" rx="32" ry="9" fill="#c5d3de"/>
+            <rect x="210" y="310" width="28" height="82" rx="13" fill="#31597a" opacity=".45"/>
+            <circle cx="224" cy="286" r="20" fill="#31597a" opacity=".45"/>
+            <text x="154" y="287" font-size="13" fill="#6a655c">角色参考</text>
+            <text x="154" y="306" font-size="12" fill="#8a8478">最低触发约 50cm</text>
+          </g>
+
+          <g filter="url(#diagramShadow)">
+            <rect x="390" y="322" width="36" height="80" rx="6" fill="#e9eff3" stroke="#31734d" stroke-width="3"/>
+            <line x1="438" y1="402" x2="438" y2="322" stroke="#31734d" stroke-width="2" marker-start="url(#measureArrow)" marker-end="url(#measureArrow)"/>
+            <text x="374" y="318" font-size="16" font-weight="900" fill="#31734d">低障碍</text>
+            <text x="374" y="430" font-size="18" font-weight="900" fill="#31734d">HURDLE</text>
+            <text x="376" y="454" font-size="13" fill="#6a655c">薄、可直接跨过</text>
+          </g>
+
+          <g filter="url(#diagramShadow)">
+            <rect x="560" y="270" width="56" height="132" rx="6" fill="#e7eef4" stroke="#31597a" stroke-width="3"/>
+            <line x1="628" y1="402" x2="628" y2="270" stroke="#31597a" stroke-width="2" marker-start="url(#measureArrow)" marker-end="url(#measureArrow)"/>
+            <text x="553" y="264" font-size="16" font-weight="900" fill="#31597a">约 100cm</text>
+            <text x="552" y="430" font-size="18" font-weight="900" fill="#31597a">VAULT</text>
+            <text x="548" y="454" font-size="13" fill="#6a655c">薄 + 背面为空</text>
+          </g>
+
+          <g filter="url(#diagramShadow)">
+            <rect x="720" y="202" width="118" height="200" rx="6" fill="#f2ecdd" stroke="#a98a4e" stroke-width="3"/>
+            <line x1="850" y1="402" x2="850" y2="202" stroke="#a98a4e" stroke-width="2" marker-start="url(#measureArrow)" marker-end="url(#measureArrow)"/>
+            <text x="728" y="196" font-size="16" font-weight="900" fill="#96660a">约 130cm</text>
+            <text x="728" y="430" font-size="18" font-weight="900" fill="#96660a">MANTLE</text>
+            <text x="708" y="454" font-size="13" fill="#6a655c">厚平台 / 背面可站</text>
+          </g>
+
+          <g filter="url(#diagramShadow)">
+            <rect x="930" y="120" width="128" height="282" rx="6" fill="#f5e7e4" stroke="#a63d33" stroke-width="3"/>
+            <line x1="1070" y1="402" x2="1070" y2="120" stroke="#a63d33" stroke-width="2" marker-start="url(#measureArrow)" marker-end="url(#measureArrow)"/>
+            <text x="942" y="112" font-size="16" font-weight="900" fill="#a63d33">160~360cm</text>
+            <text x="944" y="430" font-size="18" font-weight="900" fill="#a63d33">CLIMB</text>
+            <text x="930" y="454" font-size="13" fill="#6a655c">高台攀爬 / 需要抓边</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">03 / Shared Humanoid Framework</div>
+        <h2>给动画同事的三个结论</h2>
+        <p class="desc">讨论时优先对齐这三件事，不需要先陷进 Trace 参数或程序实现。</p>
+      </div>
+      <div class="section-body grid-2">
+        <div class="card">
+          <h3>先补齐动作类型</h3>
+          <p>缺某一类动作，会导致对应场景完全没有合适表现；同一类里做多少细分变体，可以放到后面。</p>
+          <ul>
+            <li>先保证 Hurdle / Vault / Mantle / Climb 都有可用动作。</li>
+            <li class="deferred-catch">Catch 先不进入本轮生产和数量统计。</li>
+            <li>再考虑同一动作类型里的风格、节奏和细节丰富度。</li>
+            <li>覆盖面比同类变体数量更重要。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>基础动作先通用</h3>
+          <p>基础动作只解决身体怎么通过障碍：Root 路径、手脚接触、落点和结束姿态。角色性格、武器差异后面再叠。</p>
+          <ul>
+            <li>不要每个角色重做一整套攀爬。</li>
+            <li>先把通用人形动作跑通。</li>
+            <li>角色差异用 Overlay、Additive 或少量补丁处理。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">04 / Run-Only Decision</div>
+        <h2>资产收敛决策：只保留 Run 源资产</h2>
+        <p class="desc">Walk / Stand / 低速入口 / 左右脚相位都不再作为独立生产维度。所有攀爬翻越动作只生产 Run 版本；贴墙、低速、原地触发由系统接入侧用同一 Run 动作处理，不在动画表里单列资产。</p>
+      </div>
+      <div class="section-body">
+        <div class="media-panel">
+          <div class="media-head">
+            <span class="tag blue">Video</span>
+            <strong>攀爬动作三挡对比：源资产收敛依据</strong>
+          </div>
+          <video class="inline-video" controls preload="metadata" playsinline>
+            <source src="Traversal-攀爬规划-动作三挡对比.mp4" type="video/mp4">
+            当前浏览器不支持内嵌视频播放。
+          </video>
+          <p class="media-caption">该视频用于对比不同入口档位的动作差异。后续生产不再按 Stand / Walk / Run 三套源资产扩展，也不单列低速、贴墙、原地入口；统一以 Run 版本作为动作母版。</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 150px;">决策项</th>
+              <th style="width: 260px;">做法</th>
+              <th>原因</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>只生产 Run 源资产</strong></td>
+              <td>Hurdle / Vault / Mantle / Climb 都以 Run 版本为基准，优先保证动作完整度、Root Motion 路径和手脚接触质量。</td>
+              <td>Run 版本包含最完整的速度、发力和身体通过障碍信息。用它作为源资产，可以让通用库的动作质量集中在一套核心数据上，而不是被 Stand / Walk / Run 三档稀释。</td>
+            </tr>
+            <tr>
+              <td><strong>删除独立 Walk 档</strong></td>
+              <td>Walk / Stand 不再要求单独生产。中间速度由系统侧播放速率、Blend 和 Warp 处理。</td>
+              <td>Walk 档资产量增加明显，但体验收益不稳定。竞技化移动更重视输入响应和路径稳定，Walk 独立档容易变成维护成本，而不是核心手感收益。</td>
+            </tr>
+            <tr>
+              <td><strong>低速 / 原地不单列资产</strong></td>
+              <td>不再为贴墙、低速、原地入口建立独立动画条目；统一使用对应 Run 动作。</td>
+              <td>这类入口是触发条件差异，不是新的动画生产族。先保证 Run 母版质量，系统侧处理触发时机和对齐窗口。</td>
+            </tr>
+            <tr>
+              <td><strong>重新配置动画事件</strong></td>
+              <td>同一 Run 动作接入不同触发场景时，需要在系统侧重配 Montage 起点、Blend In、Motion Warping 窗口、PlayMontageNotifyWindow 和 BlendOut 时机。</td>
+              <td>如果 Notify 和 Warp 窗口仍按单一场景走，会出现第一帧拉扯、抓边错位、穿墙或结束落点不稳。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout" style="margin-top: 18px;">
+          这不是“用 Run 动画硬套所有速度”，而是“把 Run 当作高质量动作母版”。接入侧可以根据触发条件选择不同播放起点或窗口，但这些不作为动画同事的新增交付项。
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">05 / Classification</div>
+        <h2>系统分类规则对应的动画职责</h2>
+        <p class="desc">下面不是让动画师背参数，而是说明每种关卡几何为什么需要不同动作族。动作生产时要保证这些几何差异在身体路径、手脚接触和结束姿态上能被看出来。</p>
+      </div>
+      <div class="section-body">
+        <div class="callout" style="margin-bottom: 18px;">
+          动作覆盖原则：先保证 Hurdle / Vault / Mantle / Climb 四类场景都有稳定动作；同一类里有几个小变体、表现多细，放在覆盖面成立后再补。<span class="deferred-catch">Catch 本轮暂缓，不进入数量统计。</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 110px;">动作族</th>
+              <th style="width: 190px;">典型触发</th>
+              <th style="width: 260px;">动画承担的核心作用</th>
+              <th>生产时最容易出问题的点</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag gold">Hurdle</span><span class="subtle">翻越低障碍</span></td>
+              <td>薄障碍，背面存在落点，并且背面有明显落差。</td>
+              <td>让角色快速越过低障碍，保持向前动量，翻越后自然落向 BackFloor。</td>
+              <td>Root 推进不足会像原地跨栏；推进过强会穿帮。落地脚、骨盆高度和胶囊体过障碍的时间要匹配。</td>
+            </tr>
+            <tr>
+              <td><span class="tag blue">Vault</span><span class="subtle">越过无背面地面</span></td>
+              <td>薄障碍，但背面没有可站立地面，翻过去后进入空中或落差段。</td>
+              <td>表现“越过边缘后继续下落”的动作，不要求结束在障碍顶部稳定站住。</td>
+              <td>结束姿态不能强行摆成站立；需要给 InAir / Land 留出自然接续，避免落点前后速度断裂。</td>
+            </tr>
+            <tr>
+              <td><span class="tag">Mantle</span><span class="subtle">攀上平台</span></td>
+              <td>厚平台、台阶或低于 Climb 的可站立顶面。</td>
+              <td>把角色从障碍前缘拉到顶面，结束时稳定回到 Grounded / MM 移动。</td>
+              <td>手撑、膝盖、脚掌和顶面高度需要可信；结束帧不稳会导致回到移动循环时滑脚或身体弹跳。</td>
+            </tr>
+            <tr>
+              <td><span class="tag red">Climb</span><span class="subtle">高平台攀爬</span></td>
+              <td>高于 Mantle 上限的高平台，当前抽象约 160-360cm。</td>
+              <td>表现完整的高墙攀爬过程：抓边、蹬墙、抬身、上台、站稳。</td>
+              <td>高墙动作对体型和比例敏感；手点、脚点、骨盆清障和最后站起速度都需要稳定。</td>
+            </tr>
+            <tr class="deferred-row">
+              <td><span class="tag red">Catch</span><span class="subtle">下落抓边</span></td>
+              <td>角色处于 Falling，检测到可抓边缘，并满足下落速度窗口。</td>
+              <td>从下落姿态接入抓边或翻上动作，避免“明明碰到边却掉下去”的负反馈。</td>
+              <td>第一帧最关键；如果手没有及时对上边缘，会被感知为吸附或拉扯。Catch 的 Warp 目标也必须比普通 Mantle 更保守。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">06 / Asset Families</div>
+        <h2>Traversal 动画资产职责表</h2>
+        <p class="desc">当前资产以 Run 源资产为主。历史资产里存在 Stand / Walk / Run 多档，但后续生产只保留 Run 动作清单；Catch 暂不进入本轮生产口径。</p>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 110px;">优先级</th>
+              <th style="width: 150px;">动作族</th>
+              <th style="width: 120px;">生产目标</th>
+              <th style="width: 255px;">覆盖方式</th>
+              <th>动画生产重点</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag red">P0</span></td>
+              <td><strong>Mantle</strong><span class="subtle">上平台核心动作</span></td>
+              <td>Run 单版<span class="subtle">不单列低速资产</span></td>
+              <td>Run 源资产覆盖跑动上台；贴墙、低速、原地触发不新增动画条目，由系统侧接入同一 Run 动作。</td>
+              <td>必须优先稳定。它决定攀爬系统的基本可信度：接触点、Root 上台距离、结束站稳、回到 MM Grounded 的连续性。</td>
+            </tr>
+            <tr>
+              <td><span class="tag red">P0</span></td>
+              <td><strong>Climb</strong><span class="subtle">高台攀爬</span></td>
+              <td>Run 单版<span class="subtle">不单列贴墙资产</span></td>
+              <td>Run 源资产覆盖跑动高攀；贴墙、低速、原地触发不新增动画条目，由系统侧接入同一 Run 动作。</td>
+              <td>高墙最容易暴露身高比例问题。需要明确手抓点、脚蹬点、骨盆清障、上台后的站稳姿态，以及 Tall / Short 体型偏移兼容。</td>
+            </tr>
+            <tr>
+              <td><span class="tag red">P0</span></td>
+              <td><strong>Hurdle</strong><span class="subtle">快速翻越低障碍</span></td>
+              <td>Run 单版<span class="subtle">必要时再补 V2</span></td>
+              <td>Run 源资产覆盖主要翻越体验；低速和原地不作为独立 Hurdle 生产目标。</td>
+              <td>这是探索和战斗移动中最容易频繁触发的“不断速”动作。重点是快速、低打断感、落地动量连续。低速贴近障碍时，如果 Hurdle 表现不自然，可以由系统降级到 Mantle / Step-up。</td>
+            </tr>
+            <tr>
+              <td><span class="tag gold">P1</span></td>
+              <td><strong>Vault</strong><span class="subtle">越过边缘并进入空中</span></td>
+              <td>Run 单版<span class="subtle">不单列低速资产</span></td>
+              <td>Run 版本覆盖主要 Vault。低速或原地 Vault 不作为独立表现目标，必要时由动作分类降级处理。</td>
+              <td>Vault 的价值在于处理“翻过去不是平台”的场景。动画结束不能假设立刻站住，要给 InAir、落地和速度恢复留余量。没有速度时强行 Vault 的表现风险高。</td>
+            </tr>
+            <tr class="deferred-row">
+              <td><span class="tag gray">暂缓</span></td>
+              <td><strong>Catch</strong><span class="subtle">下落抓边覆盖入口</span></td>
+              <td>不计入<span class="subtle">本轮不生产</span></td>
+              <td>Catch Hurdle / Vault / Mantle / Cliff，高中低高度优先，入口速度不再作为核心生产维度。</td>
+              <td>Catch 是容错体验，不是单纯扩充动作数量。重点是下落第一帧抓边可信、Warp 距离短、接入后不拉胶囊体。</td>
+            </tr>
+            <tr>
+              <td><span class="tag blue">P2</span></td>
+              <td><strong>角色差异层</strong><span class="subtle">Overlay / Additive / 补丁</span></td>
+              <td>按角色补充</td>
+              <td>武器、体型、性格、职业动作差异。</td>
+              <td>不建议为每个角色复制整套 Traversal。优先补上半身保护姿态、手臂风格、面向武器的局部差异和极端体型的偏移参数。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">07 / Hurdle Details</div>
+        <h2>Hurdle：低障碍快速翻越</h2>
+        <p class="desc">Hurdle 的第一目标是“不断速地跨过去”。它不应该看起来像一次完整攀爬，也不应该让玩家感觉角色被动画长时间扣住。</p>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 150px;">变体组</th>
+              <th style="width: 110px;">动画数量</th>
+              <th style="width: 280px;">典型资产</th>
+              <th style="width: 270px;">在系统中的作用</th>
+              <th>生产注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Run Hurdle</strong><span class="subtle">高速入口</span></td>
+              <td>1+<span class="subtle">基础单版，必要时补 V2</span></td>
+              <td>从现有 Run Hurdle 中选一个稳定版本作为母版；V2 只在表现差异明显时保留。</td>
+              <td>覆盖玩家高速接近低障碍时的主体验，要求不中断前冲节奏。</td>
+              <td>Root 向前推进和胶囊体过障碍时间要一致。落地脚应能接回 Run Loop，不要出现落地后停顿。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">08 / Mantle Details</div>
+        <h2>Mantle：厚平台 / 低台阶上爬</h2>
+        <p class="desc">Mantle 是攀爬系统的稳定底盘。后续生产以 Run Mantle 作为动作母版，低速和原地入口不再单列动画资产。</p>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 150px;">变体组</th>
+              <th style="width: 110px;">动画数量</th>
+              <th style="width: 280px;">典型资产</th>
+              <th style="width: 270px;">在系统中的作用</th>
+              <th>生产注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Run Mantle</strong><span class="subtle">跑动上台</span></td>
+              <td>1<span class="subtle">基础单版</span></td>
+              <td>从现有 Run Mantle 中选一个稳定版本作为母版。</td>
+              <td>高速接近平台时保持流畅上爬，减少明显刹停。</td>
+              <td>前冲惯性要保留，但上台结束必须稳。Root 的最后一段不要把角色推过头。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">09 / Climb Details</div>
+        <h2>Climb：高平台攀爬</h2>
+        <p class="desc">Climb 处理 Mantle 无法可信覆盖的高平台。它是最容易暴露体型、墙面高度和手脚接触问题的动作族，因此本轮只集中打磨 Run 母版。</p>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 150px;">变体组</th>
+              <th style="width: 110px;">动画数量</th>
+              <th style="width: 280px;">典型资产</th>
+              <th style="width: 270px;">在系统中的作用</th>
+              <th>生产注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Run Climb</strong><span class="subtle">跑动高攀</span></td>
+              <td>1<span class="subtle">基础单版</span></td>
+              <td>从现有 Run Climb 中选一个稳定版本作为母版。</td>
+              <td>高速接近高平台时进入高攀，尽量减少停顿感。</td>
+              <td>起跳、抓边和身体上提要形成连续力线。不要让角色先停住再爬，除非故意做重型表现。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout" style="margin-top: 18px;">
+          Climb 不建议只靠播放速度缩放去兼容所有高度。当前系统已按高度和体型做起始位置偏移，动画侧仍要保证关键接触点可以被 Motion Warping 稳定拉到目标，而不是依赖过大的拉伸补偿。
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">10 / Vault Details</div>
+        <h2>Vault：越过边缘并进入空中</h2>
+        <p class="desc">Vault 单独作为一类生产，不再和 Catch 混在一起看。原始资产里有 Stand / Walk / Run 三档，但本轮只按 Run Vault 母版交付。</p>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 150px;">动作组</th>
+              <th style="width: 110px;">动画数量</th>
+              <th style="width: 280px;">覆盖范围</th>
+              <th style="width: 270px;">在系统中的作用</th>
+              <th>生产注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Run Vault</strong><span class="subtle">越过无背面地面</span></td>
+              <td>1<span class="subtle">Run Vault 母版</span></td>
+              <td>Run 源资产为主；低速入口不单列动画资产。</td>
+              <td>让角色翻过边缘后继续进入空中或落差段，而不是停在障碍顶面。</td>
+              <td>结束 Pose 要服务 InAir，不要摆成 Grounded。翻越后水平速度要能恢复，避免落后像被空气刹车。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">11 / Catch Deferred</div>
+        <h2 class="deferred-catch">Catch：本轮暂不生产</h2>
+        <p class="desc deferred-catch">Catch 先作为后续能力保留讨论，不纳入当前动画数量、生产排期和验收范围。</p>
+      </div>
+      <div class="section-body">
+        <div class="deferred-block">以下 Catch 资产本轮全部暂缓，仅保留为以后恢复下落抓边能力时的参考拆分。</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 150px;">动作组</th>
+              <th style="width: 110px;">动画数量</th>
+              <th style="width: 280px;">覆盖范围</th>
+              <th style="width: 270px;">在系统中的作用</th>
+              <th>生产注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="deferred-row">
+              <td><strong>Catch Hurdle</strong><span class="subtle">低障碍下落抓边</span></td>
+              <td>约 9<span class="subtle">Sequence only，不计入本轮</span></td>
+              <td>Low / Med / High，高度档优先；入口速度不再作为核心生产维度。</td>
+              <td>角色下落时对低障碍或边缘做恢复入口。</td>
+              <td>第一帧手和边缘的距离必须短；Blend 不能让手穿过墙面再抓住。</td>
+            </tr>
+            <tr class="deferred-row">
+              <td><strong>Catch Mantle</strong><span class="subtle">平台下落抓边</span></td>
+              <td>约 6<span class="subtle">Sequence only，不计入本轮</span></td>
+              <td>Low / Med，高度档优先；入口速度不再作为核心生产维度。</td>
+              <td>下落中补救可上平台边缘，接入 Mantle 类上台。</td>
+              <td>要避免长距离横向吸附。Catch 的前缘目标通常比普通 Mantle 更贴近墙前缘。</td>
+            </tr>
+            <tr class="deferred-row">
+              <td><strong>Catch Vault</strong><span class="subtle">边缘下落越过</span></td>
+              <td>约 3<span class="subtle">Sequence only，不计入本轮</span></td>
+              <td>Low / Med / High。</td>
+              <td>下落中接到无稳定背面地面的翻越场景。</td>
+              <td>动作应该承认角色仍处于危险边缘，不要过早回站立。后续落地要自然。</td>
+            </tr>
+            <tr class="deferred-row">
+              <td><strong>Catch Cliff</strong><span class="subtle">高边缘抓取</span></td>
+              <td>约 1<span class="subtle">Sequence only，不计入本轮</span></td>
+              <td>High，作为高边缘兜底抓取。</td>
+              <td>高边缘下落抓取的兜底表现。</td>
+              <td>适合做强特征动作，但不能破坏通用入口。后续如果补多高度，优先保证 High / Med 区间。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">12 / Motion Warping Contract</div>
+        <h2>动画交付约束：Root Motion、Warp 目标和结束姿态</h2>
+        <p class="desc">Traversal 的动画资产不是单独看的表演片段，而是和胶囊体、碰撞、Warp 目标一起工作的动作。下面这些约束要作为生产验收项。</p>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 160px;">约束项</th>
+              <th style="width: 260px;">具体要求</th>
+              <th>为什么重要</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Root Motion 方向</strong></td>
+              <td>Root 推进应和动作族一致：Hurdle / Vault 向前穿过，Mantle / Climb 向前上台。</td>
+              <td>Root 与胶囊体运动不一致时，会出现滑脚、穿墙、落点偏差或被 Motion Warping 强拉。</td>
+            </tr>
+            <tr>
+              <td><strong>FrontLedge</strong></td>
+              <td>手抓边、胸口靠近墙面、上台前缘都要围绕 FrontLedge 成立。</td>
+              <td>这是 Mantle / Climb 最主要的对齐点。接触点不可信会直接破坏攀爬真实感。</td>
+            </tr>
+            <tr>
+              <td><strong>BackLedge / BackFloor</strong></td>
+              <td>Hurdle / Vault 要明确越过后缘和落地目标，动作结束不能停在障碍中间。</td>
+              <td>这两类动作通常会临时关闭障碍碰撞，如果动画没有稳定越过后缘，就会被看成穿帮。</td>
+            </tr>
+            <tr>
+              <td><strong>脚相位</strong></td>
+              <td>基础库默认不拆左右脚。只有出现明显反脚、错脚或第一帧穿帮时，再补脚相位变体。</td>
+              <td>左右脚拆分主要提升衔接细腻度，但会放大资产量。当前项目优先保证动作类型覆盖和稳定可用。</td>
+            </tr>
+            <tr>
+              <td><strong>结束姿态</strong></td>
+              <td>Mantle / Climb 结束要能回 Grounded；Hurdle / Vault 结束要能回 InAir 或 Land。</td>
+              <td>很多问题不在动作中段，而在结束后的第一帧。结束姿态决定能否平滑接回 MM。</td>
+            </tr>
+            <tr>
+              <td><strong>体型兼容</strong></td>
+              <td>通用库先服务标准人形。高矮、壮瘦角色通过 Z Offset、胶囊体、局部补丁和少量专属动作处理。</td>
+              <td>如果每个角色都重新做全套资产，维护成本会失控；但完全不管体型又会在 Climb 上暴露严重穿帮。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div class="section-no">13 / Naming & Delivery</div>
+        <h2>建议的动画命名与交付信息</h2>
+        <p class="desc">命名不是形式问题，它直接影响后续批量检索、资产合并、英雄复用和问题定位。后续命名只保留 Run 源资产口径，不再扩展 Walk / Stand / 低速入口。</p>
+      </div>
+      <div class="section-body grid-2">
+        <div class="card">
+          <h3>推荐命名字段</h3>
+          <p><strong>角色 / 姿态 / Traversal / 动作族 / 高度层 / 入口来源 / 方向</strong></p>
+          <ul>
+            <li>动作族：Hurdle、Vault、Mantle、Climb。</li>
+            <li>入口来源：RunSource。</li>
+            <li>脚相位：不作为基础库必需字段，只有出现明显接入问题时再补。</li>
+            <li>高度层：Low、Med、High 或项目现有 1_0、2_5。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>每个动作交付时应标注</h3>
+          <ul>
+            <li>适用动作族和入口来源，不要只给“好看的翻越动画”。</li>
+            <li>是否需要 FrontLedge、BackLedge、BackFloor。</li>
+            <li>入口和结束应该接 Grounded 还是 InAir。</li>
+            <li>Montage 起点、Blend In、Warp 窗口和 BlendOut 是否已经重新配置。</li>
+            <li>是否存在明显反脚、错脚或第一帧穿帮；没有问题则默认合并。</li>
+            <li>是否适合所有人形，还是只适合某个体型或武器。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer">基于当前 Traversal 实现、Twinblast 关卡参数手册与 MM Loco 动画生产视角整理。</div>
+    </section>
+  </main>
+  <footer id="siteFooter">KEKE'S COMBAT 3C WORKSTATION · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  <a id="homeBtn" href="../../../index.html" title="返回主页" aria-label="返回主页">⌂</a>
+</body>
+</html>
