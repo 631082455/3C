@@ -251,7 +251,13 @@
         <a href="#s6"><i>07</i>六、关键资产路径参考</a>
       </nav>
       <main>
-        <section id="s0"><h2>概述</h2><hr /></section>
+        <section id="s0"><h2>概述</h2>
+<blockquote>
+<p><strong>口径更新（2026-07）</strong>：本篇为早期接入口径，两处已被后续实现取代——
+① Steel 的 <code>mantle_height_from_montage=120</code> 为旧单值口径，现行为「动作 × 高度」四格补偿（Steel 当前仅 Climb Tall = 30cm），见《<a href="Traversal - 多体型适配实录.html">多体型适配实录</a>》；
+② "Mesh 必须打 Tag 才会重定向"来自旧注释，现行主链路是 <code>HeroData.IkRetargeterAsset</code> 由 C++ 直接注入，见《<a href="新增英雄移动动画配置指南.html">新增英雄移动动画配置指南</a>》。正文对应处已加标注，其余步骤仍适用。</p>
+</blockquote>
+<hr /></section>
         <section id="s1"><h2>一、系统概述</h2>
 <p>项目中存在<strong>两套翻越系统</strong>，由 <code>MCD_[CharName]</code> → <code>mantle_setting.use_new_traversal_system</code> 控制：</p>
 <table>
@@ -325,8 +331,7 @@
 </table>
 <blockquote>
 <p><strong>重要</strong>：<code>RetargetMesh</code> 和 <code>RetargetAnimClass</code> 必须同时配置，缺一不可。
-<code>ABP_GenericRetarget</code> 内部注释：<code>IF THERE IS NO TAG, THE CHARACTER WILL NOT RETARGET!!！</code>
-确认角色 Mesh 上有对应的 Mesh Tag，才能正确驱动 IKRetargeter_Map。</p>
+<strong>旧口径提醒</strong>：<code>ABP_GenericRetarget</code> 内部注释 <code>IF THERE IS NO TAG, THE CHARACTER WILL NOT RETARGET!!！</code> 描述的 Tag + Map 路径已不是现行主链路——当前由 <code>HeroData.IkRetargeterAsset</code> 经 C++ 直接注入，配齐 HeroData 三字段即可，无需依赖 Mesh Tag（详见《新增英雄移动动画配置指南》第 7 节）。</p>
 </blockquote>
 <h3>2.2 MCD 配置</h3>
 <p>打开 <code>MCD_[CharName]</code>，找到 <code>Mantle Setting</code>，配置以下字段：</p>
@@ -569,7 +574,7 @@ with unreal.ScopedEditorTransaction('Disable ik_foot_root') as trans:
 <p>大体型角色的 <code>mantle_height_from_montage</code> 需要根据角色实际骨骼高度调整：</p>
 <ul>
 <li>含义：手搭到上沿后，root motion 还需向上移动多少 cm 才能站上去</li>
-<li>Steel 的值：<code>120</code>（悬挂风格动画）</li>
+<li>Steel 的值：<code>120</code>（悬挂风格动画）——<strong>旧口径</strong>：现行 Steel 已改用四格补偿（当前仅 ClimbZOffset_Tall = 30cm，<code>mantle_height_from_montage=-1</code> 仅作非 Mantle/Climb 回退），以《多体型适配实录》为准</li>
 <li>GASPALS 风格动画：<code>0</code>（sync point 已是最终站立位置）</li>
 </ul>
 <hr />

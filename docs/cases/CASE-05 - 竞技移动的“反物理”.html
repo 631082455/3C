@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>竞技移动的“反物理” · 案例稿</title>
+  <style>
+    /* ============================================================
+       3C Doc Theme v3 — "精装手册 / Hardcover Manual"
+       案例稿空白母版 v2.1:分组结构预置,填空即可。
+       结构:封面TL;DR → 背景 → 过程 → 结果 → 资料(可折叠,打印自动展开)
+       前三组是有因果链的叙事,资料组是查表内容;章节可按案例类型取舍,分组不动
+       硬规则:只用已有 CSS 变量与组件 class;禁新增色值/外部字体/CDN。
+       ============================================================ */
+    :root{
+      --bg:#f1eee7; --paper:#fbfaf6; --ink:#211f1a; --muted:#6a655c;
+      --line:#ddd7c9; --soft:#edeade;
+      --accent:#2e526f; --accent-text:#2a4d69; --accent-soft:#e9eff3;
+      --brass:#a98a4e; --brass-soft:#f4eddc;
+      --blue:#31597a; --blue-soft:#e9eff3;
+      --ok:#31734d; --ok-soft:#e5f0e8;
+      --warn:#96660a; --warn-soft:#f8efd8;
+      --danger:#a63d33; --danger-soft:#f5e7e4;
+      --code:#2f5573; --code-bg:#eaeeee;
+      --shadow:0 1px 2px rgba(55,50,38,.05),0 8px 24px -14px rgba(55,50,38,.14);
+      --radius:6px;
+      --tint1:rgba(46,82,111,.05); --tint2:rgba(169,138,78,.07); --bgdeep:#ece8da;
+      --sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+    }
+    :root[data-theme="dark"]{
+      --bg:#14171c; --paper:#1b1f26; --ink:#e6e2d8; --muted:#9a938a;
+      --line:#2c313a; --soft:#222731;
+      --accent:#8ab4d4; --accent-text:#93bdda; --accent-soft:rgba(138,180,212,.10);
+      --brass:#cbaa6e; --brass-soft:rgba(203,170,110,.12);
+      --blue:#8ab4d4; --blue-soft:rgba(138,180,212,.10);
+      --ok:#63b183; --ok-soft:rgba(99,177,131,.12);
+      --warn:#d8a751; --warn-soft:rgba(216,167,81,.12);
+      --danger:#d88478; --danger-soft:rgba(216,132,120,.12);
+      --code:#a8c7dd; --code-bg:rgba(138,180,212,.08);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px -14px rgba(0,0,0,.5);
+      --tint1:rgba(138,180,212,.05); --tint2:rgba(203,170,110,.05); --bgdeep:#10131a;
+    }
+    *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+    body{margin:0;color:var(--ink);font:15.5px/1.85 var(--sans);
+      background:
+        radial-gradient(900px 520px at 8% -6%,var(--tint1),transparent 60%),
+        radial-gradient(760px 420px at 96% -2%,var(--tint2),transparent 55%),
+        linear-gradient(180deg,var(--bg),var(--bgdeep));
+      -webkit-font-smoothing:antialiased;transition:background .25s,color .25s;}
+    ::selection{background:var(--accent);color:#fff;}
+    ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;} ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+    a{color:var(--blue);} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+    #progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;
+      background:linear-gradient(90deg,var(--accent),var(--brass));transition:width .1s linear;}
+    .page{width:min(1200px,calc(100vw - 32px));margin:28px auto 56px;}
+    /* 宽屏适配:按视口 CSS 像素分档,版心与字号同步放大(正文行宽由 em 上限自动跟随)
+       <2000=基准(笔记本/1080p) ≥2000=2K档 ≥2800=4K@100%档 */
+    @media(min-width:2000px){
+      body{font-size:17.5px;}
+      .page{width:min(1480px,calc(100vw - 64px));}
+      .layout{grid-template-columns:260px minmax(0,1fr);gap:30px;}
+      section{padding:38px 60px;}
+      .part{padding:24px 8px 14px;}
+    }
+    @media(min-width:2800px){
+      body{font-size:19px;}
+      .page{width:min(1640px,calc(100vw - 80px));}
+    }
+    .hero{position:relative;overflow:hidden;padding:48px 52px 44px;border-radius:8px;
+      background:linear-gradient(150deg,#1a212c 0%,#141922 60%,#161b23 100%);
+      color:#c6ccd5;box-shadow:var(--shadow);}
+    .hero::before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.10);
+      border-radius:4px;pointer-events:none;}
+    .hero>*{position:relative;z-index:1;}
+    .kicker{display:flex;align-items:center;gap:12px;font:600 12px/1 var(--mono);
+      letter-spacing:.24em;text-transform:uppercase;color:#c8a96a;}
+    .kicker::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,169,106,.45),transparent);}
+    .hero h1{margin:16px 0 0;font-size:clamp(28px,3.8vw,41px);font-weight:760;line-height:1.25;
+      letter-spacing:.01em;color:#f3efe6;}
+    .hero .lede{margin:14px 0 0;max-width:46em;color:#a4abb5;font-size:15px;}
+    .hero .lede b{color:#dbe0e7;}
+    #themeBtn{position:absolute;top:22px;right:22px;z-index:2;width:38px;height:38px;border-radius:50%;
+      border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#e6e2d8;
+      font-size:16px;cursor:pointer;transition:background .2s;}
+    #themeBtn:hover{background:rgba(255,255,255,.13);}
+    /* ---- 封面 TL;DR 卡:快读层,招聘者/评审的 3 分钟版 ---- */
+    .tldr{margin-top:22px;border:1px solid rgba(200,169,106,.35);border-radius:4px;background:rgba(200,169,106,.05);}
+    .tldr>div{display:flex;gap:14px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+    .tldr>div:last-child{border-bottom:none;}
+    .tldr i{flex:none;width:52px;font:600 10.5px/2.1 var(--mono);letter-spacing:.2em;font-style:normal;color:#c8a96a;}
+    .tldr span{color:#c3cad4;font-size:13.5px;line-height:1.7;}
+    .tldr span b{color:#dde2e9;}
+    .docinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;
+      border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.02);}
+    .docinfo>div{padding:11px 16px 12px;border-right:1px solid rgba(255,255,255,.10);min-width:0;}
+    .docinfo>div:nth-child(4){border-right:none;}
+    .docinfo>.wide{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.10);border-right:none;}
+    .docinfo i{display:block;font:600 10.5px/1 var(--mono);letter-spacing:.2em;
+      font-style:normal;color:#7d8792;}
+    .docinfo b{display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#dde2e9;line-height:1.5;}
+    .docinfo a{color:#c8a96a;text-decoration:none;} .docinfo a:hover{text-decoration:underline;}
+    .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:26px;margin-top:26px;}
+    nav{position:sticky;top:18px;align-self:start;padding:14px 12px;border:1px solid var(--line);
+      border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);}
+    nav .title{padding:2px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);
+      font:600 11px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);}
+    /* 两级目录:幕分组标签 */
+    nav .grp{padding:11px 10px 3px;font:700 10.5px/1.4 var(--mono);letter-spacing:.2em;color:var(--brass);}
+    nav a{display:flex;align-items:baseline;gap:9px;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;
+      color:var(--muted);font-size:13.5px;text-decoration:none;transition:all .15s;}
+    nav a i{font:600 11px/1 var(--mono);font-style:normal;color:var(--muted);opacity:.6;transform:translateY(-1px);}
+    nav a:hover{color:var(--ink);background:var(--soft);}
+    nav a.active{color:var(--accent-text);background:var(--accent-soft);border-left-color:var(--accent);font-weight:600;}
+    nav a.active i{color:var(--accent-text);opacity:1;}
+    main{counter-reset:sec;}
+    /* ---- 篇章分隔条:故事的幕间页 ---- */
+    .part{display:flex;align-items:center;gap:14px;padding:20px 6px 12px;}
+    .part b{font:700 12.5px/1 var(--mono);letter-spacing:.3em;color:var(--brass);}
+    .part span{font:600 10.5px/1.6 var(--mono);letter-spacing:.08em;color:var(--muted);}
+    .part::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+    section{padding:36px 44px;margin:0 0 18px;background:var(--paper);
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      scroll-margin-top:24px;counter-increment:sec;}
+    section:last-child{margin-bottom:0;}
+    h2{display:flex;align-items:center;gap:12px;margin:0 0 4px;font-size:28px;font-weight:780;line-height:1.28;letter-spacing:-.01em;}
+    h2::before{content:counter(sec,decimal-leading-zero);flex:none;padding:4px 9px;border-radius:6px;
+      font:700 14px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);
+      border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);}
+    h3{margin:30px 0 0;font-size:17.5px;font-weight:730;line-height:1.4;
+      display:flex;align-items:center;gap:9px;}
+    h3::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--brass);flex:none;}
+    .rule h3,.note h3,.box h3{margin-top:0;} .rule h3::before,.box h3::before{display:none;}
+    p{margin:10px 0 0;color:var(--muted);} .rule p,.note p,.box p{color:inherit;}
+    p b,li b{color:var(--ink);} .rule b,.note b{color:inherit;font-weight:750;}
+    p,li,td,th{overflow-wrap:anywhere;}
+    ul,ol{margin:10px 0 0;padding-left:22px;} li{color:var(--muted);} li+li{margin-top:6px;}
+    li::marker{color:var(--brass);}
+    code{font-family:var(--mono);font-size:.9em;color:var(--code);background:var(--code-bg);
+      padding:1px 6px;border-radius:5px;}
+    img,video{max-width:100%;border-radius:var(--radius);border:1px solid var(--line);margin-top:14px;}
+    figure{margin:16px 0 0;padding:0;min-width:0;}
+    figure video,figure img{width:100%;margin-top:0;display:block;}
+    figcaption{margin-top:8px;font-size:13px;line-height:1.7;color:var(--muted);}
+    figcaption b{color:var(--ink);}
+    svg.diagram{display:block;max-width:100%;margin-top:14px;}
+    blockquote{margin:14px 0 0;padding:10px 18px;border-left:3px solid var(--brass);color:var(--ink);font-style:normal;}
+    blockquote i{color:var(--muted);font-style:normal;font-size:13px;}
+    .rule{position:relative;margin-top:18px;padding:18px 20px 16px;border-radius:var(--radius);
+      background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);
+      border-left:4px solid var(--accent);}
+    .rule::before{content:"◆ 关键";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--accent-text);}
+    .note{position:relative;margin-top:18px;padding:16px 20px 14px;border-radius:var(--radius);
+      background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);
+      border-left:4px solid var(--warn);color:var(--ink);}
+    .note::before{content:"⚠ 注意";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--warn);}
+    /* 题外话旁注:衍生思考就近安置,不污染主线也不必远放附录 */
+    .aside{position:relative;margin-top:18px;padding:14px 18px 12px;border-radius:var(--radius);
+      border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
+    .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
+      font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
+    .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
+    .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
+    .box.green{border-color:color-mix(in srgb,var(--ok) 35%,transparent);background:var(--ok-soft);}
+    table{width:100%;margin-top:16px;border-collapse:separate;border-spacing:0;
+      border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px;}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+    th{background:var(--soft);color:var(--muted);font:600 12px/1.5 var(--mono);letter-spacing:.1em;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:color-mix(in srgb,var(--accent) 4%,transparent);}
+    tr.group td{background:var(--soft);color:var(--accent-text);
+      font:700 12px/1.5 var(--mono);letter-spacing:.18em;}
+    tr.group:hover td{background:var(--soft);}
+    td{color:var(--muted);} td b{color:var(--ink);}
+    .ok,.no,.later{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+    .ok{color:var(--ok);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);}
+    .no{color:var(--danger);background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);}
+    .later{color:var(--warn);background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);}
+    /* ---- 资料区折叠:同事查表用,默认收起,打印自动展开(JS) ---- */
+    details.fold{margin-top:14px;}
+    details.fold>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 16px;border:1px solid var(--line);border-radius:999px;
+      font:600 12.5px/1 var(--mono);letter-spacing:.06em;color:var(--accent-text);
+      background:var(--paper);user-select:none;transition:background .15s;}
+    details.fold>summary::-webkit-details-marker{display:none;}
+    details.fold>summary::before{content:"▸";transition:transform .15s;}
+    details.fold[open]>summary::before{transform:rotate(90deg);}
+    details.fold>summary:hover{background:var(--soft);}
+    footer{margin-top:28px;text-align:center;font:500 12px/1.6 var(--mono);letter-spacing:.14em;color:var(--muted);}
+    footer a{color:var(--brass);text-decoration:none;}
+    #topBtn{position:fixed;right:26px;bottom:26px;z-index:50;width:42px;height:42px;border-radius:50%;
+      border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:17px;cursor:pointer;
+      box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .25s;}
+    #topBtn.show{opacity:1;pointer-events:auto;} #topBtn:hover{color:var(--accent-text);}
+    @media(max-width:980px){
+      .layout{grid-template-columns:1fr;}
+      nav{position:static;display:flex;flex-wrap:wrap;gap:2px;} nav .title,nav .grp{width:100%;}
+      nav a{padding:6px 10px;} section{padding:26px 20px;} .part{padding:16px 20px;} .grid{grid-template-columns:1fr;}
+      .hero{padding:34px 26px 32px;} .hero::before{inset:9px;}
+      .docinfo{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .docinfo>div:nth-child(2n){border-right:none;}
+      .docinfo>div:nth-child(n+3){border-top:1px solid rgba(255,255,255,.10);}
+    }
+    @media print{
+      #progress,#themeBtn,#topBtn,nav{display:none!important;}
+      .layout{grid-template-columns:1fr;} body{background:#fff;}
+      main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
+    }
+  </style>
+</head>
+<body>
+  <div id="progress"></div>
+  <div class="page">
+    <header class="hero">
+      <button id="themeBtn" title="切换亮/暗主题">☾</button>
+      <div class="kicker">Combat 3C · Movement Case · Doc CASE-05</div>
+      <h1>竞技移动的“反物理”：输入确认、非对称轨迹与战斗回流</h1>
+      <p class="lede">这里的“反物理”不是绕开 CharacterMovement，而是削掉不服务操作的自然惯性。起步要尽早承认输入，高弧跳跃要在下坠时兑现威胁，翻越和落地要把控制权还回来；胶囊位置、判定与网络结果仍然一丝都不能骗。</p>
+      <div class="tldr">
+        <div><i>课题</i><span>真实加速会显得软，对称高弧会乱飘，完整播完 Stop / Land 又容易抢控制。问题不是物理对不对，而是它有没有服务输入、预警与战斗回流。</span></div>
+        <div><i>终案</i><span>用四道门裁决每一次“反物理”：<b>输入确认、轨迹造型、控制权归还、网络一致</b>。真实位移交给 CMC / RMS，重量和提前读意图交给动画。</span></div>
+        <div><i>结果</i><span>方向性移速、Sparrow 下降段缓降、Steel 非对称跳劈、Traversal 动量恢复已落地；Start / Pivot Boost 代码已成形，但网络移动合并缺口未过，当前关闭。</span></div>
+      </div>
+      <div class="docinfo">
+        <div><i>文档编号</i><b>CASE-05</b></div>
+        <div><i>版本 / 状态</i><b>v0.1 · 已落地复盘 + 建设蓝图</b></div>
+        <div><i>需求方</i><b>战斗 3C 策划</b></div>
+        <div><i>实现方</i><b>战斗程序 / 技术动画；AI 辅助考古与文档</b></div>
+        <div class="wide"><i>配套文档</i><b><a href="../topics/移动优化/移动手感量化标准.html">《竞技移动手感量化标准》</a> · <a href="../topics/移动优化/MM优化六期-收官与全英雄治理.html">《MM 优化六期》</a> · <a href="../topics/移动优化/Traversal - 攀爬翻越系统接入·完整调试实录.html">《Traversal 完整调试实录》</a></b></div>
+      </div>
+    </header>
+
+    <div class="foreword">
+      <p>这篇不是从“游戏为什么需要反物理”讲起。这里的“反物理”只指削掉不服务操作的自然惯性，不是绕开 CharacterMovement，更不是不要网络预测。项目里已经有更具体的东西：起步爆发写进了 CMC，却因为网络移动合并没敢打开；Sparrow 蓄力时只把下降放慢；Steel 跳劈则反过来，过顶点后把重力乘到 4 倍。它们早就不是一条物理曲线。</p>
+      <p>我习惯用四个问题管这类需求：玩家的输入何时必须被承认，轨迹哪一段负责卖预警、哪一段负责兑现，控制权该由哪一层还回来，这个短窗能不能被客户端预测和服务器重放。这只是项目里的工作分法，不是行业分类。</p>
+      <p>目前已经落地的部分，本文会把代码、配置和边界写细；没有做完的也不补结论。Start / Pivot Boost 仍然关闭，普通 Jump 要不要加重下降、Jump Buffer 要不要立项，都留在建设清单里。</p>
+    </div>
+
+    <div class="layout">
+      <nav id="toc">
+        <div class="title">Contents</div>
+        <div class="grp">背景</div>
+        <a href="#goal"><i>01</i>现状与问题</a>
+        <div class="grp">过程 · 逐机制</div>
+        <a href="#research"><i>02</i>最近的已知解</a>
+        <a href="#decision"><i>03</i>方案排定</a>
+        <a href="#boost"><i>04</i>起步与折返 Boost</a>
+        <a href="#direction"><i>05</i>方向性移速衰减</a>
+        <a href="#braking"><i>06</i>停止与制动</a>
+        <a href="#sparrow"><i>07</i>Sparrow 蓄力缓降</a>
+        <a href="#steel"><i>08</i>Steel 非对称跳劈</a>
+        <a href="#reflow"><i>09</i>落地与 Traversal 回流</a>
+        <div class="grp">结果</div>
+        <a href="#solution"><i>10</i>终案分层</a>
+        <a href="#acceptance"><i>11</i>验收实录</a>
+        <div class="grp">资料</div>
+        <a href="#params"><i>12</i>关键参数</a>
+        <a href="#leftovers"><i>13</i>遗留与保险丝</a>
+        <a href="#methodology"><i>14</i>方法论沉淀</a>
+        <a href="#appendix"><i>15</i>附录</a>
+      </nav>
+
+      <main>
+        <div class="part"><b>背景</b></div>
+        <section id="goal">
+          <h2>移动系统现状与问题</h2>
+          <p>项目是 UE5 多人竞技 MOBA / 射击。常态移动由 CharacterMovementComponent（CMC）结算真实速度，技能跳跃和冲刺会交给 Root Motion Source（RMS），Motion Matching 与动画蓝图负责 Start / Stop / Pivot、脚步和重量，GAS 与 Traversal 再切换移动配置。一个“起步有点软”，往往横跨四层。</p>
+          <p>真正难的是三个瞬间。静止起步时，自然加速度还没形成肉眼可读的速度，玩家已经按下了；高弧技能过顶点后按对称重力慢慢落，预警有了，威胁却砸不下来；Stop、Land、Traversal 如果坚持把动画播完整，胶囊体和控制权就被表现拖着走。</p>
+          <div class="rule"><h3>本文的红线</h3><p>可以重排速度曲线，可以让动画提前读出意图，也可以把惯性留在上身；<b>不能伪造胶囊位置、判定距离和联网结果</b>。更准确地说：动画可以重排时间、缩放幅度、分配身体朝向，但不能伪造移动事件、方向符号和触地约束。</p></div>
+        </section>
+
+        <div class="part"><b>过程</b></div>
+        <section id="research">
+          <h2>最近的已知解</h2>
+          <p>行业里处理这类问题的手艺并不神秘，大体是三件事：输入宽容让系统更早承认意图，分段曲线把上升和下降拆开，表现层承担重量但不改真实判定。项目真正多出来的一道约束，是这些短窗都要经过 CharacterMovement 的预测、合并和重放。</p>
+          <div class="grid">
+            <div class="box"><h3>输入宽容</h3><p>Boost、Buffer、迟滞窗都在缩短“我已经按了”到“系统承认了”的时间。它们不能顺手增加不可解释的总位移。</p></div>
+            <div class="box"><h3>分段轨迹</h3><p>上升负责轮廓和预警，下降负责操作窗口或威胁兑现。缓降和硬砸看起来相反，底层都是只改下降段。</p></div>
+            <div class="box"><h3>表现与判定分离</h3><p>胶囊体先停，上身与骨盆再把惯性演完；动画可以提前反打，但不能把判定位置提前搬过去。</p></div>
+            <div class="box"><h3>多人保险丝</h3><p>本地预测、服务器结算、远端表现必须是同一件事。单机很跟手、进 DS 就回弹，这个方案仍算没做。</p></div>
+          </div>
+          <div class="aside"><p>这节目前只写项目能坐实的行业常用手段。外部检索工具在本轮不可用，没硬塞竞品名字；最相近的出货游戏先例留给发布前的内行嗅觉关补。</p></div>
+        </section>
+
+        <section id="decision">
+          <h2>方案排定：四个问题，问完再动手</h2>
+          <p>每次讨论 Boost、重力、落地或 Traversal，先过四个问题：输入何时必须被承认；轨迹哪段卖预警、哪段做兑现；控制权由哪层还回来；这个短窗能不能被客户端预测和服务器重放。它们不是四套系统，是同一个改动的四个检查位。</p>
+          <svg class="diagram" viewBox="0 0 860 330" role="img" aria-label="竞技移动四道裁决门">
+  <defs><marker id="arrowContract" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/></marker></defs>
+  <rect x="20" y="26" width="190" height="108" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+  <text x="40" y="56" fill="var(--accent-text)" font-size="12" font-family="var(--mono)">01 INPUT</text><text x="40" y="84" fill="var(--ink)" font-size="20" font-weight="700">输入确认</text><text x="40" y="111" fill="var(--muted)" font-size="13">系统何时承认玩家已经按了？</text>
+  <rect x="230" y="26" width="190" height="108" rx="6" fill="var(--brass-soft)" stroke="var(--brass)"/>
+  <text x="250" y="56" fill="var(--brass)" font-size="12" font-family="var(--mono)">02 TRAJECTORY</text><text x="250" y="84" fill="var(--ink)" font-size="20" font-weight="700">轨迹造型</text><text x="250" y="111" fill="var(--muted)" font-size="13">哪一段卖预警，哪一段兑现？</text>
+  <rect x="440" y="26" width="190" height="108" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/>
+  <text x="460" y="56" fill="var(--ok)" font-size="12" font-family="var(--mono)">03 CONTROL</text><text x="460" y="84" fill="var(--ink)" font-size="20" font-weight="700">控制权归还</text><text x="460" y="111" fill="var(--muted)" font-size="13">位置何时听输入，重量留给谁？</text>
+  <rect x="650" y="26" width="190" height="108" rx="6" fill="var(--warn-soft)" stroke="var(--warn)"/>
+  <text x="670" y="56" fill="var(--warn)" font-size="12" font-family="var(--mono)">04 NETWORK</text><text x="670" y="84" fill="var(--ink)" font-size="20" font-weight="700">网络一致</text><text x="670" y="111" fill="var(--muted)" font-size="13">预测、重放、远端是否同义？</text>
+  <path d="M115 166 H745" stroke="var(--accent)" stroke-width="3" marker-end="url(#arrowContract)"/>
+  <circle cx="115" cy="166" r="8" fill="var(--accent)"/><circle cx="325" cy="166" r="8" fill="var(--brass)"/><circle cx="535" cy="166" r="8" fill="var(--ok)"/><circle cx="745" cy="166" r="8" fill="var(--warn)"/>
+  <rect x="130" y="210" width="600" height="86" rx="6" fill="var(--soft)" stroke="var(--line)"/>
+  <text x="430" y="244" text-anchor="middle" fill="var(--ink)" font-size="20" font-weight="700">任何一道门过不了，反物理就不能上线</text>
+  <text x="430" y="272" text-anchor="middle" fill="var(--muted)" font-size="13">动画可以提前表达意图；胶囊位置、判定距离与网络结果不能提前结算。</text>
+</svg>
+          <h3>被否掉的捷径</h3>
+          <table><thead><tr><th>看起来省事的方案</th><th>为什么不行</th><th>最后怎么做</th></tr></thead><tbody>
+            <tr><td>把 Start / Stop 动画拉长，靠表演卖重量</td><td>输入已经发生，胶囊体却等动画；重量直接变成迟滞。</td><td>真实位移先响应，动画只负责蹬地、制动脚和上身惯性。</td></tr>
+            <tr><td>统一把重力拉大，同时做高弧和硬砸</td><td>上升、顶点和下降绑在一起；弧高与下坠互相打架。</td><td>顶点前后分段，缓降与硬砸各自只改下降。</td></tr>
+            <tr><td>Traversal 结束速度归零</td><td>玩家翻完重新起步，胶囊体停了，动画还在接跑，立刻滑步。</td><td>按动作恢复部分动量，并在 Warp 完成后及时还控制。</td></tr>
+            <tr><td>先开 StartBoost，再补网络</td><td>瞬时触发帧可能被 SavedMove 合并，客户端与服务器不是同一条曲线。</td><td>默认关闭；补完 combine / replay 证据后再谈启用。</td></tr>
+          </tbody></table>
+          <p>下面六节按机制平铺，每节只讲一件事：现象、实现、数字、当前状态与边界。</p>
+        </section>
+
+        <section id="boost">
+          <h2>起步与折返：Start / Pivot Boost</h2>
+          <p><span class="no">已实现未启用</span></p>
+          <p>现象很老：静止起步时，自然加速度还没形成肉眼可读的速度，玩家已经按下了；大角度反打时，当前速度方向已经错了，系统却还在慢慢刹旧方向。两件事是一族问题，都是"输入发生了，系统还没承认"。</p>
+          <p>实现放在同一套 <code>FStartBoostSetting</code> 里：持续时间 1.3 秒、峰值上限 750cm/s（抬的是 MaxSpeed 上限，实际速度仍要靠加速度爬上去），Pivot 默认在速度方向与输入方向点积小于 -0.5 时触发（夹角约大于 120°）。<code>UpdateStartBoost()</code> 每帧检测"上一帧静止、本帧有输入"或"大角度反打"，重置计时；<code>GetMaxSpeed()</code> 再按剩余时间从峰值插值回基础速度。ABP 只能读 <code>StartBoostAlpha</code> 做表现，不能把速度写回来。方向性衰减排在 Boost 之后生效，后退起步同样打折。</p>
+          <svg class="diagram" viewBox="0 0 860 370" role="img" aria-label="地面移动输入与表现双轨曲线">
+  <line x1="70" y1="310" x2="810" y2="310" stroke="var(--line)"/><line x1="70" y1="42" x2="70" y2="310" stroke="var(--line)"/>
+  <text x="36" y="58" fill="var(--muted)" font-size="12" font-family="var(--mono)">HIGH</text><text x="40" y="315" fill="var(--muted)" font-size="12" font-family="var(--mono)">ZERO</text>
+  <rect x="70" y="42" width="135" height="268" fill="var(--accent-soft)" opacity=".7"/><rect x="205" y="42" width="225" height="268" fill="var(--soft)"/><rect x="430" y="42" width="180" height="268" fill="var(--brass-soft)" opacity=".7"/><rect x="610" y="42" width="200" height="268" fill="var(--soft)"/>
+  <text x="137" y="64" text-anchor="middle" fill="var(--accent-text)" font-size="13" font-weight="700">START</text><text x="317" y="64" text-anchor="middle" fill="var(--muted)" font-size="13" font-weight="700">CRUISE</text><text x="520" y="64" text-anchor="middle" fill="var(--brass)" font-size="13" font-weight="700">PIVOT</text><text x="710" y="64" text-anchor="middle" fill="var(--muted)" font-size="13" font-weight="700">STOP</text>
+  <path d="M70 292 C94 250 110 126 150 104 C175 92 190 108 205 112 L430 112 C455 112 470 250 500 270 C530 292 552 140 590 116 C600 110 605 110 610 112 L685 112 C705 112 708 244 750 286 C770 302 790 305 810 305" fill="none" stroke="var(--accent)" stroke-width="4"/>
+  <path d="M70 300 C120 270 165 225 205 180 L430 180 C470 190 510 248 555 208 C585 180 598 178 610 180 L680 180 C710 180 730 205 755 225 C780 247 795 270 810 286" fill="none" stroke="var(--brass)" stroke-width="4" stroke-dasharray="9 7"/>
+  <text x="92" y="94" fill="var(--accent-text)" font-size="13">真实速度先承认输入</text><text x="620" y="96" fill="var(--accent-text)" font-size="13">胶囊体先停</text><text x="620" y="207" fill="var(--brass)" font-size="13">上身与重心保留短惯性</text>
+  <rect x="180" y="326" width="16" height="4" fill="var(--accent)"/><text x="205" y="334" fill="var(--muted)" font-size="12">真实位移 / 控制权</text><rect x="410" y="326" width="16" height="4" fill="var(--brass)"/><text x="435" y="334" fill="var(--muted)" font-size="12">动画重量 / 身体惯性</text>
+</svg>
+          <div class="note"><p><span class="no">当前关闭</span> <code>FSavedMove</code> 已保存和恢复 BoostTimer、上一帧运动状态，却没有 <code>CanCombineWith()</code> 比较。短触发帧可能被移动合并吞掉，客户端与服务器重放不同步。现行 Sparrow、Steel、Twinblast 等 MCD 实读均为 <code>bOverrideStartBoost=false</code>。</p></div>
+          <p>交叉复核又补了三条启用前置：Pivot 判定读的是 Velocity 与输入的点积，没有迟滞和边沿锁存，反向期间会逐帧把计时器续满；被击退等被动速度也可能误触发；BoostTimer 不复制，远端只会看到位置变快而没有对应的起步表现。这几条都在遗留表里挂成启用条件。</p>
+          <svg class="diagram" viewBox="0 0 860 300" role="img" aria-label="StartBoost 网络保险丝时序">
+  <defs><marker id="arrowNet" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/></marker></defs>
+  <g fill="var(--paper)" stroke="var(--line)"><rect x="30" y="54" width="130" height="72" rx="6"/><rect x="195" y="54" width="130" height="72" rx="6"/><rect x="360" y="54" width="130" height="72" rx="6"/><rect x="525" y="54" width="130" height="72" rx="6"/><rect x="690" y="54" width="140" height="72" rx="6"/></g>
+  <g fill="var(--ink)" font-size="16" font-weight="700" text-anchor="middle"><text x="95" y="85">输入触发</text><text x="260" y="85">SavedMove</text><text x="425" y="85">合并 / 重放</text><text x="590" y="85">Server</text><text x="760" y="85">远端语义</text></g>
+  <g fill="var(--muted)" font-size="12" text-anchor="middle"><text x="95" y="108">Start / Pivot</text><text x="260" y="108">缓存计时与状态</text><text x="425" y="108">不能吞瞬时帧</text><text x="590" y="108">同曲线结算</text><text x="760" y="108">不滑移、不回弹</text></g>
+  <g stroke="var(--accent)" stroke-width="2" marker-end="url(#arrowNet)"><path d="M160 90 H190"/><path d="M325 90 H355"/><path d="M490 90 H520"/><path d="M655 90 H685"/></g>
+  <rect x="330" y="168" width="190" height="74" rx="6" fill="var(--danger-soft)" stroke="var(--danger)"/><text x="425" y="196" text-anchor="middle" fill="var(--danger)" font-size="13" font-family="var(--mono)">CURRENT BLOCKER</text><text x="425" y="221" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="700">缺 CanCombineWith 比较</text>
+  <path d="M425 126 V164" stroke="var(--danger)" stroke-width="2"/><text x="425" y="270" text-anchor="middle" fill="var(--muted)" font-size="13">当前结论：代码结构存在，默认关闭；网络保险丝没过就不启用。</text>
+</svg>
+        </section>
+
+        <section id="direction">
+          <h2>方向性移速衰减</h2>
+          <p><span class="ok">已落地并配置</span></p>
+          <p>朝向开始收钱：正面盯着敌人后撤，信息保住了，速度要交一点；转身跑能拿满速，但把枪口和视野交出去。当前全英雄配置是前进 1.0、横移 0.9、后退 0.8。</p>
+          <p>它不是三个硬档，而是用角色面朝方向与 Acceleration 的二维点积连续插值：45° 斜前只吃约 29% 的侧移惩罚，斜后大约 0.83，摇杆画圆不会在区间边界跳速。系数排在属性、Buff、Boost 全部汇总之后整体相乘，任何来源的移速后退时都等比打折。</p>
+          <p>取 Acceleration 而不是 Velocity 是网络决定：Acceleration 进 SavedMove / ServerMove 的重放数据，客户端预测与服务器天然一致；Velocity 反过来决定自己的上限，会形成"速度算上限、上限再改速度"的反馈环。松开输入时 Acceleration 约等于零，系统返回 1.0，不碰制动滑行。边界也直说：代码与 20 个英雄的配置已落，多人盲测和观察期还没走完。</p>
+        </section>
+
+        <section id="braking">
+          <h2>停止与制动：位置先停，重量晚半拍停</h2>
+          <p><span class="ok">既有底座</span></p>
+          <p>角色底座当前使用 MaxAcceleration 2400、GroundFriction 8、BrakingFriction 6、BrakingDecelerationWalking 1400。拿同一组物理量预测停距、再按真实位移推进 Stop / Pivot 的 Distance Matching 代码在 <code>UHeroAnimInstance</code> 这条动画链里；现行共享 MM 父 ABP 走的是 GASP 的 MotionMatching / OrientationWarping / FootPlacement 节点。两条链要分开说：前者是把时间对齐真实距离的正确做法参考，不能直接写成当前 MM 链的上线事实。</p>
+          <p>这些常量不是这次新拍的，也没有一轮完整 A/B 可以冒领。它们能坐实的是结构：CMC 决定角色到底停在哪，动画负责制动脚、骨盆回收和上身惯性。不能为了把 Stop 播完，再把胶囊体拖出去一截。</p>
+          <div class="aside"><p>一处口径冲突留档：量化标准和调参手册写过 Stride Warping 已配，但这次对 Content 与 Plugins 全库检索没有找到 StrideWarping 节点，只有旧动画链里的权重变量。进待验证，不在正文当既成事实。</p></div>
+        </section>
+
+        <section id="sparrow">
+          <h2>Sparrow 蓄力缓降：只让下降慢下来</h2>
+          <p><span class="ok">已落地并配置</span></p>
+          <p>Sparrow 蓄力配置把最大移动速度压到 300cm/s，并启用 <code>DescentGravityScale=0.25</code>。运行时只有 <code>IsFalling()</code> 且 <code>Velocity.Z&lt;0</code> 才覆盖普通 GravityScale；上升段完全不动。</p>
+          <p>这解决的是操作窗，不是跳得更高。弓箭手已经离地并进入下降时，给她更长的蓄力和瞄准时间；如果把整个 GravityScale 都降下去，上升也会被拖长，技能节奏会一起变软。接口是通用的（任何 Override MCD 都能配下降段倍率），但目前坐实的使用案例就是 Sparrow 这一处，不写成普通跳跃已全面使用。</p>
+        </section>
+
+        <section id="steel">
+          <h2>Steel 跳劈：上升卖预警，下降把威胁砸实</h2>
+          <p><span class="ok">已落地并配置</span></p>
+          <p>Steel 的问题和 Sparrow 正好相反。AbilityJump 使用 RMS 的恒定向上速度与 CustomGravity；为了高弧调大向上分量，这股力在下降时仍然托着角色，对称曲线过顶点后发飘。项目新增 <code>DescentGravityMultiplier</code>：顶点前用原 CustomGravity，顶点后才乘下降倍率，倍率 1.0 时与旧逻辑逐帧一致。</p>
+          <p>Steel 现行落地段配置实读为 4.0。这个提交不只改一条曲线，还一起落了 NetSerialize、HAD 跳跃调参、砸地 Gameplay Cue、Camera Lag 和落地段 MCD。攻击方在上升阶段卖出轮廓，防守方能看清预警；过顶点后下坠变硬，威胁不会悬在空中等人。</p>
+          <svg class="diagram" viewBox="0 0 860 360" role="img" aria-label="对称跳跃、缓降与硬砸轨迹对比">
+  <line x1="55" y1="306" x2="815" y2="306" stroke="var(--line)"/>
+  <path d="M75 306 Q260 34 445 306" fill="none" stroke="var(--muted)" stroke-width="3" stroke-dasharray="8 7"/>
+  <path d="M75 306 Q260 34 445 178 Q610 228 790 306" fill="none" stroke="var(--accent)" stroke-width="4"/>
+  <path d="M75 306 Q260 34 445 154 Q500 242 555 306" fill="none" stroke="var(--brass)" stroke-width="4"/>
+  <circle cx="260" cy="170" r="5" fill="var(--muted)"/><circle cx="260" cy="170" r="5" fill="var(--accent)"/><circle cx="260" cy="170" r="5" fill="var(--brass)"/>
+  <text x="260" y="22" text-anchor="middle" fill="var(--ink)" font-size="17" font-weight="700">上升段：轮廓与预警</text><text x="615" y="84" text-anchor="middle" fill="var(--ink)" font-size="17" font-weight="700">下降段：操作或兑现</text>
+  <text x="615" y="184" fill="var(--accent-text)" font-size="14">Sparrow 缓降：DescentGravityScale 0.25</text><text x="470" y="278" fill="var(--brass)" font-size="14">Steel 硬砸：下降倍率 4.0</text><text x="520" y="322" fill="var(--muted)" font-size="13">灰虚线：对称高弧，过顶点后容易显得软</text>
+  <text x="75" y="344" fill="var(--muted)" font-size="12">示意图只表达分段关系，不代表实测时间与高度。</text>
+</svg>
+          <p>一条链路边界要说清：普通空格跳走 CMC 重力，AbilityJump 走 RMS 自己的重力公式，两条链只共享落地环境。Steel 的 4.0 不代表所有跳跃技能都已非对称，更不代表普通跳跃该照抄。</p>
+        </section>
+
+        <section id="reflow">
+          <h2>落地与 Traversal 回流：动作可以占用控制，但必须有归还点</h2>
+          <p><span class="ok">代码能力已落地</span></p>
+          <p>普通落地的动画权重按空中时长 0–0.4 秒映射到 0.1–1.0；蹲伏时再乘 0.3，落地仍有移动输入时乘 0.5。这里削的是 Land Recovery 表现，不是胶囊体控制权：玩家还在推杆，恢复动作就让位。</p>
+          <p>Traversal 走得更远。Hurdle / Vault 结束后恢复进入前水平速度的 80%，再切回 Falling 让物理接管落地；Mantle / Climb / Catch 直接回 Walking。<code>EndAbilityTimingEarlyOffset</code> 还能相对 Warp 窗口提前或延后还控制，计时会除以最终 PlayRate。0% 动量会重新加速并滑步，100% 又接近无成本跑酷，0.8 是当前默认折中。</p>
+          <svg class="diagram" viewBox="0 0 860 350" role="img" aria-label="跨状态动量和控制权归还">
+  <defs><marker id="arrowMomentum" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/></marker></defs>
+  <g fill="var(--paper)" stroke="var(--line)"><rect x="55" y="62" width="165" height="78" rx="6"/><rect x="348" y="62" width="165" height="78" rx="6"/><rect x="640" y="62" width="165" height="78" rx="6"/><rect x="55" y="218" width="165" height="78" rx="6"/><rect x="348" y="218" width="165" height="78" rx="6"/><rect x="640" y="218" width="165" height="78" rx="6"/></g>
+  <g fill="var(--ink)" font-size="18" font-weight="700" text-anchor="middle"><text x="137" y="95">Run / Sprint</text><text x="430" y="95">Traversal</text><text x="722" y="95">Falling</text><text x="137" y="251">Ability Jump</text><text x="430" y="251">Impact / Land</text><text x="722" y="251">Grounded</text></g>
+  <g fill="var(--muted)" font-size="12" text-anchor="middle"><text x="137" y="120">进入前速度</text><text x="430" y="120">Warp 控制位置</text><text x="722" y="120">恢复 80% 水平速度</text><text x="137" y="276">非对称轨迹</text><text x="430" y="276">技能承诺窗</text><text x="722" y="276">重新听移动输入</text></g>
+  <path d="M220 100 H343" stroke="var(--accent)" stroke-width="3" marker-end="url(#arrowMomentum)"/><path d="M513 100 H635" stroke="var(--accent)" stroke-width="3" marker-end="url(#arrowMomentum)"/><path d="M137 140 V212" stroke="var(--brass)" stroke-width="3" marker-end="url(#arrowMomentum)"/><path d="M220 257 H343" stroke="var(--brass)" stroke-width="3" marker-end="url(#arrowMomentum)"/><path d="M513 257 H635" stroke="var(--brass)" stroke-width="3" marker-end="url(#arrowMomentum)"/>
+  <text x="282" y="88" text-anchor="middle" fill="var(--accent-text)" font-size="12">保存速度</text><text x="575" y="88" text-anchor="middle" fill="var(--accent-text)" font-size="12">还动量与物理</text><text x="282" y="246" text-anchor="middle" fill="var(--brass)" font-size="12">硬砸兑现</text><text x="575" y="246" text-anchor="middle" fill="var(--brass)" font-size="12">按动作还控制</text>
+  <text x="430" y="332" text-anchor="middle" fill="var(--muted)" font-size="13">每次跨状态都要回答：保留多少速度、何时还输入、动画从哪一帧重新接管。</text>
+</svg>
+          <div class="note"><p>两条边界一起记：恢复动量只缓存了进入前速度的<b>标量</b>，结束时沿角色 Forward 写回，横移、后退入场会被改造成前冲；翻越期间还临时设了忽略客户端纠正、接受客户端权威位置两个网络标志，EndAbility 会恢复，但竞技模式上线前必须补服务端的路径与终点合法性校验。</p></div>
+        </section>
+
+        <div class="part"><b>结果</b></div>
+        <section id="solution">
+          <h2>终案分层</h2>
+          <p>六个机制各自讲完，收拢成一张静态图：按四层职责看，每层可以修饰上一层，但不能替上一层结算。</p>
+          <svg class="diagram" viewBox="0 0 860 420" role="img" aria-label="竞技移动四层终案">
+  <defs><marker id="arrowLayers" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/></marker></defs>
+  <rect x="70" y="28" width="720" height="70" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95" y="56" fill="var(--accent-text)" font-size="12" font-family="var(--mono)">INPUT INTENT</text><text x="95" y="82" fill="var(--ink)" font-size="19" font-weight="700">起步、松键、反打、跳跃、技能位移</text><text x="750" y="66" text-anchor="end" fill="var(--muted)" font-size="13">守住：玩家意图不被吞</text>
+  <path d="M430 98 V122" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrowLayers)"/>
+  <rect x="70" y="130" width="720" height="70" rx="6" fill="var(--brass-soft)" stroke="var(--brass)"/><text x="95" y="158" fill="var(--brass)" font-size="12" font-family="var(--mono)">CMC / RMS</text><text x="95" y="184" fill="var(--ink)" font-size="19" font-weight="700">速度、制动、重力、AirControl、Root Motion Source</text><text x="750" y="168" text-anchor="end" fill="var(--muted)" font-size="13">守住：胶囊位置与判定</text>
+  <path d="M430 200 V224" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrowLayers)"/>
+  <rect x="70" y="232" width="720" height="70" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="95" y="260" fill="var(--ok)" font-size="12" font-family="var(--mono)">MM / ABP</text><text x="95" y="286" fill="var(--ink)" font-size="19" font-weight="700">Start / Stop / Pivot、Distance Matching、Warping、Land Recovery</text><text x="750" y="270" text-anchor="end" fill="var(--muted)" font-size="13">守住：动作语义与重量</text>
+  <path d="M430 302 V326" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrowLayers)"/>
+  <rect x="70" y="334" width="720" height="70" rx="6" fill="var(--warn-soft)" stroke="var(--warn)"/><text x="95" y="362" fill="var(--warn)" font-size="12" font-family="var(--mono)">NETWORK VERDICT</text><text x="95" y="388" fill="var(--ink)" font-size="19" font-weight="700">SavedMove、combine / replay、Server、Simulated Proxy</text><text x="750" y="372" text-anchor="end" fill="var(--muted)" font-size="13">守住：所有人看到同一件事</text>
+</svg>
+          <table><thead><tr><th>机制</th><th>当前状态</th><th>证据</th><th>它守住什么</th></tr></thead><tbody>
+            <tr><td>方向性移速 1 / 0.9 / 0.8</td><td><span class="ok">已落地并配置</span></td><td>CMC + 20 个英雄 MCD + 量化标准</td><td>追击、横移、后退的方向价值</td></tr>
+            <tr><td>Sparrow 下降段 0.25</td><td><span class="ok">已落地并配置</span></td><td>CMC 分段判断 + 现行 MCD 资产</td><td>蓄力期间的下降操作窗</td></tr>
+            <tr><td>Steel 跳劈下降 4.0</td><td><span class="ok">已落地并配置</span></td><td>RMS 分段、NetSerialize、HAD / MCD / Cue</td><td>高弧预警与硬砸兑现同时成立</td></tr>
+            <tr><td>Traversal 动量与还控制</td><td><span class="ok">代码能力已落地</span></td><td>0.8 默认、EarlyOffset、EndAbility 路径</td><td>越障后不从零起步，动作结束无死区</td></tr>
+            <tr><td>Land Recovery</td><td><span class="ok">既有动画能力</span></td><td>空中时长、蹲伏、输入三项权重</td><td>落地有重量，但不抢继续移动</td></tr>
+            <tr><td>Start / Pivot Boost</td><td><span class="no">已实现未启用</span></td><td>CMC + SavedMove 缓存；缺合并比较</td><td>目标成立，网络保险丝未过</td></tr>
+          </tbody></table>
+        </section>
+
+        <section id="acceptance">
+          <h2>验收实录</h2>
+          <p>这篇的证据不都来自同一种验收。能说到哪一步，就停在哪一步。</p>
+          <table><thead><tr><th>项目</th><th>验收方式</th><th>结论</th><th>样本边界</th></tr></thead><tbody>
+            <tr><td>方向性移速</td><td>源码、全英雄资产配置、现有量化标准</td><td><span class="ok">达标</span> 连续插值，无区间跳变；网络输入源使用 Acceleration</td><td>前/侧/后比例是项目数值决策，不推广为行业标准</td></tr>
+            <tr><td>Sparrow 缓降</td><td>现行 MCD 资产实读 + CASE-04 既有记录</td><td><span class="ok">配置在线</span> 下降 0.25、移动 300，上升不受影响</td><td>本文未重新做多人盲测</td></tr>
+            <tr><td>Steel 非对称跳劈</td><td>源码、NetSerialize、P4 整套资产清单、现行 MCD 4.0</td><td><span class="ok">工程落地</span> 上升与下降已解耦</td><td>缺本轮新录的前后对比视频和多人主观样本</td></tr>
+            <tr><td>Traversal 回流</td><td>源码路径 + 既有完整调试实录</td><td><span class="ok">机制在线</span> Hurdle/Vault 恢复动量并回 Falling</td><td>0.8 是当前默认，不代表每个英雄已逐项回读</td></tr>
+            <tr><td>Start / Pivot Boost</td><td>源码与现有 MCD 实读</td><td><span class="no">不得上线</span> 默认关闭，网络合并缺口未补</td><td>没有启用后的 DS / 远端样本</td></tr>
+          </tbody></table>
+          <div class="note"><p><b>验收人和样本：</b>本文是作者既有验收、源码/P4/资产证据的汇编，不是一次新盲测。没有留存验收人原话和样本量的项目，统一写“未记录”；多人盲测仍是遗留。</p></div>
+        </section>
+
+        <div class="part"><b>资料</b><span>按需查阅 · 打印自动展开</span></div>
+        <section id="params">
+          <h2>关键参数</h2>
+          <details class="fold"><summary>展开参数表</summary>
+            <table><thead><tr><th>机制</th><th>字段 / 当前值</th><th>作用域</th><th>口径</th></tr></thead><tbody>
+              <tr class="group"><td colspan="4">已落地并有现行配置</td></tr>
+              <tr><td>方向性移速</td><td>Forward 1.0 / Side 0.9 / Back 0.8</td><td>Walking / NavWalking；全部速度加成之后</td><td>全英雄配置；斜向按余弦连续插值</td></tr>
+              <tr><td>Sparrow 蓄力</td><td>DescentGravityScale 0.25；MaxWalkSpeed 300</td><td>Override MCD；只在下降段</td><td>资产实读值，不是字段默认值</td></tr>
+              <tr><td>Steel 跳劈</td><td>DescentGravityMultiplier / 落地段 Scale 4.0</td><td>AbilityJump RMS + 落地段 MCD</td><td>倍率 1.0 为对称兼容路径</td></tr>
+              <tr><td>Traversal 回流</td><td>LandingVelocityRestoreScale 0.8</td><td>Hurdle / Vault 结束</td><td>恢复进入前水平速度的 80%</td></tr>
+              <tr class="group"><td colspan="4">既有底座或未启用默认</td></tr>
+              <tr><td>Start / Pivot Boost</td><td>Duration 1.3s；MaxSpeed 750；Dot -0.5</td><td>Walking / NavWalking</td><td>结构默认值；现行英雄 bOverrideStartBoost=false</td></tr>
+              <tr><td>地面运动基线</td><td>Acceleration 2400；GroundFriction 8；BrakingFriction 6；Deceleration 1400</td><td>AHeroCharacter 构造默认</td><td>既有项目常量，非本文新调参数</td></tr>
+              <tr><td>Land Recovery</td><td>Falling 0–0.4s→Alpha 0.1–1；Crouch ×0.3；有输入 ×0.5</td><td>动画恢复层</td><td>只改表现权重，不等于移动锁定时间</td></tr>
+              <tr><td>提前还控制</td><td>EndAbilityTimingEarlyOffset [-0.5, 0.5]，默认 0</td><td>Traversal Warp 结束计时</td><td>正值更早，负值更晚</td></tr>
+            </tbody></table>
+          </details>
+        </section>
+
+        <section id="leftovers">
+          <h2>遗留与保险丝</h2>
+          <details class="fold"><summary>展开建设清单</summary>
+            <table><thead><tr><th>优先级</th><th>项目</th><th>完成条件</th><th>当前判断</th></tr></thead><tbody>
+              <tr><td>P0</td><td>Start / Pivot Boost 网络闭环</td><td>补 CanCombineWith；Pivot 判定加迟滞与边沿锁存、反向不续杯；BoostTimer 对远端可读；三端一致、无可感回弹</td><td><span class="no">阻塞启用</span></td></tr>
+              <tr><td>P0</td><td>movement_trace</td><td>逐帧记录输入、位置、速度、加速度、MaxSpeed、BoostAlpha、Gravity、动画、PSDB、PlayRate、修正</td><td><span class="later">待建设</span></td></tr>
+              <tr><td>P0</td><td>Sprint 起步 Reface</td><td>归一化、PlayRate 下限、Trajectory 三条假设逐项实验，误选率清零</td><td><span class="later">已知遗留</span></td></tr>
+              <tr><td>P0</td><td>Traversal 网络权威收口</td><td>服务端校验障碍、走廊与终点合法性；任何取消、死亡路径都恢复两个网络标志</td><td><span class="no">竞技模式前置</span></td></tr>
+              <tr><td>P1</td><td>Stride Warping 口径核实</td><td>编辑器确认共享父 ABP 是否真有该节点；文档口径与库内检索当前冲突</td><td><span class="later">待核实</span></td></tr>
+              <tr><td>P1</td><td>Traversal 动量向量化</td><td>恢复完整入口速度向量，横移、后退入场不被改造成前冲</td><td><span class="later">待设计</span></td></tr>
+              <tr><td>P1</td><td>普通 Jump 的非对称下降</td><td>先测空中暴露、落点可读性、AirControl 与对手预判，再决定是否分英雄</td><td><span class="later">设计提案</span></td></tr>
+              <tr><td>P1</td><td>坡地 / 楼梯一致性</td><td>平地与坡面分别测停距、速度、FootPlacement；不能用平地基线替代</td><td><span class="later">待立基线</span></td></tr>
+              <tr><td>P2</td><td>Jump Buffer</td><td>落地前短窗缓存输入，且不产生 Bunny Hop 额外速度；必须纳入预测</td><td><span class="later">可实验</span></td></tr>
+              <tr><td>P2</td><td>极短 Coyote Time</td><td>先证明边缘判定收益大于对手可读性与网络争议</td><td><span class="later">谨慎提案</span></td></tr>
+              <tr><td>不做</td><td>普通 Jump Apex Hang</td><td>除非具体英雄能力明确需要</td><td><span class="no">不作为通用底座</span></td></tr>
+            </tbody></table>
+            <h3>禁止上线条件</h3>
+            <ul><li>本地与服务器速度曲线不同，或开启后出现位置修正。</li><li>攻击方获得额外位移，但对手侧没有等价可读信号。</li><li>动画已经反打，胶囊体仍长时间沿旧方向滑。</li><li>Stop / Land / Traversal 为了播完整动作继续锁玩家输入。</li><li>普通 Jump 的曲线修改破坏落点预判或让空中暴露窗口大幅变化，却没有数值评审。</li></ul>
+          </details>
+        </section>
+
+        <section id="methodology">
+          <h2>方法论沉淀</h2>
+          <details class="fold"><summary>展开沉淀条目</summary>
+            <h3>候选 M：输入先确认，惯性后表现</h3><p>位置和控制先服从输入，重量用骨盆、上身、制动脚和二级运动补。适用边界：普通 Locomotion；技能明确承诺窗内可以短时占用控制。</p>
+            <h3>候选 M：上升卖预警，下降做兑现</h3><p>用于有明确战斗承诺的跳跃技能。缓降也用同一分段接口，但目标是操作窗；不能把“下降加重”推广成所有 Jump 的默认答案。</p>
+            <h3>候选 M：动画可以提前读意图，位置不能提前结算</h3><p>Trajectory、Pivot Clip、Orientation / Stride Warping 可以更早表达反打；胶囊体、命中判定与网络权威仍由运动层决定。</p>
+            <h3>候选 AP：单机先爽起来，网络以后补</h3><p>短时 Boost、Buffer 和状态脉冲最容易被移动合并吃掉。没有 SavedMove、combine、replay、远端语义的证据，就不算完成。</p>
+            <h3>候选 M：跨状态动量要同时回答收益和成本</h3><p>0% 会断流，100% 可能无成本；继承多少必须和动作承诺、对手可读性、落地控制权一起拍。</p>
+          </details>
+        </section>
+
+        <section id="appendix">
+          <h2>附录：证据、复核与修订记录</h2>
+          <details class="fold"><summary>展开附录</summary>
+            <h3>内部证据索引</h3>
+            <table><thead><tr><th>主题</th><th>内部证据</th></tr></thead><tbody>
+              <tr><td>Start / Pivot Boost</td><td>CL 4924481；MovementConfigDataAsset.h；HeroCharacterMovementComponent.cpp/.h</td></tr>
+              <tr><td>Traversal 动量与提前还控制</td><td>CL 4924644 / 4927156；HeroAbility_Traverse.cpp；MovementConfigDataAsset.h</td></tr>
+              <tr><td>Sparrow 下降段缓降</td><td>CL 5398150；MCD_SparrowAttackHold；CASE-04</td></tr>
+              <tr><td>Steel 非对称跳劈</td><td>CL 5428934；HeroRootMotionSource.*；SkillModuleRootMotionSource.*；HAD_Smash / MCD_Steel_Remove_Gravity</td></tr>
+              <tr><td>方向性移速</td><td>CL 5607245 / 5608363；20 个英雄 MCD；MM 优化六期</td></tr>
+              <tr><td>Land Recovery / Stop</td><td>HeroAnimInstance.cpp/.h；AHeroCharacter 移动默认值</td></tr>
+            </tbody></table>
+            <h3>多角度复核摘要</h3>
+            <ul><li>竞技 3C：主角是控制权与战斗节奏；输入确认与 CASE-04 的输入缓存是两种机制，不能混写。</li><li>网络工程：SavedMove 缓存不等于 combine 安全；Pivot 用 Velocity 单帧阈值且无迟滞，是启用前必须改的点。</li><li>技术动画：全库未检索到 StrideWarping 节点，与既有文档口径冲突；Distance Matching 证据来自旧动画链，只能作参考。</li><li>多人 QA：Traversal 的客户端权威标志与标量动量回写是竞技模式两条硬阻断；movement_trace 是上线前必需而非可选。</li><li>行文复核：反物理必须带引号并当场限定；已落地、未启用、提案在措辞和徽章上分开。</li></ul>
+            <h3>证据局限</h3><ul><li>本轮没有重新录制机制前后对比视频。</li><li>部分既有机制只有源码与资产/P4 证据，没有可引用的验收人原话和样本量。</li><li>外部同类游戏调研未完成，发布前需作者补内行嗅觉关。</li><li>既有 3C 文档与本次库内检索存在口径冲突（Stride Warping 是否已配、DS warning 确认状态），入库前需回查一次，只保留一条。</li></ul>
+            <h3>修订记录</h3><table><thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead><tbody><tr><td>2026-07-14</td><td>v0.1</td><td>基于源码、P4、资产实读与多角度复核建立初稿；详记已落地机制，StartBoost 与候选功能保持未完成状态。</td></tr><tr><td>2026-07-15</td><td>v0.2</td><td>回填交叉复核：修正 Distance Matching 动画链归属、Stride Warping 口径降为待核；补 Pivot 触发迟滞、Boost 上限口径、Traversal 标量动量与网络权威标志四组边界。</td></tr><tr><td>2026-07-15</td><td>v0.3</td><td>按出库模板改为逐机制平铺：拆掉合并大节，六个机制各自成节直叙；四道门压缩进方案排定，图表就近归位。</td></tr><tr><td>2026-07-15</td><td>v0.4</td><td>首节改为「移动系统现状与问题」；随库级决策移除 TL;DR 分工行与「分工与工作方式」小节。</td></tr><tr><td>2026-07-15</td><td>v0.5</td><td>入库发布为 CASE-05；02 节出货游戏先例与作者亲笔位仍开放，后续修订补齐。</td></tr></tbody></table>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+  </div>
+  <button id="topBtn" title="回到顶部">↑</button>
+
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var btn=document.getElementById('themeBtn');
+      var saved=null;
+      try{saved=localStorage.getItem('doc-theme');}catch(e){}
+      var theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      apply(theme);
+      btn.addEventListener('click',function(){
+        theme=(root.dataset.theme==='dark')?'light':'dark';
+        apply(theme);
+        try{localStorage.setItem('doc-theme',theme);}catch(e){}
+      });
+      function apply(t){root.dataset.theme=t;btn.textContent=(t==='dark')?'☀':'☾';}
+      var bar=document.getElementById('progress');
+      addEventListener('scroll',function(){
+        var h=document.documentElement;
+        var max=h.scrollHeight-h.clientHeight;
+        bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+        topBtn.classList.toggle('show',h.scrollTop>600);
+      },{passive:true});
+      var links=[].slice.call(document.querySelectorAll('#toc a[href^="#"]'));
+      var byId={};links.forEach(function(a){byId[a.hash.slice(1)]=a;});
+      if('IntersectionObserver' in window){
+        var io=new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if(e.isIntersecting){
+              links.forEach(function(a){a.classList.remove('active');});
+              var a=byId[e.target.id];if(a)a.classList.add('active');
+            }
+          });
+        },{rootMargin:'-15% 0px -75% 0px'});
+        document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s);});
+      }
+      var topBtn=document.getElementById('topBtn');
+      topBtn.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+      // 打印时自动展开资料区折叠,打印后恢复
+      addEventListener('beforeprint',function(){
+        document.querySelectorAll('details.fold:not([open])').forEach(function(d){
+          d.setAttribute('data-autoopen','');d.open=true;
+        });
+      });
+      addEventListener('afterprint',function(){
+        document.querySelectorAll('details.fold[data-autoopen]').forEach(function(d){
+          d.open=false;d.removeAttribute('data-autoopen');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

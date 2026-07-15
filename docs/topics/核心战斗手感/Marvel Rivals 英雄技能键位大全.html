@@ -384,207 +384,26 @@
 </head>
 <body>
 <header>
-  <h1>⚡ MARVEL RIVALS 英雄技能键位大全</h1>
+  <h1>Marvel Rivals 英雄技能键位大全</h1>
   <p>共 48 个英雄 · 数据来源：marvelrivals.com</p>
 </header>
 
 <section class="methodology">
   <button class="meth-toggle open" id="methToggle">
-    <span>📘 抽屉规则方法论 · 基于 48 英雄数据得出的键位分配框架</span>
+    <span>抽屉规则方法论（本页仅存数据，方法论见《键位抽屉规则》）</span>
     <span class="arrow">▼</span>
   </button>
   <div class="meth-content open" id="methContent">
 
     <!-- 引言 -->
     <div class="meth-block">
-      <h2>⚡ 核心结论：键就是角色</h2>
+      <h2>核心结论：键就是角色</h2>
       <p>MR 的键位不是"技能 1/2/3/4"，而是 <strong>语义槽位（semantic slot）</strong>——同一个键在不同英雄上承担同样的语义角色（Q=大招、Shift=自保、E=战术、RMB=高频副武器）。这让玩家跨英雄迁移肌肉记忆，转人零成本。</p>
       <p>本方法论从 <strong>物理成本</strong>（手指要不要离开 WASD）+ <strong>语义统计</strong>（48 英雄各键的功能分布）两个维度，给出"<strong>每个键应该塞什么技能</strong>"的设计指引。</p>
     </div>
 
-    <!-- 物理成本 -->
     <div class="meth-block">
-      <h2>① 物理成本：手指离开 WASD 的代价</h2>
-      <table class="cost-table">
-        <thead><tr><th>等级</th><th>键</th><th>离手成本</th><th>适合承担</th></tr></thead>
-        <tbody>
-          <tr><td class="lvl lvl-0">零成本</td><td><kbd>LMB</kbd> / <kbd>RMB</kbd></td><td>右手食指/中指本来就在</td><td>持续 / 反应性操作</td></tr>
-          <tr><td class="lvl lvl-0">零成本</td><td><kbd>Shift</kbd> / <kbd>Space</kbd></td><td>左小指/左拇指本来就在</td><td>持续 / 反应性操作</td></tr>
-          <tr><td class="lvl lvl-1">低成本</td><td><kbd>E</kbd> / <kbd>Q</kbd></td><td>中指/无名指抬一下，眼睛不离屏</td><td>高频主动技能</td></tr>
-          <tr><td class="lvl lvl-2">中成本</td><td><kbd>R</kbd> / <kbd>F</kbd></td><td>食指/无名指要拉伸</td><td>中频战术技能</td></tr>
-          <tr><td class="lvl lvl-3">高成本</td><td><kbd>C</kbd> / <kbd>V</kbd> / <kbd>X</kbd> / <kbd>Z</kbd></td><td>手掌下移，Space 弃守</td><td>低频 / Team-Up</td></tr>
-          <tr><td class="lvl lvl-5">极高</td><td><kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd> / <kbd>4</kbd></td><td>整只手平移，必须低头瞄键盘</td><td>战前 / 物品 / 装备</td></tr>
-        </tbody>
-      </table>
-      <p style="margin-top:0.6rem;">传统 MOBA 的 1234 是人机成本最高方案。MR 的 <kbd>RMB</kbd>/<kbd>Shift</kbd>/<kbd>E</kbd>/<kbd>Q</kbd> 让 4 个主动技能全落在零/低成本区，这是 FPS-MOBA 手感跟手的根本原因。</p>
-    </div>
-
-    <!-- 语义统计 -->
-    <div class="meth-block">
-      <h2>② 语义统计：48 英雄各键功能分布</h2>
-      <table class="cost-table">
-        <thead><tr><th>键</th><th>语义</th><th>典型案例</th><th>占比</th></tr></thead>
-        <tbody>
-          <tr><td><kbd>LMB</kbd></td><td>主输出 / 普攻</td><td>全员普攻</td><td>100%</td></tr>
-          <tr><td><kbd>RMB</kbd></td><td>副武器 / 持续高频技能 / 按住式盾</td><td>Iron Man Unibeam, DocStrange Shield, Punisher Grenade</td><td>~90%</td></tr>
-          <tr><td><kbd>Shift</kbd></td><td>位移 / 自保 / 形态切换</td><td>Storm Surge, Diamond Form, Indestructible Guard</td><td><strong>100% 不留空</strong></td></tr>
-          <tr><td><kbd>E</kbd></td><td>战术 / AoE / 控制 / 增益</td><td>Lightning Realm, Pyro-Prison, Healing Bubble</td><td>~95%</td></tr>
-          <tr><td><kbd>Q</kbd></td><td>大招 / 终极技</td><td>Hulk Smash, Reality Erasure, Soul Resurgence</td><td>100%</td></tr>
-          <tr><td><kbd>F</kbd></td><td>特殊冲击 / 强抉择技</td><td>Karmic Revival(复活), Moonlight Hook</td><td>~30%（备用槽）</td></tr>
-          <tr><td><kbd>Space</kbd></td><td>二段跳 / 飞行 / 攀爬</td><td>Incredible Leap, Hel's Descent</td><td>仅垂直机动英雄</td></tr>
-          <tr><td><kbd>C/V/X/Z</kbd></td><td>Team-Up 联动技</td><td>Vibranium Bastion, Cosmic Fastball</td><td>联动专属</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 四个抽屉 -->
-    <div class="meth-block">
-      <h2>③ 抽屉规则（GameMoba 字母键布局：Skill 1/2/3/4 → RMB / Shift / E / R）</h2>
-      <div class="drawer-grid">
-
-        <div class="drawer rmb">
-          <div class="drawer-head">
-            <span class="drawer-key">RMB</span>
-            <span class="drawer-title">右手枪</span>
-            <span class="drawer-tag">高频输出</span>
-          </div>
-          <h4>✓ 允许塞</h4>
-          <ul>
-            <li>CD &lt; 8s 的输出向技能</li>
-            <li>按住式 / 多段瞄准</li>
-            <li>持续治疗光束（治疗位）</li>
-            <li>按住式护盾</li>
-          </ul>
-          <h4 class="forbidden">✗ 禁止塞</h4>
-          <ul><li class="forbidden">长 CD 大招 / 救命位移 / 长前摇 AoE</li></ul>
-          <div class="examples">参考：Iron Man Unibeam · Hela Piercing Night · Adam Cosmic Cluster</div>
-        </div>
-
-        <div class="drawer shift">
-          <div class="drawer-head">
-            <span class="drawer-key">Shift</span>
-            <span class="drawer-title">逃生绳</span>
-            <span class="drawer-tag">永不留空</span>
-          </div>
-          <h4>✓ 优先级（从有到无依次降级）</h4>
-          <ul>
-            <li>① 传统位移（冲刺/闪现/钩自己）</li>
-            <li>② 形态切换（钻石形态/暴怒）</li>
-            <li>③ 短无敌 / 速度爆发 / Cleanse</li>
-            <li>④ 短 CD 自疗 / 韧性增益</li>
-          </ul>
-          <h4 class="forbidden">✗ 禁止塞</h4>
-          <ul><li class="forbidden">主输出 / 指向控 / 长前摇 AoE</li></ul>
-          <div class="examples">底线："玩家半血被追，本能按下去能活更久"</div>
-        </div>
-
-        <div class="drawer e">
-          <div class="drawer-head">
-            <span class="drawer-key">E</span>
-            <span class="drawer-title">战术匣</span>
-            <span class="drawer-tag">主动开团</span>
-          </div>
-          <h4>✓ 允许塞</h4>
-          <ul>
-            <li>CD 10–20s 的团队收益技</li>
-            <li>范围控制（束缚/眩晕/缓速场）</li>
-            <li>AoE 伤害区</li>
-            <li>队友增益（攻速/护盾/加速）</li>
-            <li>单体硬控 / 标记 / 减抗</li>
-          </ul>
-          <div class="examples">参考：Lightning Realm · Pyro-Prison · Healing Bubble · Buddy Barrier</div>
-        </div>
-
-        <div class="drawer r">
-          <div class="drawer-head">
-            <span class="drawer-key">R</span>
-            <span class="drawer-title">核按钮</span>
-            <span class="drawer-tag">终极技</span>
-          </div>
-          <h4>✓ 允许塞</h4>
-          <ul>
-            <li>长 CD（60s+）</li>
-            <li>单局放 2–3 次</li>
-            <li>改变战局的体量</li>
-            <li>视觉 / 音效最隆重</li>
-          </ul>
-          <h4>📌 为何不沿用 MR 的 Q</h4>
-          <ul><li>MOBA 玩家 R=大招 是肌肉记忆，强改 Q 转岗玩家全员翻车。MR 用 Q 是 FPS 血统</li></ul>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- 决策流程 -->
-    <div class="meth-block">
-      <h2>④ 决策流程：拿到一个英雄怎么分配</h2>
-      <div class="flow">
-        <div class="flow-step" data-step="1">
-          <div class="step-title">找出大招</div>
-          <div class="step-desc">→ 放 <span class="step-key">R</span>（不用想）</div>
-        </div>
-        <div class="flow-step" data-step="2">
-          <div class="step-title">找出自保 / 位移</div>
-          <div class="step-desc">→ 放 <span class="step-key">Shift</span>，找不到就找形态/无敌/自疗</div>
-        </div>
-        <div class="flow-step" data-step="3">
-          <div class="step-title">挑高频 / 可瞄准 / 输出向</div>
-          <div class="step-desc">→ 放 <span class="step-key">RMB</span></div>
-        </div>
-        <div class="flow-step" data-step="4">
-          <div class="step-title">剩下的战术 / 控制 / 团辅</div>
-          <div class="step-desc">→ 放 <span class="step-key">E</span></div>
-        </div>
-      </div>
-      <h3 style="margin-top:1rem;">冲突仲裁</h3>
-      <ul>
-        <li><strong>两个位移</strong>（传统位移 + 瞬移大招）→ 位移留 Shift，瞬移走 R</li>
-        <li><strong>既输出又控制</strong>（眩晕弹）→ CD &lt; 8s 走 RMB；CD ≥ 10s 走 E</li>
-        <li><strong>没大招</strong>（纯辅助）→ R 放"最长 CD 的战略技"</li>
-      </ul>
-    </div>
-
-    <!-- FAQ -->
-    <div class="meth-block">
-      <h2>⑤ FAQ：边界问题</h2>
-      <div class="faq">
-        <details>
-          <summary>Q1：高频输出手段是不是右键好？</summary>
-          <p>是。MR 48 英雄里副武器 / 高频输出 90% 都在 RMB。右手食指零成本，可以一边走位一边按。规则：<strong>任何 CD &lt; 8s 的输出向技能优先 RMB</strong>。</p>
-        </details>
-        <details>
-          <summary>Q2：单体选中的技能也放右键好吗？</summary>
-          <p>分情况。<strong>高频可重复</strong>的单体技（持续射线、连用钩拉、短 CD 单体束缚）→ RMB ✓；<strong>一次性单体重击 + 长 CD</strong> → 放 E 更合适（节奏感强、玩家会"攒着用"）；<strong>选中队友放治疗</strong> → 放 E（治疗英雄 RMB 通常已被持续治疗光束占用）。</p>
-          <p>经验法则：<strong>RMB = 频繁、Shift = 救命、E = 抉择、R = 终结</strong>。同样是单体技，<strong>频次</strong>决定塞哪儿。</p>
-        </details>
-        <details>
-          <summary>Q3：Shift 如果英雄没有位移放什么好？</summary>
-          <p><strong>绝对不能空着</strong>。按优先级降级：① 形态切换（钻石形态/暴怒模式）→ ② 短无敌 / 短霸体 / Cleanse 解控 → ③ 短 CD 治疗自己 / 减伤护盾 → ④ 速度爆发（移速 +50%/2s 之类）。</p>
-          <p>底线：Shift 上的技能必须满足"<strong>玩家半血被追、本能按下去能活更久</strong>"。</p>
-        </details>
-        <details>
-          <summary>Q4：F 键我们要不要用？</summary>
-          <p>暂时不要。F 在 MR 里是"备用第 6 个槽"。我们 4 技能制如果硬塞 F 进字母键布局，会破坏 <code>RMB/Shift/E/R 对应 1/2/3/4</code> 的清晰映射，玩家要记两套规则。F 留给未来扩展（被动主动化、装备技、英雄专属交互）。</p>
-        </details>
-        <details>
-          <summary>Q5：能不能把"治疗"放 Shift？</summary>
-          <p>只对治疗自己的技能可以。给队友的治疗永远放 RMB 或 E：持续光束治疗 → RMB；范围治疗 / 治疗光环 → E；仅治疗自己的应急回复 → Shift（满足"出事就按"语义）。</p>
-        </details>
-        <details>
-          <summary>Q6：一个英雄有 2 个位移怎么办？</summary>
-          <p>主位移（短 CD / 可重复打节奏）→ Shift；副位移（长 CD / 收尾用）看用途：是终结/突进/全屏闪现 → R；是战术性"过墙/绕后" → E。</p>
-        </details>
-        <details>
-          <summary>Q7：被动技能放在哪？</summary>
-          <p>不占字母键抽屉。被动技能纯属角色机制，不参与按键映射。UI 上单独有"被动图标"显示状态即可。</p>
-        </details>
-      </div>
-    </div>
-
-    <!-- 一句话总结 -->
-    <div class="punchline">
-      <span class="kw">RMB</span> 是右手枪 · <span class="kw">Shift</span> 是逃生绳 · <span class="kw">E</span> 是战术匣 · <span class="kw">R</span> 是核按钮<br>
-      <span style="font-size:0.85rem; color:#cbd5e1; font-weight:400;">拿到任何英雄都按这个语义对号入座，<strong style="color:#fcd34d;">Shift 槽不允许留空</strong></span>
+      <p>基于这份 48 英雄数据得出的键位分配方法论——物理成本分级、语义统计、抽屉规则、决策流程与边界 FAQ——已完整收录于《<a href="键位抽屉规则.html" style="color:#fcd34d;">键位抽屉规则</a>》，本页不再重复维护，只保留下方的英雄键位数据表。</p>
     </div>
 
   </div>

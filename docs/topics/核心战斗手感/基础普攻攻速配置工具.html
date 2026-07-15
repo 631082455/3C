@@ -251,33 +251,36 @@
         <a href="#s6"><i>07</i>限制</a>
       </nav>
       <main>
-        <section id="s0"><h2>概述</h2><p>文件：
-- <a href="/C:/Users/User/Perforce/projectm_likeke_devel/GameProject/Scripts/apply_basic_attack_profile.py">Scripts/apply_basic_attack_profile.py</a></p>
-<p>这个脚本用于批量套用一套固定规则：
-- <code>HeroData.AttackSpeed = 基础显示攻速</code>
-- <code>HAD.PlayRate = (1 / 基础显示攻速） * AttackSpeed</code>
-- <code>Montage AttackIntervalStart.AttackInterval = 1 / AttackSpeed</code></p>
-<p>这样当 <code>AttackSpeed == 基础显示攻速</code> 时：
-- <code>PlayRate = 1</code>
-- <code>AttackInterval = 1 / 基础显示攻速</code></p>
-<p>当前脚本内置了 Steel 示例：
-- 基础显示攻速：<code>0.625</code>
-- 所以：
-  - <code>PlayRate = 1.6 * AttackSpeed</code>
-  - <code>AttackInterval = 1 / AttackSpeed</code></p></section>
+        <section id="s0"><h2>概述</h2><p>文件：<code>GameProject/Scripts/apply_basic_attack_profile.py</code>（项目仓库内，不随本站发布）</p>
+<p>这个脚本用于批量套用一套固定规则：</p>
+<ul>
+<li><code>HeroData.AttackSpeed = 基础显示攻速</code></li>
+<li><code>HAD.PlayRate = (1 / 基础显示攻速) * AttackSpeed</code></li>
+<li><code>Montage AttackIntervalStart.AttackInterval = 1 / AttackSpeed</code></li>
+</ul>
+<p>这样当 <code>AttackSpeed == 基础显示攻速</code> 时：</p>
+<ul>
+<li><code>PlayRate = 1</code></li>
+<li><code>AttackInterval = 1 / 基础显示攻速</code></li>
+</ul>
+<p>当前脚本内置了 Steel 示例：基础显示攻速 <code>0.625</code>，所以 <code>PlayRate = 1.6 * AttackSpeed</code>、<code>AttackInterval = 1 / AttackSpeed</code>。</p></section>
         <section id="s1"><h2>适用前提</h2>
-<p>这个脚本假定目标英雄的资源结构和 Steel 这套一致：
-- <code>HeroData</code> 里有 <code>Unit.Attribute.AttackSpeed</code>
-- <code>HAD</code> 的 <code>ActivateSkillModules</code> 里有 <code>SkillModuleMontagePlay</code>
-- 每条攻击 montage 里有一个 <code>AnimNotify_AbilityTrigger</code>
-- 该 notify 内挂了一个 <code>SkillModuleAttackInterval</code></p>
-<p>它不会处理这些内容：
-- <code>AttackIntervalStart</code> 的具体时间点
-- <code>EndAbilityTimer</code>
-- <code>Recovery</code> / <code>ABP</code> 收招
-- <code>SaveAttack</code> / <code>ResetCombo</code>
-- 其它非普攻模块
-- <code>bAutoReTriggerOnHold</code>（长按持续触发，需手工在 <code>SkillModuleAttackInterval</code> 上勾选）</p>
+<p>这个脚本假定目标英雄的资源结构和 Steel 这套一致：</p>
+<ul>
+<li><code>HeroData</code> 里有 <code>Unit.Attribute.AttackSpeed</code></li>
+<li><code>HAD</code> 的 <code>ActivateSkillModules</code> 里有 <code>SkillModuleMontagePlay</code></li>
+<li>每条攻击 montage 里有一个 <code>AnimNotify_AbilityTrigger</code></li>
+<li>该 notify 内挂了一个 <code>SkillModuleAttackInterval</code></li>
+</ul>
+<p>它不会处理这些内容：</p>
+<ul>
+<li><code>AttackIntervalStart</code> 的具体时间点</li>
+<li><code>EndAbilityTimer</code></li>
+<li><code>Recovery</code> / <code>ABP</code> 收招</li>
+<li><code>SaveAttack</code> / <code>ResetCombo</code></li>
+<li>其它非普攻模块</li>
+<li><code>bAutoReTriggerOnHold</code>（长按持续触发，需手工在 <code>SkillModuleAttackInterval</code> 上勾选）</li>
+</ul>
 </section>
         <section id="s2"><h2>长按持续触发（自动续触）</h2>
 <p>如果该英雄的普攻希望支持"按住 LMB 持续输出"(combo 段式连击 或 Sparrow 式充能型连射），
@@ -286,70 +289,56 @@
 <li>默认 off，既有英雄行为零变化</li>
 <li>不需要改动 montage / combo / 攻速换算，本机制只决定"AttackInterval Timer 结束时
   是否替玩家自动按一下"</li>
-<li>详细语义、被否决方案、约束边界见 <a href="../../../adr/0004-auto-retrigger-on-hold.md">[adr-0004]</a></li>
-<li>CONTEXT 术语条目见 <code>CONTEXT.md</code> "战斗 · 输入续触" 章节</li>
+<li>详细语义、被否决方案、约束边界见工程侧 ADR-0004（内部文档，未随站发布）；机制说明另见本站《<a href="长按持续触发规则.html">长按持续触发规则</a>》</li>
+<li>术语条目见工程侧 CONTEXT 术语表"战斗 · 输入续触"章节（内部文档，未随站发布）</li>
 </ul>
 </section>
         <section id="s3"><h2>使用方式</h2>
-<p>先做：
-1. <code>p4 edit</code> 目标 <code>.uasset</code>
-2. 确认本地文件不是只读
-3. 在脚本顶部 <code>PROFILES</code> 里改目标英雄路径和数值</p>
-<p>注意：
-- 这项目里偶尔会出现 <code>p4 edit</code> 之后 <code>.uasset</code> 仍然是只读属性的情况
-- 这种情况下脚本会直接报错并停止
-- 先把文件只读位清掉，再执行脚本</p>
-<p>建议至少改这几个字段：
-- <code>hero_data_asset</code>
-- <code>had_asset</code>
-- <code>montage_assets</code>
-- <code>attack_speed_value</code>
-- <code>play_rate_reference_speed</code>
-- <code>attack_interval_numerator</code></p>
-<p>常见配置：
-- 如果你想要 <code>AttackSpeed = 0.625</code> 时 <code>PlayRate = 1</code>
-  - <code>attack_speed_value = 0.625</code>
-  - <code>play_rate_reference_speed = 0.625</code>
-  - <code>attack_interval_numerator = 1.0</code>
-- 如果你想要 <code>AttackSpeed = 0.8</code> 时 <code>PlayRate = 1</code>
-  - <code>attack_speed_value = 0.8</code>
-  - <code>play_rate_reference_speed = 0.8</code>
-  - <code>attack_interval_numerator = 1.0</code></p>
-<p>执行方式：
-- Unreal Editor 里用 <code>File -&gt; Execute Python Script</code>
-- 或 Python 控制台执行：</p>
-<pre><code class="language-python">exec(open(r&quot;C:/Users/User/Perforce/projectm_likeke_devel/GameProject/Scripts/apply_basic_attack_profile.py&quot;, encoding=&quot;utf-8&quot;).read()）
+<p>先做：</p>
+<ol>
+<li><code>p4 edit</code> 目标 <code>.uasset</code></li>
+<li>确认本地文件不是只读</li>
+<li>在脚本顶部 <code>PROFILES</code> 里改目标英雄路径和数值</li>
+</ol>
+<p>注意：这项目里偶尔会出现 <code>p4 edit</code> 之后 <code>.uasset</code> 仍然是只读属性的情况，此时脚本会直接报错并停止；先把文件只读位清掉，再执行脚本。</p>
+<p>建议至少改这几个字段：</p>
+<ul>
+<li><code>hero_data_asset</code> / <code>had_asset</code> / <code>montage_assets</code></li>
+<li><code>attack_speed_value</code> / <code>play_rate_reference_speed</code> / <code>attack_interval_numerator</code></li>
+</ul>
+<p>常见配置：</p>
+<ul>
+<li>想要 <code>AttackSpeed = 0.625</code> 时 <code>PlayRate = 1</code>：<code>attack_speed_value = 0.625</code>、<code>play_rate_reference_speed = 0.625</code>、<code>attack_interval_numerator = 1.0</code></li>
+<li>想要 <code>AttackSpeed = 0.8</code> 时 <code>PlayRate = 1</code>：<code>attack_speed_value = 0.8</code>、<code>play_rate_reference_speed = 0.8</code>、<code>attack_interval_numerator = 1.0</code></li>
+</ul>
+<p>执行方式：Unreal Editor 里用 <code>File -&gt; Execute Python Script</code>，或 Python 控制台执行：</p>
+<pre><code class="language-python">exec(open(r&quot;&lt;项目根&gt;/GameProject/Scripts/apply_basic_attack_profile.py&quot;, encoding=&quot;utf-8&quot;).read())
 </code></pre>
 </section>
         <section id="s4"><h2>改别的英雄时怎么填</h2>
-<p>只要遵守同一套口径：
-- <code>attack_speed_value</code>
-  - 写进 <code>HeroData</code> 的基础攻速
-- <code>play_rate_reference_speed</code>
-  - 你希望 <code>PlayRate = 1</code> 时对应的攻速值
-- <code>attack_interval_numerator</code>
-  - 一般填 <code>1.0</code>
-  - 结果就是 <code>AttackInterval = 1 / AttackSpeed</code></p>
-<p>举例：
-- 目标：基础攻速 <code>0.7</code>，并且该基础档动画正常速率
-  - <code>attack_speed_value = 0.7</code>
-  - <code>play_rate_reference_speed = 0.7</code>
-  - <code>attack_interval_numerator = 1.0</code></p>
+<p>只要遵守同一套口径：</p>
+<ul>
+<li><code>attack_speed_value</code>：写进 <code>HeroData</code> 的基础攻速</li>
+<li><code>play_rate_reference_speed</code>：你希望 <code>PlayRate = 1</code> 时对应的攻速值</li>
+<li><code>attack_interval_numerator</code>：一般填 <code>1.0</code>，结果就是 <code>AttackInterval = 1 / AttackSpeed</code></li>
+</ul>
+<p>举例——目标：基础攻速 <code>0.7</code>，并且该基础档动画正常速率：<code>attack_speed_value = 0.7</code>、<code>play_rate_reference_speed = 0.7</code>、<code>attack_interval_numerator = 1.0</code>。</p>
 </section>
         <section id="s5"><h2>脚本实际改了什么</h2>
-<p><code>HeroData</code>
-- 改 <code>hero_attribute_datas</code> 里 <code>Unit.Attribute.AttackSpeed</code> 的 <code>BaseValue</code></p>
-<p><code>HAD</code>
-- 改 <code>SkillModuleMontagePlay.PlayRate.BaseValue.LevelValueMap</code></p>
-<p><code>Montage</code>
-- 改 <code>AnimNotify_AbilityTrigger -&gt; SkillModuleAttackInterval -&gt; AttackInterval.BaseValue.LevelValueMap</code></p>
+<ul>
+<li><code>HeroData</code>：改 <code>hero_attribute_datas</code> 里 <code>Unit.Attribute.AttackSpeed</code> 的 <code>BaseValue</code></li>
+<li><code>HAD</code>：改 <code>SkillModuleMontagePlay.PlayRate.BaseValue.LevelValueMap</code></li>
+<li><code>Montage</code>：改 <code>AnimNotify_AbilityTrigger -&gt; SkillModuleAttackInterval -&gt; AttackInterval.BaseValue.LevelValueMap</code></li>
+</ul>
 </section>
         <section id="s6"><h2>限制</h2>
-<p>这个脚本目前按 Steel 的资产形态写的，后续如果有这些差异，需要再补：
-- 一个 HAD 里有多段完全不同的普攻模块结构
-- 一条 montage 上有多个 <code>SkillModuleAttackInterval</code>
-- 使用的不是 <code>AnimNotify_AbilityTrigger</code>
-- <code>AttackSpeed</code> 不是直接驱动 runtime 属性，而是走显示值到内部倍率的二次换算</p></section>
+<p>这个脚本目前按 Steel 的资产形态写的，后续如果有这些差异，需要再补：</p>
+<ul>
+<li>一个 HAD 里有多段完全不同的普攻模块结构</li>
+<li>一条 montage 上有多个 <code>SkillModuleAttackInterval</code></li>
+<li>使用的不是 <code>AnimNotify_AbilityTrigger</code></li>
+<li><code>AttackSpeed</code> 不是直接驱动 runtime 属性，而是走显示值到内部倍率的二次换算</li>
+</ul></section>
     </main>
     </div>
     <footer>COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>

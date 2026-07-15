@@ -236,7 +236,6 @@
         <div><i>课题</i><span>技能蓄力想要镜头绕着角色转的演出，但镜头一转，准星指的地方就不对了。这是个 skillshot，准星骗人是大忌。</span></div>
         <div><i>终案</i><span>把射击游戏切镜头时保住瞄准点的老手艺（FPP/TPP 切换、开镜都在用）改成持续版：机位照常绕弧，视线每帧对回原瞄准点，做成资产上的一个选项。</span></div>
         <div><i>结果</i><span>准星不动了，环绕从 2.6° 放开到 10.4°；顺带证伪了让准星跟弹道走的方案（逻辑诚实，看着乱飘）。单人验收，n=1。</span></div>
-        <div><i>分工</i><span>我（战斗 3C 策划）定方向、逐档验收、拍板参数；AI agent 在我指挥下写 C++、跑调研与代码审查、搭数据工具；战斗程序提供动效层一期框架、承接遗留 P0。</span></div>
       </div>
       <div class="docinfo">
         <div><i>文档编号</i><b>CASE-01</b></div>
@@ -294,8 +293,6 @@
             <div class="box"><h3>不解决：演出这头</h3><p>环绕被压到 2.6°（实测偏移勉强可忍的量）仍不满足，演出预算被扣押了四分之三。</p></div>
             <div class="box"><h3>不解决：信任那头</h3><p>蓄力期正是玩家最后瞄准精修的窗口，每局上百次施放的 skillshot 在这里被准星欺骗，轻则命中率，重则玩家不再相信准星。</p></div>
           </div>
-          <h3>分工与工作方式</h3>
-          <p>本案由三方完成，如实记录：作者（战斗 3C 策划）——体验判断、方向决策、逐档验收、参数拍板、业界案例取舍；AI agent（作者指挥）——C++ 实现、对抗性代码审查、web 调研执行、逐帧记录仪搭建；战斗程序——动效层一期框架、遗留 P0 需求承接。工作方式本身是本案的一部分：策划用 AI agent 打通了原本需要排程序档期的"假设 → 实现 → 实测 → 证伪 → 换方案"实验闭环，三次方案迭代发生在两天之内。</p>
         </section>
 
         <div class="part"><b>过程</b></div>
@@ -606,7 +603,7 @@
   };
   var BASE={
     warm:{bg:'#f1eee7',paper:'#fbfaf6',soft:'#edeade',line:'#ddd7c9',deep:'#ece8da',ink:'#211f1a',muted:'#6a655c'},
-    cool:{bg:'#eef0f3',paper:'#fbfcfd',soft:'#e8ebef',line:'#d6dbe2',deep:'#e5e8ee',ink:'#1d2025',muted:'#5f6672'}
+    cool:{bg:'#eef0f3',paper:'#fbfcfd',soft:'#e8ebef',line:'#d6dbe2',deep:'#e5e8ee',ink:'#171b21',muted:'#4d5560'}
   };
   var A='brass', B='warm';
   function APPLY(){

@@ -158,6 +158,14 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
+    .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
+      background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
+      box-shadow:var(--shadow);}
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
+      font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+    .foreword p{margin:8px 0 0;color:var(--ink);}
+    .foreword p:first-of-type{margin-top:0;}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px;}
     .box{padding:18px 20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);}
     .box.blue{border-color:color-mix(in srgb,var(--blue) 35%,transparent);background:var(--blue-soft);}
@@ -220,7 +228,6 @@
         <div><i>课题</i><span>建设型：技能镜头缺一层靠谱的地基。旋转配不出、last-wins 互相顶、残留、污染判定，策划想要的"拿预设改一两个数"无从谈起。</span></div>
         <div><i>终案</i><span>镜头动效层（CME)：<b>效果 = 相对基础镜头的增量，叠加求和、分带钳制、自动归零、只写渲染视图</b>；清理由结构保证，不靠人记得配。</span></div>
         <div><i>结果</i><span>Steel 大招、Kallari 两个技能全链路实配通过；验收清单 10 条过 9 条；逐帧数据确认判定视线全程不受演绎影响。一期已提交进库。</span></div>
-        <div><i>分工</i><span>我（战斗 3C 策划）定方向、审计取舍、逐项验收、参数拍板；AI agent 在我指挥下写 C++、跑审计与竞品调研、搭数据工具；战斗程序对齐架构、承接遗留 P0。</span></div>
       </div>
       <div class="docinfo">
         <div><i>文档编号</i><b>CASE-02（入库时分配）</b></div>
@@ -230,6 +237,12 @@
         <div class="wide"><i>配套文档</i><b><a href="../topics/核心战斗手感/Camera - 镜头动效配置手册.html">《配置手册》</a> · <a href="../topics/核心战斗手感/Camera - 镜头动效层二期需求（程序对齐）.html">《二期需求》</a> · <a href="CASE-01 - 准星是眼睛的锚.html">《准星是眼睛的锚》（姊妹案例）</a></b></div>
       </div>
     </header>
+
+    <div class="foreword">
+      <p>技能镜头当时缺一层地基：旋转通道不存在，大招俯角、命中踢这类效果配不出来；多个镜头效果同帧时后到的整体顶掉先到的；技能被打断或角色死亡后镜头可能卡在技能状态；镜头偏移还写进了判定视图，表现层在悄悄影响弹道。约束是不能停机重造，存量技能还在用旧配置。</p>
+      <p>新系统把每个镜头效果做成相对基础镜头的增量：效果资产化成预设、使用处只填强度；同帧多个效果求和叠加、分带钳制；每个效果自带包络、必然衰减归零，清理不依赖任何"清除条件"配置；判定视图从头到尾不被写入。旧配置原样共存，新技能走新层，按需逐个迁移。</p>
+      <p>目前 Steel 大招与 Kallari 两个技能完成全链路实配，验收清单 10 条过 9 条（单英雄灰度机制已备待首用）；逐帧记录确认判定视线全程不随演绎变化。验收人为需求方本人（n=1），多人盲测未做；FOV 灵敏度补偿与弹道命中镜头位点仍待程序，观战端不重放动效为已知盲点。</p>
+    </div>
 
     <div class="layout">
       <nav id="toc">
@@ -256,7 +269,7 @@
         <section id="goal">
           <h2>体验目标与课题</h2>
           <p>项目是 UE5 第三人称 MOBA 射击（自研引擎分支）。技能镜头当时的实现是裁剪版 Lyra 加一条旁路：模式栈只推一个全局第三人称，技能镜头走 UAbilityCameraData(ACD，按技能配置的镜头数据）数组。</p>
-          <p>我要的体验其实很朴素：放技能的时候，镜头得跟角色一起憋劲、一起爆发，技能才有排面；而我是配技能的人，想要的配置体验是拿预设改一两个数，不是每个技能从零搭。这两件事在旧系统上都落不了地。案发现场是一次很平常的疑问：</p>
+          <p>我要的体验其实很朴素：放技能的时候，镜头得跟角色一起憋劲、一起爆发，技能才有排面；而我是配技能的人，想要的配置体验是拿预设改一两个数，不是每个技能从零搭。这两件事在旧系统上都落不了地。起点是翻旧设计文档对照现状时的一个疑问：</p>
           <blockquote>"现在战斗镜头好像是配不出一些旋转、偏移效果的，是这样吗？" <i>—— 我，翻旧设计文档对照现状时</i></blockquote>
           <p>确实配不出。顺着这个问题做了一次全代码审计，挖出来的不止旋转：</p>
           <ul>
@@ -270,8 +283,6 @@
             <h3>课题定性：建设型，带一条共存约束</h3>
             <p>这不是修 bug，是缺一层地基：需要一个让"旋转/推拉/FOV/冲击"都能配、能同帧共存、坏不掉的技能镜头系统。约束是不能停机重造：存量技能还在用 ACD，新系统得和它并行，逐个迁移。</p>
           </div>
-          <h3>分工与工作方式</h3>
-          <p>我负责体验判断、审计结论取舍、方案拍板、每一轮 PIE 验收和参数定稿；AI agent 在我指挥下做全代码审计、竞品逐案核实、C++ 实现、对抗性代码审查和数据工具搭建；战斗程序对齐架构边界（哪些钩子能用、判定链路怎么走），并承接列到二期的 P0 需求。三次方案评审加两个英雄的实配，发生在几个工作日内，实验闭环不用排程序档期，这是这套工作方式的实际收益。</p>
         </section>
 
         <div class="part"><b>过程</b></div>
@@ -334,7 +345,7 @@
           <p>瞬步（Mark,holding 选目标后瞬移到目标身后）接着验证了两件系统层的事：瞬移那一帧镜头会拖影，补了单帧吸附（全局基建，以后任何闪现类都受益）；镜头模块的 Remove 选项被发现从上线起就是坏的，按位点匹配永远失败。它是潜伏缺陷，一期只有 Add 的用户，holding 这种"A 时机挂、B 时机收"的配置是第一个真实用户，一用就暴露。</p>
           <div class="note">发射帧那次教训值得单独记：动画描述说 0.37 出手，配置里投射物 0.03 就出生了。数据不查，这种错位就长期潜伏。此后新技能接镜头前，先让记录仪录一遍定发射帧。</div>
           <h3>对抗性审查</h3>
-          <p>二期代码合入前跑了一轮三视角对抗审查（数学边界/系统集成/配置滥用），AI 产出 9 条告警，我逐条对源码裁决：5 条真实全修，4 条误报逐条给出"现有防护在哪一行"后否掉。真问题里最值钱的一条是实验开关的 C++ 默认值是开，两个直接继承基类的英雄准星暗地里带着实验行为，没人知道。</p>
+          <p>二期代码合入前跑了一轮三视角对抗审查（数学边界/系统集成/配置滥用），AI 产出 9 条告警，我逐条对源码裁决：5 条真实全修，4 条误报逐条给出"现有防护在哪一行"后否掉。真问题里影响面最大的一条是实验开关的 C++ 默认值是开，两个直接继承基类的英雄准星暗地里带着实验行为，没人知道。</p>
           <div class="aside">同期试了个副产物：让 AI 从一句话（"重锤下砸带回弹"）直接生成 CME 资产初稿，归一化器按校验器规则钳值兜底。通了，对话式调预设可用。工程化（系统提示词、编辑器内入口）列为候补，没排期。这里还没想清楚它该不该进正式管线，先挂着。</div>
         </section>
 
@@ -518,6 +529,14 @@
             <li>Deadlock 打断残留 bug 为社区多例交叉，非官方承认；Nesky《50 Game Camera Mistakes》无公开编号文本，引用只述内容不引条号；</li>
             <li>竞品参数（BF4 灵敏度系数 1.33、OW zoom sens 37.89）为社区文档口径。</li>
           </ul>
+          <h3>修订记录</h3>
+          <table>
+            <thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead>
+            <tbody>
+              <tr><td>2026-07-14</td><td>v1.0</td><td>定稿入库：0→1 建设案整理成文，编号 CASE-02</td></tr>
+              <tr><td>2026-07-15</td><td>v1.1</td><td>补导读；措辞按站点行文规范修订（去自评式与叙事式表述）</td></tr>
+            </tbody>
+          </table>
           </details>
         </section>
       </main>

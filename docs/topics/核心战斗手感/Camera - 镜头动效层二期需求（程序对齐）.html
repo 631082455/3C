@@ -50,7 +50,7 @@
 <h2><span class="p1">P1-2</span> Look-at 反解合成模式(OrbitAimLocked)——演绎自由度的钥匙 <span style="color:#7ec98f">【已实装 · CL 5643871,2026-07-11 Kallari 实测通过:"准星完全没有晃动感"】</span></h2>
 <table>
 <tr><th style="width:12%">现状</th><td>可瞄准窗口内的轨道旋转必然挪动屏幕中心与真实瞄准点的映射(几何必然,Kallari 蓄力 yaw 实测确认)。当前只能在"环绕感"与"准星诚实"间取舍。</td></tr>
-<tr><th>需求</th><td><code>ECameraMotionRotationSpace</code> 增加第三值 <code>OrbitAimLocked</code>:该空间下动效只驱动机位位置(沿轨道弧线平移),<b>旋转逐帧由 look-at 反解</b>——看向 GameplayPOV 瞄准射线上的参考点(取 min(技能射程, 固定截断距离) 处,防空旷方向视差不稳)。锁定镜头(魂系/塞尔达)的通用骨架,业界唯一兼得"环绕演出 + 中心诚实"的方案。</td></tr>
+<tr><th>需求</th><td><code>ECameraMotionRotationSpace</code> 增加第三值 <code>OrbitAimLocked</code>:该空间下动效只驱动机位位置(沿轨道弧线平移),<b>旋转逐帧由 look-at 反解</b>——看向 GameplayPOV 瞄准射线上的参考点(取 min(技能射程, 固定截断距离) 处,防空旷方向视差不稳)。锁定镜头(魂系/塞尔达)的通用骨架,调研范围内唯一兼得"环绕演出 + 中心诚实"的方案。</td></tr>
 <tr><th>约定</th><td>实现位置在 <code>GameMatchCameraComponent::ApplyMotionEffects</code> 的 Orbit 分支旁;环绕弧度建议钳 ≤10°(角色挡准线风险,Nesky:近目标滑移勿旋转);玩家转向输入改 GameplayPOV → look-at 参考点跟着走,自洽。</td></tr>
 <tr><th>验收</th><td>配一个 8° yaw 的 OrbitAimLocked 蓄力动效:准星压住的世界点全程不动(camera_trace 可量化验证),机位绕行视差明显;与 ViewKick/FOV 通道叠加无打架。</td></tr>
 </table>

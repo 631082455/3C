@@ -261,7 +261,7 @@
 <p>一套<strong>统一的落点决策系统</strong>。技能要把东西放到地面上时（召唤一个单位、铺一片 AOE、传送到某点），落点不再各算各的，而是统一交给 <code>UPlacementResolverLibrary</code> 这个<strong>纯函数算法库</strong>决定。</p>
 <p>三个关键特性，接入前先知道：</p>
 <ol>
-<li><strong>三端同源</strong>：客户端预览、客户端释放、服务端反作弊复算，跑的是同一份算法。<strong>你预览看到的落点 = 实际落点</strong>，一帧不差。</li>
+<li><strong>三端同源</strong>：客户端预览、客户端释放、服务端反作弊复算，跑的是同一份算法。<strong>你预览看到的落点 = 实际落点</strong>（三端跑同一份算法）。</li>
 <li><strong>Emergent LOS（撞哪算哪）</strong>：落点由相机射线的几何自然决定——射线被墙挡住就留这侧，越过墙顶就到那侧。无需配任何"视线遮挡"参数。</li>
 <li><strong>永远有合法落点</strong>：任何瞄准都返回一个合理落点，没有"无法施放"的失败态（Deadlock 派设计）。</li>
 </ol>

@@ -260,8 +260,9 @@
           <tr><td><b>一期</b></td><td>2026-01</td><td><a href="MM优化一期-数据流接入.html">数据流接入</a></td><td>45 个资产从零建起项目自持数据流：35 库 + 5 Schema + 双归一化集，CHT Root 路由奠定多英雄地基</td></tr>
           <tr><td><b>二期</b></td><td>2026-02~03</td><td><a href="MM优化二期-起停手感.html">起停与折返手感</a></td><td>一天四连击治起步（保护窗 / 强制冲刺起步 / 动作裁剪 / 起步冲量），停步与折返链路同批打通，移速仲裁权收归 MCD</td></tr>
           <tr><td><b>三期</b></td><td>2026-03~05</td><td><a href="MM优化三期-战斗上身与分层.html">战斗上身与分层</a></td><td>Overlay 体系逐英雄接入、spine 拧麻花、UpperBody 抖动根因（mesh-space）与 Slot 三件套定稿</td></tr>
-          <tr><td><b>四期</b></td><td>2026-06</td><td><a href="MM优化四期-竞技化改造.html">竞技化改造</a> · <a href="MM优化五期-竞技化手感改造V2.html">五期 竞技化手感改造 V2</a></td><td>MOBA-Lite 裁库（624 → 87）、Sprint 战役、局内 Dense/Sparse 一键 AB（案例稿，含完整证伪链）</td></tr>
-          <tr><td><b>五期</b></td><td>2026-07</td><td><a href="MM优化六期-收官与全英雄治理.html">收官与全英雄治理</a></td><td>方向性移速衰减、310 蒙太奇重定向清理、半身分层终案；以"标准与差距"收尾，遗留如实</td></tr>
+          <tr><td><b>四期</b></td><td>2026-06</td><td><a href="MM优化四期-竞技化改造.html">竞技化手感改造 V1</a></td><td>MOBA-Lite 裁库（624 → 87）、Sprint 战役、局内 Dense/Sparse 一键 AB（案例稿，含完整证伪链）</td></tr>
+          <tr><td><b>五期</b></td><td>2026-06~07</td><td><a href="MM优化五期-竞技化手感改造V2.html">竞技化手感改造 V2</a></td><td>竞技化调优复盘：起步 / 折返 / 急停 / 镜头耦合等症状的处理口径与参数组，与本手册症状反查表互为索引</td></tr>
+          <tr><td><b>六期</b></td><td>2026-07</td><td><a href="MM优化六期-收官与全英雄治理.html">收官与全英雄治理</a></td><td>方向性移速衰减、310 蒙太奇重定向清理、半身分层终案；以"标准与差距"收尾，遗留如实</td></tr>
         </tbody>
       </table>
     </div>
@@ -607,12 +608,12 @@
             <thead><tr><th>层</th><th>管什么 / 效果</th><th>切换方式</th><th>误配症状与红线</th></tr></thead>
             <tbody>
               <tr><td><b>蒙太奇 Slot 三件套</b></td><td>战斗动作占用上身的三档表达强度：UpperBody 硬钉（上身完全归蒙太奇）/ UpperBodySoft（渐变过渡，pelvis 权重 0.15）/ UpperBodyAdditive（叠加不抢占）</td><td>蒙太奇选槽即选强度；分层混合开 Mesh Space Rotation Blend + 显式 BlendMask（BP_UpperBody_Hard）</td><td>空 BlendMask = slot 静默失效（权重不沿骨链继承）；local space 混合 = 上身跟骨盆晃（三期根因【实战】）。定稿见《蒙太奇slot使用说明》</td></tr>
-              <tr><td><b>原地 / 移动分支</b></td><td>原地放技能整段透传全身姿势（有位移表现力），移动中走上身遮罩分层（腿归 locomotion）</td><td>BlendListByBool（ActiveValue=HasVelocity）自动切</td><td>原地分支会把未重定向动画的骨盆高度差全暴露出来（五期 310 蒙太奇大清理的根因舞台【实战】）</td></tr>
-              <tr><td><b>FullBody 曲线分层</b></td><td>同一条全身蒙太奇内的时间分段：出手段全身、收招段腿部交还移动，上身继续收招</td><td>动画自带 FullBody 曲线驱动，0.1s 混合交接；未配曲线的动画保持原行为，零影响</td><td>别用"双 Slot 空尾"实现同一目标：DefaultSlot 空尾会保持最后一帧卡 Pose（五期翻车实录【实战】）</td></tr>
+              <tr><td><b>原地 / 移动分支</b></td><td>原地放技能整段透传全身姿势（有位移表现力），移动中走上身遮罩分层（腿归 locomotion）</td><td>BlendListByBool（ActiveValue=HasVelocity）自动切</td><td>原地分支会把未重定向动画的骨盆高度差全暴露出来（六期 310 蒙太奇大清理的根因舞台【实战】）</td></tr>
+              <tr><td><b>FullBody 曲线分层</b></td><td>同一条全身蒙太奇内的时间分段：出手段全身、收招段腿部交还移动，上身继续收招</td><td>动画自带 FullBody 曲线驱动，0.1s 混合交接；未配曲线的动画保持原行为，零影响</td><td>别用"双 Slot 空尾"实现同一目标：DefaultSlot 空尾会保持最后一帧卡 Pose（六期翻车实录【实战】）</td></tr>
               <tr><td><b>Combat Overlay 姿态层</b></td><td>roaming / combat 两种持械姿态的叠加（进战举枪举锤），叠在 locomotion 之上、Slot 之下</td><td>GASPALS ALI_OverlayPose 层 + 逐英雄子 Overlay ABP（bCanAim 桥 + Pose_*_Aim 槽），HAD 的 MontagePlay 标志驱动进出战</td><td>动画未先重定向到 UEFN 骨架就入层 = 比例错位；新英雄漏接 bCanAim 桥 = 姿态不切（接入清单见三期文档）</td></tr>
             </tbody>
           </table>
-          <p>这一章的故事版：分层体系怎么一步步立起来的在三期文档（spine 拧麻花 → mesh-space 根因 → 三件套定稿），FullBody 曲线终案在五期文档，都从手册封面的优化历程面板进。</p>
+          <p>这一章的故事版：分层体系怎么一步步立起来的在三期文档（spine 拧麻花 → mesh-space 根因 → 三件套定稿），FullBody 曲线终案在六期文档，都从手册封面的优化历程面板进。</p>
         </section>
 
         <section id="acceptance">
@@ -779,11 +780,11 @@
               <li>Sparse 侧行序/限采样修复同步；FilterCrashingLegs 评估；Markdown 精简版蒸馏进项目 Docs（定稿后）。</li>
             </ul>
             <h3>素材来源与修订</h3>
-            <p>源码盘点两份（数据层/节点与轨迹层，均标 file:line）、项目资产实读记录、症状表底稿：<code>knowledge-local/inbox/mm-handbook/</code>；实战出处：MM 决策考古台账 <code>knowledge-local/inbox/mm-archaeology/</code> 与案例稿《三选一才留》。</p>
+            <p>源码盘点两份（数据层/节点与轨迹层，均标 file:line）、项目资产实读记录、症状表底稿：<code>knowledge-local/inbox/mm-handbook/</code>；实战出处：MM 决策考古台账 <code>knowledge-local/inbox/mm-archaeology/</code>（两者均为内部留档，不随站发布）与案例稿《三选一才留》。</p>
             <table>
               <thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead>
               <tbody>
-                <tr><td>2026-07-13</td><td>v0.1</td><td>初稿：源码盘点 + 资产实读 + 六层结构成文，待作者过笔与实机验证回填</td></tr>
+                <tr><td>2026-07-13</td><td>v0.1</td><td>初稿：源码盘点 + 资产实读 + 六层结构成文，待实机验证回填</td></tr>
               </tbody>
             </table>
           </details>

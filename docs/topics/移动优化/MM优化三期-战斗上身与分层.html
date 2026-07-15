@@ -232,7 +232,6 @@
         <div><i>课题</i><span>MM 移动下战斗上半身动作发飘：UpperBody 蒙太奇随下半身晃动"晃晃悠悠"，战斗姿态（举枪/持弓）缺统一的进出机制。</span></div>
         <div><i>终案</i><span><b>Combat Overlay</b>（roaming-combat 状态＋逐英雄 Overlay ABP）＋ UpperBody 层 <b>mesh-space 旋转混合</b> ＋ BlendMask 双档 ＋ Slot 三件套（UpperBody/Soft/Additive）。</span></div>
         <div><i>结果</i><span>CL 5306991 入库，8 英雄共用主 ABP 生效；连锁暴露 Steel 普攻坏烘焙，以 AAT_NONE 兜底；Sparrow 下半身乱拧与 Soft 权重验收仍未终结。</span></div>
-        <div><i>分工</i><span>策划提出体验问题、录屏 A/B 验收、多次关键纠错拍板；AI 读 AnimGraph 定根因、经 AIK/Python 改资产并出 C++ patch；BlendProfile 创建只能编辑器 UI 手建，由策划手动操作。</span></div>
       </div>
       <div class="docinfo">
         <div><i>文档编号</i><b>MOV-03</b></div>
@@ -290,8 +289,6 @@
               <tr><td>D</td><td>03-11~04-29</td><td>翻越攀爬</td><td>28 子阶段三阶段调通 ＋ 流畅度优化 ＋ 速率分档</td><td>CL 4916106 / 5202323 / 5209320 / 5209620</td><td><span class="ok">另见专篇</span></td></tr>
             </tbody>
           </table>
-          <h3>分工与工作方式</h3>
-          <p>本期延续系列惯例：策划不写代码，负责提出体验问题、逐轮 PIE 与录屏验收、在关键分岔处拍板与纠错；AI 负责读 AnimGraph 定位配置、经 AIK MCP 与 Python 批量改资产、必要处出 C++ patch。工具够不到的地方（BlendProfile 创建、部分节点属性）由策划在编辑器 UI 手动操作，AI 远程看截图校对。战役一节中多次关键转折来自策划的原话质疑，均按日期保留。</p>
         </section>
 
         <div class="part"><b>模块实录</b><span>现象 → 根因 → 方案 → 效果</span></div>
