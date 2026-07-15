@@ -71,57 +71,57 @@
 <body>
   <div class="page">
     <header>
-      <div class="kicker">Combat 3C / V1.2 · 给主程的对齐稿(1 页)</div>
+      <div class="kicker">Combat 3C / V1.2 · 给主程的对齐稿（1 页）</div>
       <h1>Skill - 范围施法落点 V1.2 主程对齐稿</h1>
-      <p>请在这份对齐稿上 sign off 5 件事(见最末)。详细 FDD 见同目录 <code>Skill - 范围施法落点 V1.1 (Deadlock派).html</code>(内部 V1.2)。</p>
+      <p>请在这份对齐稿上 sign off 5 件事（见最末）。详细 FDD 见同目录 <code>Skill - 范围施法落点 V1.1 (Deadlock派).html</code>（内部 V1.2）。</p>
       <div class="meta">
-        <span>需求方:战斗 / 3C 策划</span>
-        <span>实现方:战斗程序</span>
-        <span>预估工作量:5-7 工程日</span>
-        <span>对应代码:GameMoba 模块,不涉及 Engine 改动</span>
+        <span>需求方：战斗 / 3C 策划</span>
+        <span>实现方：战斗程序</span>
+        <span>预估工作量：5-7 工程日</span>
+        <span>对应代码：GameMoba 模块，不涉及 Engine 改动</span>
       </div>
     </header>
 
     <main>
 
-      <h2>TL;DR(5 句话)</h2>
+      <h2>TL;DR（5 句话）</h2>
       <div class="tldr">
         <ul>
-          <li><strong>统一落点算法</strong>:把现在散落在 4 处的算法收到 1 个 <code>UPlacementResolverLibrary</code> 共用</li>
-          <li><strong>服务端基础反作弊</strong>:服务端用同一 Library 复算,客户端坐标偏差 > 200cm 时以服务端为准 + log</li>
+          <li><strong>统一落点算法</strong>：把现在散落在 4 处的算法收到 1 个 <code>UPlacementResolverLibrary</code> 共用</li>
+          <li><strong>服务端基础反作弊</strong>：服务端用同一 Library 复算，客户端坐标偏差 > 200cm 时以服务端为准 + log</li>
           <li><strong>修复一个已知 bug</strong>:<code>SummonPreviewDataAsset</code> 的 pick-further 算法在水平瞄墙时落点会穿到墙对面</li>
-          <li><strong>设计取向:Deadlock 派</strong> — 永远出技能,失败靠 Clamp,不上"失败枚举/红色预览/失败不消耗"那套</li>
+          <li><strong>设计取向：Deadlock 派</strong> — 永远出技能，失败靠 Clamp，不上"失败枚举/红色预览/失败不消耗"那套</li>
           <li><strong>V1 范围相比原 FDD 砍 70%</strong>,Footprint / Reject / 失败 UI / 投射物 reticle 全部排到 V2+</li>
         </ul>
       </div>
 
-      <h2>1. 设计取向:为什么是 Deadlock 派</h2>
+      <h2>1. 设计取向：为什么是 Deadlock 派</h2>
       <table>
-        <thead><tr><th>维度</th><th>Deadlock 派(选)</th><th>Valorant 派(不选)</th></tr></thead>
+        <thead><tr><th>维度</th><th>Deadlock 派（选）</th><th>Valorant 派（不选）</th></tr></thead>
         <tbody>
-          <tr><td>落点不合法时</td><td>Clamp 到最近合法点</td><td>红色预览,按键无效</td></tr>
+          <tr><td>落点不合法时</td><td>Clamp 到最近合法点</td><td>红色预览，按键无效</td></tr>
           <tr><td>资源/CD</td><td>总是消耗</td><td>失败时不消耗</td></tr>
-          <tr><td>LineOfSight</td><td>emergent(由相机射线几何自然涌现)</td><td>显式 LOS trace</td></tr>
+          <tr><td>LineOfSight</td><td>emergent（由相机射线几何自然涌现）</td><td>显式 LOS trace</td></tr>
           <tr><td>失败原因 / Reject</td><td>不需要</td><td>需要 9 值枚举</td></tr>
-          <tr><td>GAS Commit 时序拦截</td><td>不需要(无失败路径)</td><td>需要(失败不消耗)</td></tr>
+          <tr><td>GAS Commit 时序拦截</td><td>不需要（无失败路径）</td><td>需要（失败不消耗）</td></tr>
         </tbody>
       </table>
       <p style="margin-top: 10px;"><strong>选 Deadlock 派的 4 个理由</strong>:</p>
       <ul>
-        <li><strong>项目当前真实行为已经是 Deadlock 派</strong>:所有 SkillModule 服务端裸信任客户端,<code>SpawnCollisionHandlingOverride = AlwaysSpawn</code>。V1.2 只是把这个隐性行为显化为规范</li>
-        <li><strong>实现工作量小</strong>:省掉"失败原因 + GAS Commit 时序集成 + 客户端预测回滚"整条链路</li>
-        <li><strong>手感更稳定</strong>:玩家不会被"明明能瞄到但不让放"惊讶</li>
-        <li><strong>对应项目调性</strong>:参照 Deadlock / Paragon 风格的 TPS MOBA,技能设计本身避免了"必须精准放在某处"的范式</li>
+        <li><strong>项目当前真实行为已经是 Deadlock 派</strong>：所有 SkillModule 服务端裸信任客户端，<code>SpawnCollisionHandlingOverride = AlwaysSpawn</code>。V1.2 只是把这个隐性行为显化为规范</li>
+        <li><strong>实现工作量小</strong>：省掉"失败原因 + GAS Commit 时序集成 + 客户端预测回滚"整条链路</li>
+        <li><strong>手感更稳定</strong>：玩家不会被"明明能瞄到但不让放"惊讶</li>
+        <li><strong>对应项目调性</strong>：参照 Deadlock / Paragon 风格的 TPS MOBA，技能设计本身避免了"必须精准放在某处"的范式</li>
       </ul>
 
-      <h2>2. 代码改动概览(13 个文件)</h2>
+      <h2>2. 代码改动概览（13 个文件）</h2>
 
       <h3>新增 3 个文件</h3>
       <table class="compact">
         <thead><tr><th>文件</th><th>内容</th></tr></thead>
         <tbody>
-          <tr><td><code>GameMoba/Skills/Placement/PlacementProfile.h</code></td><td><code>FPlacementProfile</code> USTRUCT(6 字段)+ <code>EPlacementMode</code> UENUM + <code>FPlacementInput</code> USTRUCT</td></tr>
-          <tr><td><code>GameMoba/Skills/Placement/PlacementResolverLibrary.h/.cpp</code></td><td><code>UBlueprintFunctionLibrary</code> 纯函数,<code>ResolveGroundPlacement(Input, Profile) → FVector</code>。约 80-120 行</td></tr>
+          <tr><td><code>GameMoba/Skills/Placement/PlacementProfile.h</code></td><td><code>FPlacementProfile</code> USTRUCT（6 字段）+ <code>EPlacementMode</code> UENUM + <code>FPlacementInput</code> USTRUCT</td></tr>
+          <tr><td><code>GameMoba/Skills/Placement/PlacementResolverLibrary.h/.cpp</code></td><td><code>UBlueprintFunctionLibrary</code> 纯函数，<code>ResolveGroundPlacement(Input, Profile) → FVector</code>。约 80-120 行</td></tr>
         </tbody>
       </table>
 
@@ -129,11 +129,11 @@
       <table class="compact">
         <thead><tr><th>层</th><th>文件</th><th>改动</th></tr></thead>
         <tbody>
-          <tr><td>Preview</td><td><code>SummonPreviewDataAsset.h/.cpp</code></td><td>加 Profile 字段,<code>UpdatePreviewInternal</code> 第 53-124 行<strong>整段删除</strong>替换为 Library 调用(同时修 pick-further bug)</td></tr>
-          <tr><td>Preview</td><td><code>SkillAreaPreviewDataAsset.h/.cpp</code></td><td>加 Profile 字段(默认 Mode = None),<code>UpdatePreviewInternal</code> 加 Mode 分支</td></tr>
-          <tr><td>SkillModule</td><td><code>SkillModuleSpawnMobaUnit.h/.cpp</code></td><td>TargetData 加 AimRay 字段;<code>Execute</code> 服务端走"Library 重算 + 阈值 200cm"流程</td></tr>
-          <tr><td>SkillModule</td><td><code>SkillModuleAddSkillAreaWithBuffs.h/.cpp</code></td><td>同上(Profile.Mode = None 时跳过 Library)</td></tr>
-          <tr><td>SkillModule</td><td><code>SkillModuleTeleportToTarget.h/.cpp</code></td><td>BasedOnSummonPreview / BasedOnSkillAreaPreview 模式接入(RelativeToSelf 不动,BasedOnArmedTarget 不在范围)</td></tr>
+          <tr><td>Preview</td><td><code>SummonPreviewDataAsset.h/.cpp</code></td><td>加 Profile 字段，<code>UpdatePreviewInternal</code> 第 53-124 行<strong>整段删除</strong>替换为 Library 调用（同时修 pick-further bug）</td></tr>
+          <tr><td>Preview</td><td><code>SkillAreaPreviewDataAsset.h/.cpp</code></td><td>加 Profile 字段（默认 Mode = None），<code>UpdatePreviewInternal</code> 加 Mode 分支</td></tr>
+          <tr><td>SkillModule</td><td><code>SkillModuleSpawnMobaUnit.h/.cpp</code></td><td>TargetData 加 AimRay 字段；<code>Execute</code> 服务端走"Library 重算 + 阈值 200cm"流程</td></tr>
+          <tr><td>SkillModule</td><td><code>SkillModuleAddSkillAreaWithBuffs.h/.cpp</code></td><td>同上（Profile.Mode = None 时跳过 Library）</td></tr>
+          <tr><td>SkillModule</td><td><code>SkillModuleTeleportToTarget.h/.cpp</code></td><td>BasedOnSummonPreview / BasedOnSkillAreaPreview 模式接入（RelativeToSelf 不动，BasedOnArmedTarget 不在范围）</td></tr>
         </tbody>
       </table>
 
@@ -142,7 +142,7 @@
         所有改动局限在 GameMoba 模块的 Preview 和 SkillModule 子目录。
       </div>
 
-      <h2>3. 接入面积(技能数实证)</h2>
+      <h2>3. 接入面积（技能数实证）</h2>
       <table class="compact">
         <thead><tr><th>类别</th><th>技能数</th><th>清单</th><th>V1 行为变化</th></tr></thead>
         <tbody>
@@ -150,13 +150,13 @@
             <td>SummonPreview 受影响</td>
             <td><strong>7</strong></td>
             <td>BladeShower / StormArrow / GideonMeteor / PhaseThunderCloud / MurielBomb / SkyfireMechaUlt / BladeShower_Test</td>
-            <td><strong>有</strong>:pick-further bug 修复,水平瞄墙不再穿。<strong>QA 需要回归这 7 个</strong></td>
+            <td><strong>有</strong>:pick-further bug 修复，水平瞄墙不再穿。<strong>QA 需要回归这 7 个</strong></td>
           </tr>
           <tr>
             <td>SkillAreaPreview 实际在用</td>
             <td><strong>7</strong></td>
             <td>MurielBomb / GideonBarrier / GideonFlash / MurdockBindingBeam / MurdockMissileBarrage / MurdockRestraintField / SevarogChargeAattack</td>
-            <td>无(默认 Mode = None,维持现状)。如要接地需策划手动改 Mode</td>
+            <td>无（默认 Mode = None，维持现状）。如要接地需策划手动改 Mode</td>
           </tr>
           <tr>
             <td>SAPDA_ 文件存在但已迁 TSC</td>
@@ -169,14 +169,14 @@
 
       <h2>4. 与 V2.1 TSC 系统的边界</h2>
       <p>
-        本系统(范围施法 V1)与已上线的 <strong>V2.1 单体施法选取(TSC)</strong>是<strong>正交关系</strong>,互不影响。
-        证据:<code>SkillModuleApplyBuffToTarget.cpp:45-73</code> 的 ArmedTarget 分支完全不读 AreaPreviewData,
+        本系统（范围施法 V1）与已上线的 <strong>V2.1 单体施法选取（TSC）</strong>是<strong>正交关系</strong>，互不影响。
+        证据：<code>SkillModuleApplyBuffToTarget.cpp:45-73</code> 的 ArmedTarget 分支完全不读 AreaPreviewData,
         直接 <code>TSC->GetCurrentTarget()</code>。
       </p>
       <ul>
-        <li><strong>TSC 管</strong>:锁敌、辅助瞄准、单体目标合法性校验(team / dead / range / LOS,见 ADR-0003)</li>
-        <li><strong>本系统管</strong>:空间位置(地面落点)</li>
-        <li>3 个已迁 TSC 的技能(KallariMark / MurielShield / TwinblastBomb)对本 V1 完全免疫</li>
+        <li><strong>TSC 管</strong>：锁敌、辅助瞄准、单体目标合法性校验（team / dead / range / LOS，见 ADR-0003）</li>
+        <li><strong>本系统管</strong>：空间位置（地面落点）</li>
+        <li>3 个已迁 TSC 的技能（KallariMark / MurielShield / TwinblastBomb）对本 V1 完全免疫</li>
       </ul>
 
       <h2>5. 风险点</h2>
@@ -184,7 +184,7 @@
         <strong>R1:TargetData 协议加 AimRay 字段的兼容性</strong><br/>
         <code>FSpawnMobaUnitTargetData</code> / <code>FSkillAreaSpawnTargetData</code> / <code>FTeleportToTargetData</code> 都要加
         <code>FVector_NetQuantize AimOrigin</code> + <code>FVector_NetQuantizeNormal AimDirection</code> 字段。
-        UE FStruct NetSerialize 在末尾加字段一般兼容,但<strong>客户端服务端必须同版本部署</strong>(混版本会出错)。
+        UE FStruct NetSerialize 在末尾加字段一般兼容，但<strong>客户端服务端必须同版本部署</strong>（混版本会出错）。
         如果有热更新需求需要先确认。
       </div>
 
@@ -192,38 +192,38 @@
         <strong>R2:SummonPreview pick-further bug 修复 = 行为变化</strong><br/>
         修复后水平瞄墙不再穿过去。<strong>7 个使用 SummonPreview 的技能</strong>(BladeShower / StormArrow / GideonMeteor /
         PhaseThunderCloud / MurielBomb / SkyfireMechaUlt / BladeShower_Test)需要 QA 重点回归。
-        如果某个技能策划<strong>故意</strong>依赖"穿墙放置"行为,需要单独决定是否给 Profile 加
-        <code>bAllowAimThroughObstacles</code>(V1 不主动加,V2+ 再说)。
+        如果某个技能策划<strong>故意</strong>依赖"穿墙放置"行为，需要单独决定是否给 Profile 加
+        <code>bAllowAimThroughObstacles</code>（V1 不主动加，V2+ 再说）。
       </div>
 
       <div class="note">
-        <strong>R3:阈值 200cm 写死代码全局常量</strong><br/>
-        放在 <code>UPlacementResolverLibrary::MaxServerClientDeviation</code>。如果未来某个技能(比如远距离召唤)
-        需要更大阈值,需要先重构成 Profile 字段。V1 不主动加,等真实需求出现。
+        <strong>R3：阈值 200cm 写死代码全局常量</strong><br/>
+        放在 <code>UPlacementResolverLibrary::MaxServerClientDeviation</code>。如果未来某个技能（比如远距离召唤）
+        需要更大阈值，需要先重构成 Profile 字段。V1 不主动加，等真实需求出现。
       </div>
 
       <div class="note">
-        <strong>R4:AimRay 严格反作弊漏洞(V1 接受,V2 补)</strong><br/>
-        V1 服务端复算用客户端发来的 AimRay。cheat 工具如果同时伪造 AimRay + 坐标(让两者"自洽")可以绕过阈值。
+        <strong>R4:AimRay 严格反作弊漏洞（V1 接受，V2 补）</strong><br/>
+        V1 服务端复算用客户端发来的 AimRay。cheat 工具如果同时伪造 AimRay + 坐标（让两者"自洽"）可以绕过阈值。
         V2 需要改用服务端 <code>ControlRotation</code> 或加 AimRay 合理性校验。
       </div>
 
-      <h2>6. V2+ 排期(本版不做,但请确认方向)</h2>
+      <h2>6. V2+ 排期（本版不做，但请确认方向）</h2>
       <ul>
         <li><strong>Footprint 校验 + Adapt</strong>(Capsule)— 当 QA 报"召唤物穿墙"成为优先级时启动</li>
-        <li><strong>严格空中放置 / 表面附着</strong>(类似 Sage 头顶云、悬空标记圈)— Profile 新增 <code>AirPlaced</code> / <code>SurfaceAttached</code> Mode</li>
+        <li><strong>严格空中放置 / 表面附着</strong>（类似 Sage 头顶云、悬空标记圈）— Profile 新增 <code>AirPlaced</code> / <code>SurfaceAttached</code> Mode</li>
         <li><strong>投射物 reticle 与服务端命中点统一</strong> — 需要先解决 <code>InstantProjectileSystem</code> 轨迹模拟一致性</li>
         <li><strong>AimRay 严格反作弊</strong> — V1 漏洞补全</li>
         <li><strong>Reject 分支</strong> — 仅当未来出现"严格精准放置"技能时</li>
       </ul>
 
-      <h2>7. 改造顺序(7 步)</h2>
+      <h2>7. 改造顺序（7 步）</h2>
       <ol>
-        <li>建立 <code>FPlacementProfile</code> + <code>UPlacementResolverLibrary</code>(纯函数,可独立单元测试)</li>
-        <li>把 <code>SummonPreviewDataAsset</code> 现有算法迁入 Library,同时修复 pick-further bug;客户端预览验证</li>
-        <li><code>SkillModuleSpawnMobaUnit</code> 服务端接入(加 AimRay,Execute 走阈值流程)</li>
-        <li>QA 验收召唤类 7 个技能(关键:水平瞄墙不穿、行为零回归)</li>
-        <li>接入 <code>SkillModuleAddSkillAreaWithBuffs</code>(默认 Mode = None,7 个老 AOE 零回归)</li>
+        <li>建立 <code>FPlacementProfile</code> + <code>UPlacementResolverLibrary</code>（纯函数，可独立单元测试）</li>
+        <li>把 <code>SummonPreviewDataAsset</code> 现有算法迁入 Library，同时修复 pick-further bug；客户端预览验证</li>
+        <li><code>SkillModuleSpawnMobaUnit</code> 服务端接入（加 AimRay,Execute 走阈值流程）</li>
+        <li>QA 验收召唤类 7 个技能（关键：水平瞄墙不穿、行为零回归）</li>
+        <li>接入 <code>SkillModuleAddSkillAreaWithBuffs</code>（默认 Mode = None,7 个老 AOE 零回归）</li>
         <li>接入 <code>SkillModuleTeleportToTarget</code> 服务端复算</li>
         <li>Footprint / 严格空中放置 / 投射物 reticle / AimRay 严格反作弊 → V2+</li>
       </ol>
@@ -231,19 +231,19 @@
       <div class="signoff">
         <h3>📋 请主程 sign off 以下 5 项</h3>
         <ol>
-          <li><strong>设计取向</strong>:Deadlock 派(永远出技能,失败靠 Clamp,不做失败枚举/Reject/红色 UI)</li>
-          <li><strong>V1 范围</strong>:只做 Library + 服务端复算 + pick-further bug 修复;Footprint / 严格放置 / 投射物 reticle 全部 V2+</li>
-          <li><strong>代码改动面</strong>:新增 3 文件 + 改 10 文件,全在 GameMoba 模块,不动 Character / MobaUnit / PlayerState / Movement / UI / Tag / Engine</li>
-          <li><strong>反作弊立场</strong>:阈值 200cm 制(不"总用服务端"),允许 AimRay 同伪造漏洞留 V2 补</li>
-          <li><strong>排期估算</strong>:5-7 工程日(1 人),含单元测试与 QA 自验,不含完整 QA 回归</li>
+          <li><strong>设计取向</strong>:Deadlock 派（永远出技能，失败靠 Clamp，不做失败枚举/Reject/红色 UI）</li>
+          <li><strong>V1 范围</strong>：只做 Library + 服务端复算 + pick-further bug 修复；Footprint / 严格放置 / 投射物 reticle 全部 V2+</li>
+          <li><strong>代码改动面</strong>：新增 3 文件 + 改 10 文件，全在 GameMoba 模块，不动 Character / MobaUnit / PlayerState / Movement / UI / Tag / Engine</li>
+          <li><strong>反作弊立场</strong>：阈值 200cm 制（不"总用服务端"），允许 AimRay 同伪造漏洞留 V2 补</li>
+          <li><strong>排期估算</strong>:5-7 工程日（1 人），含单元测试与 QA 自验，不含完整 QA 回归</li>
         </ol>
       </div>
 
-      <h2 style="margin-top: 28px;">附:详细文档索引</h2>
+      <h2 style="margin-top: 28px;">附：详细文档索引</h2>
       <ul>
-        <li>完整 FDD V1.2(13 章节,含算法伪代码 / Profile 字段表 / 边界案例 / 验收清单)（内部文档，未随站发布）</li>
-        <li><a href="./Skill - 范围施法落点.html">原 FDD V1.0(参考,与本版决策对比)</a></li>
-        <li><a href="./Skill - 单体施法选取 V2.1.html">兄弟系统:V2.1 单体施法选取(TSC,与本系统正交)</a></li>
+        <li>完整 FDD V1.2（13 章节，含算法伪代码 / Profile 字段表 / 边界案例 / 验收清单）（内部文档，未随站发布）</li>
+        <li><a href="./Skill - 范围施法落点.html">原 FDD V1.0（参考，与本版决策对比）</a></li>
+        <li><a href="./Skill - 单体施法选取 V2.1.html">兄弟系统：V2.1 单体施法选取（TSC，与本系统正交）</a></li>
       </ul>
     </main>
   </div>
