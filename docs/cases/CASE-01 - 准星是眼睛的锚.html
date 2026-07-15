@@ -161,11 +161,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -243,9 +243,9 @@
     </header>
 
     <div class="foreword">
-      <p>先说这篇在干嘛。技能蓄力的时候想让镜头绕着角色转一圈，有点演出感。但镜头一转，准星指的地方就不对了，这是个 skillshot，准星骗人是大忌。两个都想要。</p>
-      <p>解法其实是老手艺。射击游戏里 FPP 切 TPP、开镜，都要处理机位变了但世界瞄准点不能变这件事，只不过人家是切换瞬间算一次，我们把它改成持续的：机位照常绕弧，视线每帧重新对回原来的瞄准点，然后做成资产上的一个选项，策划想用就选。</p>
-      <p>结果准星不动了，环绕从被压着的 2.6° 放开到 10.4°。中间试过一版让准星跟着真实弹道走的方案，证伪了，逻辑上完全诚实，看起来却像准星在乱飘，为什么错第 4 节细讲，这条歧路可能比终案还值钱。</p>
+      <p>技能蓄力需要一段环绕镜头来撑住演出，但镜头旋转会带走准星对应的瞄准点。直接把环绕压小，技能没有足够的蓄势感；保留原来的旋转，玩家最后那一下瞄准修正又不可信。这里先定了一条底线：演出可以调整，准星不能骗人。</p>
+      <p>这个问题和射击游戏切换视角时保持瞄准关系属于同一类。常见做法是在机位变化时重新对回原来的世界瞄点，我们把一次性校正改成了持续过程：镜头照常环绕，视线在运动中不断对回瞄准点，再把它做成策划可以选择的镜头行为。</p>
+      <p>在同一段约 0.4 秒的蓄力窗口里，可用环绕量从 2.6° 放宽到 10.4°。本次测试距离下，准星对应的世界瞄点保持稳定。过程中还试过让准星跟随真实弹道投影，几何上是准确的，但屏幕上的持续位移让它看起来一直在漂，最终没有采用。当前结论来自需求方单人验收，多人环境还没有补测。</p>
       <div class="grid">
         <figure>
           <video autoplay loop muted playsinline src="CASE-01-crosshair-before.mp4"></video>
@@ -581,7 +581,7 @@
               <tr><td>2026-07-11</td><td>—</td><td>全篇去冗余：同一论点只陈述一次（01/04/05 节共十处）</td></tr>
               <tr><td>2026-07-12</td><td>—</td><td>宽屏排版两轮修正：视口分档、移除正文行宽上限</td></tr>
               <tr><td>2026-07-12</td><td>v2.1</td><td>导语与 TL;DR 重写为人话口径；调研补路线 E（切换瞬间瞄点还原，作者盲区修正）；发明式措辞降调</td></tr>
-              <tr><td>2026-07-13</td><td>—</td><td>作者按补优化前后实机对比动图（GIF 转 MP4 内嵌）</td></tr>
+              <tr><td>2026-07-13</td><td>—</td><td>导读补优化前后实机对比动图（GIF 转 MP4 内嵌）</td></tr>
             </tbody>
           </table>
           </details>

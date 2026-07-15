@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -244,10 +244,10 @@
     </header>
 
     <div class="foreword">
-      <p>多体型适配最容易被说成「大角色把动画缩放一下」。实际做下来完全不是这回事。动画里的手搭边缘、角色胶囊中心、骨架 root、Motion Warping 目标点，属于四个不同坐标语义。标准体型上它们差得不多，看起来像一套参数能通用；到了 Steel，这些误差会同时放大。</p>
-      <p>这篇不重复前一份完整调试实录，而是把当时散落在 IK Rig、Retargeter、MCD、Chooser、PoseSearch 数据库和 C++ 里的多体型工作单独捞出来。P4 已经找回了关键链路，其中还保留了一次很真实的过程：第一版「体型差异巨大的悬挂处理」提交后四分钟就撤回，十几分钟后重新提交。</p>
-      <p>旧接入文档里的 Steel 单值偏移已经落后于现行实现。本文以编辑器当前实读和代码为准，同时把旧口径标成历史阶段，不反向篡改当时的记录。</p>
-    </div>
+      <p>标准体型的攀爬方案放到 Steel 上会同时暴露几类误差：手部约束可能把手臂拉坏，胶囊尺寸会改变角色与墙面的横向距离，骨架比例和动画剩余 Root Motion 又会影响最终高度。它们最后都表现成“攀爬位置不对”，但不是同一个问题，继续只调一个 Z Offset 很容易把错误藏起来。</p>
+      <p>这次把适配拆成三层处理。先按目标骨架重新决定哪些 IK 约束该保留；横向位置直接读取角色实际胶囊半径；高度补偿则拆成 Mantle、Climb 与高低墙组合，由共享逻辑负责选格，各英雄的 MCD 负责填写自己的值。这样代码不需要知道角色名字，体型差异也不会被一个 Steel 特例带进所有英雄。</p>
+      <p>当前实读配置中，只有 Steel 的高墙 Climb 使用 30cm 补偿，TwinBlast 和 Sparrow 对应四格仍为 0。旧接入文档中的 Steel 单值 120 已经过时，不能再作为现行参数。这个系统自动化的是差异如何被表达和选择，不会自动算出每个体型的正确结果；IK 取舍和补偿值仍要拿目标骨架与动画逐项验收。</p>
+      </div>
 
     <div class="layout">
       <nav id="toc">

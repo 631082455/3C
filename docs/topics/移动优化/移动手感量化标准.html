@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -244,10 +244,10 @@
     </header>
 
     <div class="foreword">
-      <p>写这份标准的直接原因：调了半年移动，每次说"手感好多了"其实都是在凭当天的手指投票。同一个起步，今天觉得跟手，明天换个英雄又觉得肉，到底是它变了还是我变了，没有对表的地方。</p>
-      <p>做法不新鲜，就是把射击游戏圈用输入延迟、开镜时间做验收的老办法搬到移动上：每个手感形容词背后找出那个可测的数（"跟手"是按键到位移的帧数，"干脆"是松键到静止的距离，"利索"是反打到掉头的耗时），配上测法和目标区间。目标区间这版是建议值，标了理由，等基线实测完再定稿，不拍脑袋。</p>
-      <p>写完最大的收获是记分卡本身：23 项细项里 4 项红着，归并后就是三件事（起步误选、起步与折返爆发的网络同步、多人盲测）。标准不是用来证明做完了的，是用来知道还差多少的。</p>
-    </div>
+      <p>这份标准不打算用数字代替手感判断。它解决的是另一个问题：同一句“更跟手了”，今天、明天、换一个英雄，可能指的不是同一件事。如果没有固定测法，版本之间只能靠当时的手感记忆比较，很难确认是真的变好，还是判断基准变了。</p>
+      <p>这里把常用的体验词拆成可以复查的代理指标：起步看输入到首帧位移的帧数，急停看松键后的停止距离，折返看速度完成反向所需时间；再用 Rewind Debugger 保留逐帧记录。数字负责发现退化和保证比较口径一致，目标是否舒服仍由实机验收决定。</p>
+      <p>当前版本是 v0.1 建议稿，多数目标区间还需要基线实测后再拍板。现有记分卡按细项计为 13 项通过、7 项待测、4 项红灯，主要未完成项包括起步误选 Reface、StartBoost 的网络同步和多人盲测。正式发布前还需要统一正文中的指标总数口径；在待测项和网络验证完成前，它只能作为验收框架，不能作为“竞技移动已经达标”的证明。</p>
+      </div>
 
     <div class="layout">
       <nav id="toc">

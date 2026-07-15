@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -243,12 +243,12 @@
       </div>
     </header>
 
-    <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
+    <!-- 导读:帮助读者快速判断正文是否值得深入。按文档类型说明课题、处理方式、结果或使用方法与证据边界,不强制固定段数。 -->
     <div class="foreword">
-      <p>技能打架的规则（我放大招时你按闪现给不给走）是手感的一部分，但它原先住在程序侧：每个技能蓝图里写死一串「阻挡哪些 tag」。策划想改一条得开蓝图，想看全貌基本不可能。</p>
-      <p>做法是把这层规则抽出来：每个英雄一张表，一行就是一条「A 释放中，B 来了怎么办」。表存盘后编辑器里的监听脚本自动编译进数据表，运行时每次放技能都现读，所以改完约 1 秒就能在局内试。这是老套路（数据驱动），值钱的是配套语义：哪类技能进表、哪类不进，想清楚了表才不会越填越乱。</p>
-      <p>验收用了个有点极端的例子：Skyfire 火焰喷射期间要能同时放护盾和手雷，还得跳过它们的出手动作免得打断喷火——全程在表和资产配置里完成，没动火焰技能一行代码。</p>
-    </div>
+      <p>技能之间谁挡谁、谁能并行，原先分散在每个技能蓝图的 Tag 配置里。策划想改一条关系，要先找到对应资产；想确认一个英雄的全局规则，只能把几十个技能在脑子里拼起来。问题不在 GAS 能不能处理互斥，而在规则没有一个适合策划查看和修改的地方。</p>
+      <p>这次把关系集中成每个英雄一张表，一行只回答一件事：A 正在出手时，B 来了怎么办。真正需要先定的不是工具，而是“正在出手”的边界。第一版把持续护盾也放进表里，结果连“释放中”指哪一段都说不清。后来明确，没有承诺出手或引导阶段的持续状态不进表，继续走状态 Tag。</p>
+      <p>目前表格保存后约 1 秒可以在 PIE 中看到内存结果，满意后再由编辑器落盘。Skyfire 的火焰喷射已经用它验证过：引导期间可以并行释放护盾和手雷，并按配置跳过会打断喷火的出手动作，火焰技能本身没有改代码。当前打断语义仍有一部分留在代码侧，多人延迟环境也没有验证。</p>
+      </div>
 
     <figure>
       <video src="CASE-03-parallel-config-demo.mp4" controls muted playsinline></video>

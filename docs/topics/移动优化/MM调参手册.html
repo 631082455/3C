@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -244,12 +244,12 @@
       </div>
     </header>
 
-    <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
+    <!-- 导读:帮助读者快速判断正文是否值得深入。按文档类型说明课题、处理方式、结果或使用方法与证据边界,不强制固定段数。 -->
     <div class="foreword">
-      <p>调了半年 Motion Matching，最大的感受不是参数难，是参数散。同一个"起步不对"，病根可能在库的行序、可能在采样范围、可能在驱动变量、也可能在轨迹预测，每次都要重新想一遍去哪找。这本手册就是把这半年翻过的地方一次性收编成查表，以后自己不用再考古，接手的人和 AI 也不用。</p>
-      <p>写法上有一条底线：不背旧教程。PoseSearch 这套插件在 UE 各版本间变动很大（5.7 删了 MirrorMismatchCostBias、废了 bShouldSearch 引脚、条目结构整个换了），网上资料大多停在 5.3 到 5.5。所以全部参数对着项目引擎的源码逐行核过，项目资产的现值也是编辑器里实读的，每条都标了证据档位，源码、项目、实战、推断分开写，不混。</p>
-      <p>用法建议从第 09 节症状反查表进：先按症状找到"先验证什么"，确认诊断了再动参数。直接从头读也行，第 01 节的两张图（数据流六层、cost 四项组成）把"病在哪层去哪层调"的地图画清楚了。</p>
-    </div>
+      <p>这本手册不是参数百科，也不建议从第一页顺序读到最后。它的用途是排查：先从第 09 节的症状反查表确认问题更像出在数据、路由、轨迹、匹配还是选后修饰，再去对应章节核对参数。Bias 放在后面，是因为它很容易临时压住症状，却不一定碰到根因。</p>
+      <p>PoseSearch 在 UE 不同版本间变化较大，旧教程中的一些字段和节点在本项目使用的版本里已经失效或被删除。因此手册中的机制解释以项目引擎源码为准，资产现值来自编辑器实读，项目事实、实战结果和推断分别标注。这里记录的是当前工程快照，不是对所有 UE 版本都成立的通用说明。</p>
+      <p>目前仍有几项需要回填：Sparse 档没有同步 Dense 侧的部分路由修复，Reface 误选的新假设还未完成实测，一些归一化与轨迹配置也只到“值得验证”的程度。使用时应按证据标签区分已经核验的事实与待验证方向，不能把后者直接当作调参结论。</p>
+      </div>
 
     <div style="margin-top:26px;padding:22px 30px 20px;border:1px solid var(--line);border-radius:6px;background:var(--paper);border-top:3px solid var(--accent);box-shadow:var(--shadow);">
       <div style="font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--accent-text);margin-bottom:10px;">优化历程 · 手册背后的半年</div>

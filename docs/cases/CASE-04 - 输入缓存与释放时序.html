@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -244,10 +244,10 @@
     </header>
 
     <div class="foreword">
-      <p>玩家已经按了，技能却不一定能在这一帧放出来。可能是上一发的攻击间隔没结束，也可能是表现上必须先把弓拉到最低出手点。只用一个“输入缓存”去解释这些情况，很快就会乱。</p>
-      <p>Sparrow 的蓄力普攻把问题摊得很开：按下开始拉弓，松开决定蓄力值，动画和发弹可以稍后执行；射完立刻再按，新的输入又可能撞上攻击间隔。我们最后没有把所有东西塞进一个队列，而是把短时重试、持续按住和蓄力时间拆开，各自在正确的时机被消费。</p>
-      <p>真正难排的是多人网络。客户端认为 gate 已经结束，立刻预测下一发；服务端的计数还差一点才清掉，于是拒绝这次激活，玩家看到的就是偶尔丢一箭。问题只差几十毫秒，手感上却像输入不靠谱。</p>
-    </div>
+      <p>Sparrow 射出一箭后有 1 秒攻击间隔。玩家在这段时间里再次按下并保持，下一轮攻击不能被吞掉；但等待 gate 结束的时间也不能算进蓄力，否则长按会比准确手点多拿伤害。表面上都像“缓存输入”，实际是两件不同的事。</p>
+      <p>终案把三种时间拆开处理：短时缓存只保存一次暂时失败的意图；Press Tag 只表示玩家现在是否还按着；蓄力只从新一轮技能真正激活时开始计算。攻击间隔结束后，系统检查按键是否仍然保持，再走一次正常的玩家输入入口。这样既不会错过开放帧，也不会让 gate 期间的等待偷偷变成蓄力收益。</p>
+      <p>联机后还出现过一次偶发丢箭：客户端先结束 Timer 并预测下一发，服务端的 gate 还差几十毫秒没有清掉，于是拒绝了激活。当前处理是让权威端的 gate 最多提前 50ms 收口，客户端节奏不变。这个数只覆盖当时观察到的竞态窗口，不是可以照搬的网络常数；不同 RTT、抖动和丢包条件下的正式压测仍未完成。秒松时伤害应该读取物理松手还是最低出手点，也还需要最终确认。</p>
+      </div>
 
     <div class="layout">
       <nav id="toc">

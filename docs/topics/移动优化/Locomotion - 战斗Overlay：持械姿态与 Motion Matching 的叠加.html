@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -244,10 +244,10 @@
     </header>
 
     <div class="foreword">
-      <p>做移动的时候有一个决定影响了后面所有英雄的量产：持械姿态不进移动库。MOBA 十几个英雄，锤、弓、双枪、茶壶各拿各的，如果"举着锤子跑"要单独一套跑步动画，移动库规模乘以武器数，量产直接死掉。所以拆成三层：MM 只管一套通用的腿，拿什么武器、在不在戒备，全靠往上叠一层姿态。</p>
-      <p>叠加层的节点位是引擎动画方案里现成的，这不是我们的发明；我们做的是把它长成一套能量产的战斗体系：进出战的状态语义（哪些行为算进战、什么时候退）、策划侧的驱动链（HAD 上勾两个布尔，保存时自动反写进蒙太奇，运行时零配置）、C++ 基类里的三态姿势矩阵，以及一个字段收口的接入配方：新英雄要"进战举起武器"，一个子 ABP 加 HeroData 一个字段。</p>
-      <p>现在 10 个英雄跑在这套体系上。回头看最值钱的两个设计：驱动链把"进出战"做成了蒙太奇的自带属性而不是每个技能的手工配置；姿势矩阵允许跨英雄借资产（KongfuTea 的瞄准姿势直接借 Twinblast 的双枪套用到今天），量产成本比"每英雄全套"低一个量级。</p>
-    </div>
+      <p>如果持械差异直接做进移动库，每增加一种武器，跑、停、转身和冲刺就要跟着扩一套。英雄数量和武器类型一乘，移动资产很快就养不起。这里的取舍是让 Motion Matching 只负责通用腿部移动，武器持握、戒备和瞄准姿态放到上半身 Overlay 里处理。</p>
+      <p>引擎已经提供了姿势叠加的基础节点，项目补的是量产所需的整条链：roaming、combat、aim 三档状态；技能资产上的进出战配置；保存时反写蒙太奇；运行时由主动画蓝图和英雄 Overlay 接起来。新英雄接入时仍需要准备经过正确骨架处理的姿势资产、一个子 Overlay ABP、HeroData 入口和技能侧进出战配置，并不只是“填一个字段”。</p>
+      <p>当前资产盘点中有 10 个英雄在使用这套体系。部分姿势可以按武器类型复用，例如 KongfuTea 暂时借用了 Twinblast 的双枪姿势；但它的 Ready 列和瞄准开关仍未配完，Crouch 对应的插槽也只是保留结构。现有结果来自需求方逐英雄 PIE 验收，没有独立量化指标或多人验证。</p>
+      </div>
 
     <div class="layout">
       <nav id="toc">

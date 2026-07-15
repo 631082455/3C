@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -244,12 +244,12 @@
       </div>
     </header>
 
-    <!-- 作者按:整篇的导语,三段(课题/解法/结果),用最平的人话写。这里是作者过笔的核心位置,写完全文最后回来写 -->
+    <!-- 导读:帮助读者快速判断正文是否值得深入。按文档类型说明课题、处理方式、结果或使用方法与证据边界,不强制固定段数。 -->
     <div class="foreword">
-      <p>项目的移动是拿 Epic 的 GASP（Game Animation Sample）整套 Motion Matching 方案搬进来的。它是个展示级 demo，搬进 MOBA 之后两头都不对：手感上有病灶，移速拉到 650 一直按前进，角色在几个过渡动画里打摆子，进不了巡航；起步还会突然播一个反身转 180° 的动画。量产上也养不起，一套移动库 624 条动画，英雄有几十个。</p>
-      <p>解法没有发明。动画库分档瘦身是 GASP 官方自带的路数（Dense/Sparse 两档），我们做的是顺着它的砍法再切一档 MOBA 特化档：不要走路、不要下蹲，8 个库 87 条动画，再立一条判据管住以后每一次取舍，能感知、做得出、影响命中判定，三选一才留。手感那头，把冲刺档位的判断依据从"此刻跑多快"改成"角色能跑多快"（移速属性含 buff），配一对迟滞阈值。</p>
-      <p>结果是全英雄生效，起步和巡航稳了，每个新英雄的移动动画交付量从 624 压到 87，局内 F1 面板能一键切两档实机对比。起步偶发误选反身动画的问题没有根治，七轮假设全被证伪，老老实实写在遗留区。回头看最值钱的是那条保留判据，和几次干净的证伪（其中一个坑还是我们自己修复时埋的）。</p>
-    </div>
+      <p>GASP 的 Motion Matching 接进项目后，Sprint 档首先暴露出两个问题：650 移速下，角色会在过渡动画之间反复切换，难以稳定进入巡航；正向起步还会偶发选到反身 180° 的 Reface 动画。与此同时，官方 Dense 库的移动四族共有 624 个数据库候选条目，直接按这个密度扩到几十个英雄，维护成本也不可接受。</p>
+      <p>手感侧已经落地的处理包括：用角色的最大移速属性驱动 Gait，加入升降档迟滞；修正 Chooser 中起步行被 Any 兜底行截断的问题；把抢占巡航的过渡动画采样范围限制在前半段。Dense 档的起步到巡航因此稳定下来，并做了局内 Dense、Sparse 切换工具，方便后续按实机结果比较动画库。</p>
+      <p>量产侧则定下了 MOBA-Lite 的目标结构：从现有候选库中收敛到 8 个库、约 87 个数据库 Entry，并用“玩家能感知、玩家做得出、影响命中判定”作为保留条件。这里的 624 和 87 都是数据库候选口径，不等于动画师的源 Clip 交付量；MOBA-Lite 的最终路由也还没有完整铺开。Reface 误选仍未根治，Sparse 档尚未同步 Dense 的全部修复，现有手感结论主要来自单人 PIE 验收。</p>
+      </div>
 
     <div class="layout">
       <nav id="toc">
@@ -294,7 +294,7 @@
             <p>一，冲刺档的两个病灶治到根因层，修复不许以砍动画为代价；二，移动库裁到 MOBA 品类值得付的量，并且立下判据，管住以后每一次"这条动画留不留"的争论。</p>
           </div>
           <h3>分工与工作方式</h3>
-          <p>作者（战斗 3C 策划，不写 C++）：出课题、定设计原则、否决方案、每一轮实机验收。AI agent（经 AIK 编辑器自动化桥）：库数据实测、资产修改、引擎源码查证，本案唯一一处 C++（控制台变量注册）也由 AI 代写、作者提交。程序：本轮零投入。</p>
+          <p>作者（战斗 3C 策划，C++ 让 AI 狠狠写、由我拍板提交）：出课题、定设计原则、否决方案、每一轮实机验收。AI agent（经 AIK 编辑器自动化桥）：库数据实测、资产修改、引擎源码查证，本案唯一一处 C++（控制台变量注册）也由 AI 代写、作者提交。程序：本轮零投入。</p>
           <p>工作方式上有一条贯穿全程：单变量实验加明确证伪。AI 的每个结论都要过作者实机复核，实录里 AI 被驳回、被打脸的地方全部保留原样，那正是定位问题最快的几步。</p>
         </section>
 
@@ -601,7 +601,7 @@
             <table>
               <thead><tr><th>日期</th><th>版本</th><th>变更</th></tr></thead>
               <tbody>
-                <tr><td>2026-07-13</td><td>v0.1</td><td>初稿：由考古台账整理成文，待作者过笔（亲笔位：标题/作者按/各节首句/结论）与内行嗅觉关（调研谱系）</td></tr>
+                <tr><td>2026-07-13</td><td>v0.1</td><td>初稿：由考古台账整理成文，待作者复核（标题/导读/各节首句/结论）与内行嗅觉关（调研谱系）</td></tr>
               </tbody>
             </table>
           </details>

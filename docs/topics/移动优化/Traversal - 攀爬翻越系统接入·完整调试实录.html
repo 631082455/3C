@@ -162,11 +162,11 @@
       border:1px dashed color-mix(in srgb,var(--brass) 45%,transparent);color:var(--muted);}
     .aside::before{content:"◇ 题外话";display:block;margin-bottom:6px;
       font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
-    /* 作者按:卷首导语框,置于封面与正文之间,亲笔位的核心落点 */
+    /* 导读:卷首说明框,帮助读者快速理解正文的课题、处理方式与证据边界 */
     .foreword{margin-top:26px;padding:22px 30px 20px;border-radius:var(--radius);
       background:var(--paper);border:1px solid var(--line);border-top:3px solid var(--brass);
       box-shadow:var(--shadow);}
-    .foreword::before{content:"作者按";display:block;margin-bottom:10px;
+    .foreword::before{content:"导读";display:block;margin-bottom:10px;
       font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
     .foreword p{margin:8px 0 0;color:var(--ink);}
     .foreword p:first-of-type{margin-top:0;}
@@ -258,10 +258,10 @@
     </div>
 
     <div class="foreword">
-      <p>原来的系统只有一种攀爬：不管面前是半人高的箱子、一堵薄墙还是两米五的高台，都播同一套 Mantle。目标是把 GASPALS 的四类翻越完整移植进来，同时兼容项目已有的 GAS 框架、CharacterMovement 组件和 Motion Matching 动画系统。</p>
-      <p>这篇按时间顺序记录整个过程。写法上遵守一条纪律：走错的方向、失败的尝试、编译没生效白调一晚上的蠢事，全部保留原样。因为后来翻回去看，这些弯路本身比结论有用——同类系统再接一次，大概率还会在同样的地方掉坑。</p>
-      <p>全文整理自当期的调试报告与功能文档，参数与时序均为当时实测值，未做追改。</p>
-    </div>
+      <p>原系统不区分箱子、薄墙和高台，所有障碍都走同一套 Mantle。此次接入把翻越拆成 Hurdle、Vault、Mantle、Climb 四类，并根据高度、深度、背面地板和接近速度选择动作，同时保留项目原有的 GAS、CharacterMovement 与 Motion Matching 框架。</p>
+      <p>真正需要联调的不只是动画。翻越期间角色处于无重力的 Flying 状态，技能无论正常完成、被打断还是启动失败，都必须把 MovementMode 归还；障碍深度探针、Motion Warping 目标名和蒙太奇安全结束点也必须使用同一套语义。最终视觉启动延迟从约 530ms 降到约 67ms，第一天就存在、却因为测试场景全是薄墙而没有暴露的“深度恒为 0”问题也被替换为顶面向下的步进探针。</p>
+      <p>全文按三场调试、28 个阶段保留了每次判断、验证和回退，参数是当时的实测记录，不是对现行系统的再次追改。当前仍不支持大角度斜向入墙，Walk 档资产没有补齐，Motion Warping Notify 提前播放也只是对 PoseSearch BranchIn 的近似替代。要复用这份记录，应先看问题发生在哪一层，不要直接照抄其中的阈值。</p>
+      </div>
 
     <div class="layout">
       <nav id="toc">
