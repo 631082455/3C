@@ -219,6 +219,17 @@
       main,.hero{box-shadow:none;} section{break-inside:avoid-page;}
     }
   </style>
+
+<style>
+  /* 返回主页按钮：全站统一，左下角常驻 */
+  #homeBtn{position:fixed;left:26px;bottom:26px;z-index:60;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    border:1px solid var(--line,#ddd7c9);background:var(--paper,#fbfaf6);color:var(--muted,#6a655c);font-size:19px;line-height:1;
+    box-shadow:var(--shadow,0 1px 2px rgba(55,50,38,.05));transition:color .15s,border-color .15s;}
+  #homeBtn:hover{color:var(--accent-text,var(--accent,#2a4d69));border-color:var(--accent-text,var(--accent,#2a4d69));}
+  @media(max-width:980px){#homeBtn{left:14px;bottom:14px;width:38px;height:38px;font-size:17px;}}
+  @media print{#homeBtn{display:none!important;}}
+</style>
 </head>
 <body>
   <div id="progress"></div>
@@ -612,5 +623,6 @@
       });
     })();
   </script>
+<a id="homeBtn" href="../../index.html" title="返回主页" aria-label="返回主页">⌂</a>
 </body>
 </html>

@@ -6,24 +6,24 @@
   <title>Skill - 范围施法落点需求</title>
   <style>
     :root {
-      --bg: #f5f6f8;
-      --paper: #ffffff;
-      --ink: #22272e;
-      --muted: #65717f;
-      --line: #d9dee5;
-      --soft: #eef2f5;
-      --accent: #256f65;
-      --accent-soft: #e2f1ee;
-      --blue: #22577a;
-      --blue-soft: #e5f0f8;
-      --warn: #8a5b18;
-      --warn-soft: #fff4dd;
+      --bg: #f1eee7;
+      --paper: #fbfaf6;
+      --ink: #211f1a;
+      --muted: #6a655c;
+      --line: #ddd7c9;
+      --soft: #edeade;
+      --accent: #2e526f;
+      --accent-soft: #e9eff3;
+      --blue: #31597a;
+      --blue-soft: #e9eff3;
+      --warn: #96660a;
+      --warn-soft: #f8efd8;
       --bad: #8d3b3b;
       --bad-soft: #fbe9e7;
       --code: #172530;
       --radius: 8px;
-      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      --mono: "Cascadia Code", Consolas, monospace;
+      --sans: "Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono: "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
     }
 
     * { box-sizing: border-box; }
@@ -59,7 +59,7 @@
     li + li { margin-top: 4px; }
     code, .mono {
       font-family: var(--mono);
-      color: #1d5f80;
+      color: #2a4d69;
       font-size: 0.94em;
       overflow-wrap: anywhere;
     }
@@ -135,10 +135,10 @@
     .note {
       margin-top: 16px;
       padding: 14px 16px;
-      border: 1px solid #ecd6ad;
+      border: 1px solid #ecdfc0;
       border-radius: var(--radius);
       background: var(--warn-soft);
-      color: #604219;
+      color: #96660a;
     }
     .risk {
       margin-top: 16px;
@@ -146,7 +146,7 @@
       border: 1px solid #e8c1bc;
       border-radius: var(--radius);
       background: var(--bad-soft);
-      color: #6b302c;
+      color: #a63d33;
     }
     .grid {
       display: grid;
@@ -161,7 +161,7 @@
       background: #fbfcfd;
     }
     .box.blue {
-      border-color: #c8dced;
+      border-color: #dbe4ec;
       background: var(--blue-soft);
     }
     .scene-grid {
@@ -203,7 +203,7 @@
     }
     th {
       background: #f2f4f6;
-      color: #303740;
+      color: #211f1a;
       font-size: 13px;
       font-weight: 740;
     }
@@ -214,7 +214,7 @@
       padding: 14px 16px;
       border-radius: var(--radius);
       background: var(--code);
-      color: #e8f1f7;
+      color: #e9eff3;
       overflow: auto;
       font: 13px/1.65 var(--mono);
     }
@@ -239,6 +239,17 @@
       .scene-grid { grid-template-columns: 1fr; }
     }
   </style>
+
+<style>
+  /* 返回主页按钮：全站统一，左下角常驻 */
+  #homeBtn{position:fixed;left:26px;bottom:26px;z-index:60;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    border:1px solid var(--line,#ddd7c9);background:var(--paper,#fbfaf6);color:var(--muted,#6a655c);font-size:19px;line-height:1;
+    box-shadow:var(--shadow,0 1px 2px rgba(55,50,38,.05));transition:color .15s,border-color .15s;}
+  #homeBtn:hover{color:var(--accent-text,var(--accent,#2a4d69));border-color:var(--accent-text,var(--accent,#2a4d69));}
+  @media(max-width:980px){#homeBtn{left:14px;bottom:14px;width:38px;height:38px;font-size:17px;}}
+  @media print{#homeBtn{display:none!important;}}
+</style>
 </head>
 <body>
   <div class="page">
@@ -343,14 +354,14 @@
             <div class="scene">
               <svg viewBox="0 0 360 220" role="img" aria-label="预览承诺示意">
                 <rect width="360" height="220" fill="#f8fbfc"/>
-                <rect x="48" y="56" width="90" height="90" rx="8" fill="#e2f1ee" stroke="#9bcfc5"/>
-                <rect x="136" y="56" width="90" height="90" rx="8" fill="#fff4dd" stroke="#ecd6ad"/>
+                <rect x="48" y="56" width="90" height="90" rx="8" fill="#e9eff3" stroke="#9bcfc5"/>
+                <rect x="136" y="56" width="90" height="90" rx="8" fill="#f8efd8" stroke="#ecdfc0"/>
                 <rect x="224" y="56" width="90" height="90" rx="8" fill="#fbe9e7" stroke="#e8c1bc"/>
-                <circle cx="93" cy="101" r="24" fill="rgba(37,111,101,.18)" stroke="#256f65" stroke-width="3"/>
+                <circle cx="93" cy="101" r="24" fill="rgba(37,111,101,.18)" stroke="#2e526f" stroke-width="3"/>
                 <circle cx="181" cy="101" r="24" fill="rgba(214,157,55,.16)" stroke="#d69d37" stroke-width="3"/>
                 <circle cx="269" cy="101" r="24" fill="rgba(141,59,59,.14)" stroke="#8d3b3b" stroke-width="3" stroke-dasharray="6 5"/>
-                <text x="93" y="169" fill="#256f65" font-size="13" text-anchor="middle">合法</text>
-                <text x="181" y="169" fill="#8a5b18" font-size="13" text-anchor="middle">已修正</text>
+                <text x="93" y="169" fill="#2e526f" font-size="13" text-anchor="middle">合法</text>
+                <text x="181" y="169" fill="#96660a" font-size="13" text-anchor="middle">已修正</text>
                 <text x="269" y="169" fill="#8d3b3b" font-size="13" text-anchor="middle">非法</text>
               </svg>
               <div class="scene-body">
@@ -463,7 +474,7 @@
                 </marker>
               </defs>
               <rect width="980" height="310" fill="#ffffff"/>
-              <text x="40" y="42" fill="#65717f" font-size="16" font-weight="700">Placement Resolver</text>
+              <text x="40" y="42" fill="#6a655c" font-size="16" font-weight="700">Placement Resolver</text>
               <g fill="#f8fbfc" stroke="#cfd8df" stroke-width="1.5">
                 <rect x="42" y="82" width="120" height="72" rx="8"/>
                 <rect x="202" y="82" width="120" height="72" rx="8"/>
@@ -480,7 +491,7 @@
                 <text x="742" y="113">Resolve</text>
                 <text x="890" y="113">Result</text>
               </g>
-              <g fill="#65717f" font-size="12" text-anchor="middle">
+              <g fill="#6a655c" font-size="12" text-anchor="middle">
                 <text x="102" y="136">AimRay / Profile</text>
                 <text x="262" y="136">原始意图点</text>
                 <text x="422" y="136">候选支撑面</text>
@@ -495,8 +506,8 @@
                 <line x1="642" y1="118" x2="674" y2="118"/>
                 <line x1="802" y1="118" x2="834" y2="118"/>
               </g>
-              <path d="M102 168 C102 238, 742 238, 742 168" fill="none" stroke="#256f65" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#arrow)"/>
-              <text x="422" y="255" fill="#256f65" font-size="14" text-anchor="middle">拖拽预览可持续复用上一次输入，但释放时仍重新决议</text>
+              <path d="M102 168 C102 238, 742 238, 742 168" fill="none" stroke="#2e526f" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#arrow)"/>
+              <text x="422" y="255" fill="#2e526f" font-size="14" text-anchor="middle">拖拽预览可持续复用上一次输入，但释放时仍重新决议</text>
             </svg>
           </div>
           <table>
@@ -620,21 +631,21 @@
                 </marker>
               </defs>
               <rect width="980" height="330" fill="#ffffff"/>
-              <text x="70" y="48" fill="#256f65" font-size="18" font-weight="700">允许：同一支撑面内贴边</text>
-              <rect x="70" y="95" width="340" height="42" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+              <text x="70" y="48" fill="#2e526f" font-size="18" font-weight="700">允许：同一支撑面内贴边</text>
+              <rect x="70" y="95" width="340" height="42" rx="6" fill="#e9eff3" stroke="#9bcfc5"/>
               <rect x="70" y="137" width="280" height="72" rx="4" fill="#d7e6dc" stroke="#9bcfc5"/>
-              <circle cx="370" cy="115" r="18" fill="#fff4dd" stroke="#d69d37" stroke-width="2"/>
-              <circle cx="333" cy="115" r="18" fill="#e5f0f8" stroke="#22577a" stroke-width="2"/>
+              <circle cx="370" cy="115" r="18" fill="#f8efd8" stroke="#d69d37" stroke-width="2"/>
+              <circle cx="333" cy="115" r="18" fill="#e9eff3" stroke="#31597a" stroke-width="2"/>
               <line x1="365" y1="115" x2="341" y2="115" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow2)"/>
-              <text x="352" y="250" fill="#65717f" font-size="14" text-anchor="middle">原始点略出边缘，可夹到同面最近合法点</text>
+              <text x="352" y="250" fill="#6a655c" font-size="14" text-anchor="middle">原始点略出边缘，可夹到同面最近合法点</text>
 
               <text x="570" y="48" fill="#8d3b3b" font-size="18" font-weight="700">禁止：跨层改意图</text>
               <rect x="570" y="88" width="330" height="42" rx="6" fill="#fbe9e7" stroke="#e1aaa3"/>
               <rect x="630" y="205" width="270" height="42" rx="6" fill="#fbe9e7" stroke="#e1aaa3"/>
-              <circle cx="745" cy="109" r="18" fill="#fff4dd" stroke="#d69d37" stroke-width="2"/>
+              <circle cx="745" cy="109" r="18" fill="#f8efd8" stroke="#d69d37" stroke-width="2"/>
               <circle cx="745" cy="226" r="18" fill="#fbe9e7" stroke="#8d3b3b" stroke-width="2"/>
               <path d="M745 132 C745 160, 745 180, 745 203" stroke="#8d3b3b" stroke-width="2" stroke-dasharray="6 6" fill="none"/>
-              <text x="735" y="280" fill="#65717f" font-size="14" text-anchor="middle">楼上点不能自动改成楼下点</text>
+              <text x="735" y="280" fill="#6a655c" font-size="14" text-anchor="middle">楼上点不能自动改成楼下点</text>
             </svg>
           </div>
           <table>
@@ -782,11 +793,11 @@
             <div class="scene">
               <svg viewBox="0 0 320 210" role="img" aria-label="合法预览示意">
                 <rect width="320" height="210" fill="#f8fbfc"/>
-                <rect x="42" y="84" width="236" height="58" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
-                <circle cx="160" cy="112" r="42" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
-                <circle cx="160" cy="112" r="5" fill="#256f65"/>
-                <text x="160" y="45" fill="#256f65" font-size="16" font-weight="700" text-anchor="middle">合法预览</text>
-                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">范围圈、中心点、实际生效位置一致</text>
+                <rect x="42" y="84" width="236" height="58" rx="6" fill="#e9eff3" stroke="#9bcfc5"/>
+                <circle cx="160" cy="112" r="42" fill="rgba(37,111,101,.14)" stroke="#2e526f" stroke-width="3"/>
+                <circle cx="160" cy="112" r="5" fill="#2e526f"/>
+                <text x="160" y="45" fill="#2e526f" font-size="16" font-weight="700" text-anchor="middle">合法预览</text>
+                <text x="160" y="180" fill="#6a655c" font-size="12" text-anchor="middle">范围圈、中心点、实际生效位置一致</text>
               </svg>
               <div class="scene-body">
                 <h3>合法</h3>
@@ -801,7 +812,7 @@
                 <line x1="146" y1="91" x2="206" y2="151" stroke="#8d3b3b" stroke-width="4"/>
                 <line x1="206" y1="91" x2="146" y2="151" stroke="#8d3b3b" stroke-width="4"/>
                 <text x="160" y="45" fill="#8d3b3b" font-size="16" font-weight="700" text-anchor="middle">非法 · 坡度过陡</text>
-                <text x="160" y="190" fill="#65717f" font-size="12" text-anchor="middle">失败原因要能给 UI / QA 读取</text>
+                <text x="160" y="190" fill="#6a655c" font-size="12" text-anchor="middle">失败原因要能给 UI / QA 读取</text>
               </svg>
               <div class="scene-body">
                 <h3>非法</h3>
@@ -811,17 +822,17 @@
             <div class="scene">
               <svg viewBox="0 0 320 210" role="img" aria-label="吸附后占地示意">
                 <rect width="320" height="210" fill="#f8fbfc"/>
-                <rect x="54" y="78" width="180" height="56" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
+                <rect x="54" y="78" width="180" height="56" rx="6" fill="#e9eff3" stroke="#9bcfc5"/>
                 <circle cx="241" cy="106" r="35" fill="rgba(214,157,55,.12)" stroke="#d69d37" stroke-width="3" stroke-dasharray="6 5"/>
-                <circle cx="214" cy="106" r="35" fill="rgba(37,111,101,.14)" stroke="#256f65" stroke-width="3"/>
+                <circle cx="214" cy="106" r="35" fill="rgba(37,111,101,.14)" stroke="#2e526f" stroke-width="3"/>
                 <path d="M239 106 L219 106" stroke="#6b7580" stroke-width="2" marker-end="url(#snapArrow)"/>
                 <defs>
                   <marker id="snapArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M0,0 L10,5 L0,10 Z" fill="#6b7580"/>
                   </marker>
                 </defs>
-                <text x="160" y="45" fill="#8a5b18" font-size="16" font-weight="700" text-anchor="middle">同层吸附</text>
-                <text x="160" y="180" fill="#65717f" font-size="12" text-anchor="middle">显示修正后的真实 footprint</text>
+                <text x="160" y="45" fill="#96660a" font-size="16" font-weight="700" text-anchor="middle">同层吸附</text>
+                <text x="160" y="180" fill="#6a655c" font-size="12" text-anchor="middle">显示修正后的真实 footprint</text>
               </svg>
               <div class="scene-body">
                 <h3>已修正</h3>
@@ -874,19 +885,19 @@
                 </marker>
               </defs>
               <rect width="980" height="250" fill="#ffffff"/>
-              <rect x="70" y="70" width="230" height="82" rx="8" fill="#e5f0f8" stroke="#9bbfd9"/>
+              <rect x="70" y="70" width="230" height="82" rx="8" fill="#e9eff3" stroke="#9bbfd9"/>
               <rect x="380" y="70" width="220" height="82" rx="8" fill="#f8fbfc" stroke="#cfd8df"/>
-              <rect x="680" y="70" width="230" height="82" rx="8" fill="#e2f1ee" stroke="#9bcfc5"/>
+              <rect x="680" y="70" width="230" height="82" rx="8" fill="#e9eff3" stroke="#9bcfc5"/>
               <text x="185" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Client Preview</text>
               <text x="490" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Cast Request</text>
               <text x="795" y="103" fill="#202830" font-size="18" font-weight="700" text-anchor="middle">Server Resolve</text>
-              <text x="185" y="128" fill="#65717f" font-size="13" text-anchor="middle">本地预测 FinalPlacement</text>
-              <text x="490" y="128" fill="#65717f" font-size="13" text-anchor="middle">AimRay / ProfileId / Context</text>
-              <text x="795" y="128" fill="#65717f" font-size="13" text-anchor="middle">权威 FinalPlacement / FailureReason</text>
+              <text x="185" y="128" fill="#6a655c" font-size="13" text-anchor="middle">本地预测 FinalPlacement</text>
+              <text x="490" y="128" fill="#6a655c" font-size="13" text-anchor="middle">AimRay / ProfileId / Context</text>
+              <text x="795" y="128" fill="#6a655c" font-size="13" text-anchor="middle">权威 FinalPlacement / FailureReason</text>
               <line x1="300" y1="111" x2="372" y2="111" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow3)"/>
               <line x1="600" y1="111" x2="672" y2="111" stroke="#6b7580" stroke-width="2" marker-end="url(#arrow3)"/>
-              <path d="M795 156 C795 210, 185 210, 185 156" fill="none" stroke="#256f65" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#arrow3)"/>
-              <text x="490" y="224" fill="#256f65" font-size="14" text-anchor="middle">服务器结果回传，客户端校正表现和失败反馈</text>
+              <path d="M795 156 C795 210, 185 210, 185 156" fill="none" stroke="#2e526f" stroke-width="2" stroke-dasharray="7 7" marker-end="url(#arrow3)"/>
+              <text x="490" y="224" fill="#2e526f" font-size="14" text-anchor="middle">服务器结果回传，客户端校正表现和失败反馈</text>
             </svg>
           </div>
           <table>
@@ -999,12 +1010,12 @@
             <div class="scene">
               <svg viewBox="0 0 360 240" role="img" aria-label="动态阻挡示意">
                 <rect width="360" height="240" fill="#f8fbfc"/>
-                <rect x="54" y="110" width="252" height="58" rx="6" fill="#e2f1ee" stroke="#9bcfc5"/>
-                <circle cx="152" cy="139" r="34" fill="rgba(37,111,101,.13)" stroke="#256f65" stroke-width="3"/>
+                <rect x="54" y="110" width="252" height="58" rx="6" fill="#e9eff3" stroke="#9bcfc5"/>
+                <circle cx="152" cy="139" r="34" fill="rgba(37,111,101,.13)" stroke="#2e526f" stroke-width="3"/>
                 <rect x="182" y="112" width="42" height="54" rx="10" fill="#fbe9e7" stroke="#8d3b3b" stroke-width="2"/>
                 <path d="M182 139 L224 139" stroke="#8d3b3b" stroke-width="3"/>
                 <text x="160" y="45" fill="#202830" font-size="15" font-weight="700" text-anchor="middle">动态阻挡</text>
-                <text x="160" y="198" fill="#65717f" font-size="12" text-anchor="middle">预览合法，释放瞬间被挡，需要服务器返回原因</text>
+                <text x="160" y="198" fill="#6a655c" font-size="12" text-anchor="middle">预览合法，释放瞬间被挡，需要服务器返回原因</text>
               </svg>
               <div class="scene-body">
                 <h3>状态变化</h3>
@@ -1113,5 +1124,13 @@
       </main>
     </div>
   </div>
+
+<style>
+  #siteFooter{margin:48px auto 76px;text-align:center;font:500 12px/1.8 "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;letter-spacing:.14em;color:var(--muted,#6a655c);}
+  #siteFooter a{color:var(--brass,#a98a4e);text-decoration:none;} #siteFooter a:hover{text-decoration:underline;}
+</style>
+
+<footer id="siteFooter">COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+<a id="homeBtn" href="../../../index.html" title="返回主页" aria-label="返回主页">⌂</a>
 </body>
 </html>

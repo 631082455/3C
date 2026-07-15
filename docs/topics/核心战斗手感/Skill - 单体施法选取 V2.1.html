@@ -6,26 +6,26 @@
   <title>Skill - 单体施法选取 V2.1</title>
   <style>
     :root {
-      --bg: #f5f6f8;
-      --paper: #ffffff;
-      --ink: #22272e;
-      --muted: #66727e;
-      --line: #d9dee5;
-      --soft: #eef2f5;
-      --accent: #256f65;
-      --accent-soft: #e2f1ee;
-      --blue: #22577a;
-      --blue-soft: #e5f0f8;
-      --warn: #8a5b18;
-      --warn-soft: #fff4dd;
+      --bg: #f1eee7;
+      --paper: #fbfaf6;
+      --ink: #211f1a;
+      --muted: #6a655c;
+      --line: #ddd7c9;
+      --soft: #edeade;
+      --accent: #2e526f;
+      --accent-soft: #e9eff3;
+      --blue: #31597a;
+      --blue-soft: #e9eff3;
+      --warn: #96660a;
+      --warn-soft: #f8efd8;
       --bad: #8d3b3b;
       --bad-soft: #fbe9e7;
       --good: #2c6e3f;
       --good-soft: #e3f4e7;
       --code: #172530;
       --radius: 8px;
-      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      --mono: "Cascadia Code", Consolas, monospace;
+      --sans: "Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono: "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
     }
 
     * { box-sizing: border-box; }
@@ -62,7 +62,7 @@
     li + li { margin-top: 4px; }
     code, .mono {
       font-family: var(--mono);
-      color: #1d5f80;
+      color: #2a4d69;
       font-size: 0.94em;
       overflow-wrap: anywhere;
     }
@@ -141,10 +141,10 @@
     .note {
       margin-top: 16px;
       padding: 14px 16px;
-      border: 1px solid #ecd6ad;
+      border: 1px solid #ecdfc0;
       border-radius: var(--radius);
       background: var(--warn-soft);
-      color: #604219;
+      color: #96660a;
     }
     .risk {
       margin-top: 16px;
@@ -152,7 +152,7 @@
       border: 1px solid #e8c1bc;
       border-radius: var(--radius);
       background: var(--bad-soft);
-      color: #6b302c;
+      color: #a63d33;
     }
     .changed {
       margin-top: 16px;
@@ -175,7 +175,7 @@
       background: #fbfcfd;
     }
     .box.blue {
-      border-color: #c8dced;
+      border-color: #dbe4ec;
       background: var(--blue-soft);
     }
     .box.good {
@@ -200,7 +200,7 @@
     }
     th {
       background: #f2f4f6;
-      color: #303740;
+      color: #211f1a;
       font-size: 12.5px;
       font-weight: 740;
       text-transform: uppercase;
@@ -213,7 +213,7 @@
       padding: 14px 16px;
       border-radius: var(--radius);
       background: var(--code);
-      color: #e8f1f7;
+      color: #e9eff3;
       overflow: auto;
       font: 13px/1.65 var(--mono);
     }
@@ -256,6 +256,17 @@
       .grid { grid-template-columns: 1fr; }
     }
   </style>
+
+<style>
+  /* 返回主页按钮：全站统一，左下角常驻 */
+  #homeBtn{position:fixed;left:26px;bottom:26px;z-index:60;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    border:1px solid var(--line,#ddd7c9);background:var(--paper,#fbfaf6);color:var(--muted,#6a655c);font-size:19px;line-height:1;
+    box-shadow:var(--shadow,0 1px 2px rgba(55,50,38,.05));transition:color .15s,border-color .15s;}
+  #homeBtn:hover{color:var(--accent-text,var(--accent,#2a4d69));border-color:var(--accent-text,var(--accent,#2a4d69));}
+  @media(max-width:980px){#homeBtn{left:14px;bottom:14px;width:38px;height:38px;font-size:17px;}}
+  @media print{#homeBtn{display:none!important;}}
+</style>
 </head>
 <body>
   <div class="page">
@@ -484,58 +495,58 @@
             <svg viewBox="0 0 1180 280" role="img">
               <defs>
                 <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                  <path d="M0,0 L0,6 L9,3 z" fill="#6a655c"></path>
                 </marker>
                 <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
                   <path d="M0,0 L0,6 L9,3 z" fill="#8d3b3b"></path>
                 </marker>
               </defs>
               <!-- 顶部主流程 -->
-              <rect x="20" y="40" width="135" height="70" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
-              <text x="87" y="71" text-anchor="middle" font-size="16" fill="#22272e">采集候选</text>
-              <text x="87" y="92" text-anchor="middle" font-size="12" fill="#66727e">世界 actor</text>
+              <rect x="20" y="40" width="135" height="70" rx="8" fill="#e9eff3" stroke="#b8cfdf"></rect>
+              <text x="87" y="71" text-anchor="middle" font-size="16" fill="#211f1a">采集候选</text>
+              <text x="87" y="92" text-anchor="middle" font-size="12" fill="#6a655c">世界 actor</text>
 
-              <rect x="180" y="40" width="135" height="70" rx="8" fill="#eef2f5" stroke="#d9dee5"></rect>
-              <text x="247" y="71" text-anchor="middle" font-size="16" fill="#22272e">硬过滤</text>
-              <text x="247" y="92" text-anchor="middle" font-size="12" fill="#66727e">队 / 死 / 距离 / LOS</text>
+              <rect x="180" y="40" width="135" height="70" rx="8" fill="#edeade" stroke="#ddd7c9"></rect>
+              <text x="247" y="71" text-anchor="middle" font-size="16" fill="#211f1a">硬过滤</text>
+              <text x="247" y="92" text-anchor="middle" font-size="12" fill="#6a655c">队 / 死 / 距离 / LOS</text>
 
-              <rect x="340" y="40" width="135" height="70" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
-              <text x="407" y="71" text-anchor="middle" font-size="16" fill="#22272e">分桶评分</text>
-              <text x="407" y="92" text-anchor="middle" font-size="12" fill="#66727e">屏幕中心 + 朝向 + 距</text>
+              <rect x="340" y="40" width="135" height="70" rx="8" fill="#f8efd8" stroke="#ecdfc0"></rect>
+              <text x="407" y="71" text-anchor="middle" font-size="16" fill="#211f1a">分桶评分</text>
+              <text x="407" y="92" text-anchor="middle" font-size="12" fill="#6a655c">屏幕中心 + 朝向 + 距</text>
 
-              <rect x="500" y="40" width="135" height="70" rx="8" fill="#e2f1ee" stroke="#badbd4"></rect>
-              <text x="567" y="71" text-anchor="middle" font-size="16" fill="#22272e">Soft Target</text>
-              <text x="567" y="92" text-anchor="middle" font-size="12" fill="#66727e">空闲 + 有驱动源</text>
+              <rect x="500" y="40" width="135" height="70" rx="8" fill="#e9eff3" stroke="#badbd4"></rect>
+              <text x="567" y="71" text-anchor="middle" font-size="16" fill="#211f1a">Soft Target</text>
+              <text x="567" y="92" text-anchor="middle" font-size="12" fill="#6a655c">空闲 + 有驱动源</text>
 
               <rect x="660" y="40" width="135" height="70" rx="8" fill="#e3f4e7" stroke="#bcdcc4"></rect>
-              <text x="727" y="71" text-anchor="middle" font-size="16" fill="#22272e">Armed Target</text>
-              <text x="727" y="92" text-anchor="middle" font-size="12" fill="#66727e">Holding · β 跟手</text>
+              <text x="727" y="71" text-anchor="middle" font-size="16" fill="#211f1a">Armed Target</text>
+              <text x="727" y="92" text-anchor="middle" font-size="12" fill="#6a655c">Holding · β 跟手</text>
 
-              <rect x="820" y="40" width="135" height="70" rx="8" fill="#fff4dd" stroke="#ecd6ad"></rect>
-              <text x="887" y="71" text-anchor="middle" font-size="16" fill="#22272e">Release</text>
-              <text x="887" y="92" text-anchor="middle" font-size="12" fill="#66727e">打当时 Armed</text>
+              <rect x="820" y="40" width="135" height="70" rx="8" fill="#f8efd8" stroke="#ecdfc0"></rect>
+              <text x="887" y="71" text-anchor="middle" font-size="16" fill="#211f1a">Release</text>
+              <text x="887" y="92" text-anchor="middle" font-size="12" fill="#6a655c">打当时 Armed</text>
 
-              <rect x="980" y="40" width="180" height="70" rx="8" fill="#e5f0f8" stroke="#b8cfdf"></rect>
-              <text x="1070" y="71" text-anchor="middle" font-size="16" fill="#22272e">服务器验证</text>
-              <text x="1070" y="92" text-anchor="middle" font-size="12" fill="#66727e">300ms 容忍窗</text>
+              <rect x="980" y="40" width="180" height="70" rx="8" fill="#e9eff3" stroke="#b8cfdf"></rect>
+              <text x="1070" y="71" text-anchor="middle" font-size="16" fill="#211f1a">服务器验证</text>
+              <text x="1070" y="92" text-anchor="middle" font-size="12" fill="#6a655c">300ms 容忍窗</text>
 
-              <line x1="155" y1="75" x2="180" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
-              <line x1="315" y1="75" x2="340" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
-              <line x1="475" y1="75" x2="500" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
-              <line x1="635" y1="75" x2="660" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
-              <line x1="795" y1="75" x2="820" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
-              <line x1="955" y1="75" x2="980" y2="75" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="155" y1="75" x2="180" y2="75" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="315" y1="75" x2="340" y2="75" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="475" y1="75" x2="500" y2="75" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="635" y1="75" x2="660" y2="75" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="795" y1="75" x2="820" y2="75" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="955" y1="75" x2="980" y2="75" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow)"></line>
 
               <!-- 底部注解 -->
-              <rect x="180" y="170" width="370" height="70" rx="8" fill="#fbfcfd" stroke="#d9dee5"></rect>
-              <text x="365" y="200" text-anchor="middle" font-size="15" fill="#22272e">评分稳定机制</text>
-              <text x="365" y="222" text-anchor="middle" font-size="12" fill="#66727e">LockRetain / LockProtect / SwitchCooldown / Grace 加分</text>
+              <rect x="180" y="170" width="370" height="70" rx="8" fill="#fbfcfd" stroke="#ddd7c9"></rect>
+              <text x="365" y="200" text-anchor="middle" font-size="15" fill="#211f1a">评分稳定机制</text>
+              <text x="365" y="222" text-anchor="middle" font-size="12" fill="#6a655c">LockRetain / LockProtect / SwitchCooldown / Grace 加分</text>
 
               <rect x="660" y="170" width="370" height="70" rx="8" fill="#fbe9e7" stroke="#e8c1bc"></rect>
-              <text x="845" y="200" text-anchor="middle" font-size="15" fill="#22272e">不可逾越红线</text>
-              <text x="845" y="222" text-anchor="middle" font-size="12" fill="#6b302c">候选池空 → 不擅自自施法 / 服务器不擅自换目标</text>
+              <text x="845" y="200" text-anchor="middle" font-size="15" fill="#211f1a">不可逾越红线</text>
+              <text x="845" y="222" text-anchor="middle" font-size="12" fill="#a63d33">候选池空 → 不擅自自施法 / 服务器不擅自换目标</text>
 
-              <line x1="565" y1="110" x2="365" y2="170" stroke="#66727e" stroke-width="2" marker-end="url(#arrow)"></line>
+              <line x1="565" y1="110" x2="365" y2="170" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow)"></line>
               <line x1="887" y1="110" x2="845" y2="170" stroke="#8d3b3b" stroke-width="2" marker-end="url(#arrowRed)"></line>
             </svg>
             <div class="cap">图 5.1 · 整体流程：候选 → 硬过滤 → 评分 → Soft/Armed → Release → 服务器验证</div>
@@ -546,37 +557,37 @@
             <svg viewBox="0 0 700 240" role="img">
               <defs>
                 <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-                  <path d="M0,0 L0,6 L9,3 z" fill="#66727e"></path>
+                  <path d="M0,0 L0,6 L9,3 z" fill="#6a655c"></path>
                 </marker>
               </defs>
               <!-- 三个状态节点 -->
-              <circle cx="120" cy="120" r="65" fill="#e5f0f8" stroke="#b8cfdf" stroke-width="2"></circle>
-              <text x="120" y="115" text-anchor="middle" font-size="18" fill="#22272e">Idle</text>
-              <text x="120" y="138" text-anchor="middle" font-size="12" fill="#66727e">Soft Target</text>
+              <circle cx="120" cy="120" r="65" fill="#e9eff3" stroke="#b8cfdf" stroke-width="2"></circle>
+              <text x="120" y="115" text-anchor="middle" font-size="18" fill="#211f1a">Idle</text>
+              <text x="120" y="138" text-anchor="middle" font-size="12" fill="#6a655c">Soft Target</text>
 
               <circle cx="400" cy="120" r="65" fill="#e3f4e7" stroke="#bcdcc4" stroke-width="2"></circle>
-              <text x="400" y="115" text-anchor="middle" font-size="18" fill="#22272e">Holding</text>
-              <text x="400" y="138" text-anchor="middle" font-size="12" fill="#66727e">Armed （β 跟手）</text>
+              <text x="400" y="115" text-anchor="middle" font-size="18" fill="#211f1a">Holding</text>
+              <text x="400" y="138" text-anchor="middle" font-size="12" fill="#6a655c">Armed （β 跟手）</text>
 
-              <circle cx="600" cy="120" r="55" fill="#e2f1ee" stroke="#badbd4" stroke-width="2"></circle>
-              <text x="600" y="115" text-anchor="middle" font-size="16" fill="#22272e">SelfCast</text>
-              <text x="600" y="135" text-anchor="middle" font-size="12" fill="#66727e">Alt+键</text>
+              <circle cx="600" cy="120" r="55" fill="#e9eff3" stroke="#badbd4" stroke-width="2"></circle>
+              <text x="600" y="115" text-anchor="middle" font-size="16" fill="#211f1a">SelfCast</text>
+              <text x="600" y="135" text-anchor="middle" font-size="12" fill="#6a655c">Alt+键</text>
 
               <!-- Idle → Holding -->
-              <path d="M185 100 Q280 60 335 100" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
-              <text x="260" y="65" text-anchor="middle" font-size="11" fill="#22272e">按下技能键</text>
+              <path d="M185 100 Q280 60 335 100" stroke="#6a655c" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="260" y="65" text-anchor="middle" font-size="11" fill="#211f1a">按下技能键</text>
 
               <!-- Holding → Idle (Release/Cancel) -->
-              <path d="M335 145 Q280 185 185 145" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
-              <text x="260" y="200" text-anchor="middle" font-size="11" fill="#22272e">Release / 右键取消</text>
+              <path d="M335 145 Q280 185 185 145" stroke="#6a655c" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="260" y="200" text-anchor="middle" font-size="11" fill="#211f1a">Release / 右键取消</text>
 
               <!-- Idle → SelfCast (Alt+键) -->
-              <path d="M120 55 Q 360 -5 600 55" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
-              <text x="360" y="25" text-anchor="middle" font-size="11" fill="#22272e">Alt+技能键</text>
+              <path d="M120 55 Q 360 -5 600 55" stroke="#6a655c" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="360" y="25" text-anchor="middle" font-size="11" fill="#211f1a">Alt+技能键</text>
 
               <!-- SelfCast → Idle (立即) -->
-              <path d="M600 175 Q 360 235 120 175" stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
-              <text x="360" y="225" text-anchor="middle" font-size="11" fill="#22272e">立即施放后回 Idle</text>
+              <path d="M600 175 Q 360 235 120 175" stroke="#6a655c" stroke-width="2" fill="none" marker-end="url(#arrow2)"></path>
+              <text x="360" y="225" text-anchor="middle" font-size="11" fill="#211f1a">立即施放后回 Idle</text>
             </svg>
             <div class="cap">图 5.2 · 状态机：Idle / Holding / SelfCast，显式输入驱动迁移</div>
           </div>
@@ -669,45 +680,45 @@
           <div class="diagram" aria-label="UI 三态配色">
             <svg viewBox="0 0 700 260" role="img">
               <!-- Soft -->
-              <text x="120" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">Soft</text>
-              <text x="120" y="48" text-anchor="middle" font-size="11" fill="#66727e">空闲 + 驱动源</text>
+              <text x="120" y="30" text-anchor="middle" font-size="14" fill="#211f1a" font-weight="700">Soft</text>
+              <text x="120" y="48" text-anchor="middle" font-size="11" fill="#6a655c">空闲 + 驱动源</text>
               <rect x="60" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
               <!-- L 角 (灰白) -->
               <polyline points="60,90 60,60 90,60" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
               <polyline points="150,60 180,60 180,90" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
               <polyline points="60,180 60,210 90,210" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
               <polyline points="150,210 180,210 180,180" fill="none" stroke="#bbbbbb" stroke-width="3"></polyline>
-              <text x="120" y="240" text-anchor="middle" font-size="11" fill="#66727e">灰白 #bbbbbb</text>
+              <text x="120" y="240" text-anchor="middle" font-size="11" fill="#6a655c">灰白 #bbbbbb</text>
 
               <!-- Armed (友) -->
-              <text x="290" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">Armed</text>
-              <text x="290" y="48" text-anchor="middle" font-size="11" fill="#66727e">Holding · 友军</text>
+              <text x="290" y="30" text-anchor="middle" font-size="14" fill="#211f1a" font-weight="700">Armed</text>
+              <text x="290" y="48" text-anchor="middle" font-size="11" fill="#6a655c">Holding · 友军</text>
               <rect x="230" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
               <polyline points="230,90 230,60 260,60" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
               <polyline points="320,60 350,60 350,90" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
               <polyline points="230,180 230,210 260,210" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
               <polyline points="320,210 350,210 350,180" fill="none" stroke="#3ca85f" stroke-width="4"></polyline>
-              <text x="290" y="240" text-anchor="middle" font-size="11" fill="#66727e">友绿 #3ca85f</text>
+              <text x="290" y="240" text-anchor="middle" font-size="11" fill="#6a655c">友绿 #3ca85f</text>
 
               <!-- Armed (敌) -->
-              <text x="460" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">Armed</text>
-              <text x="460" y="48" text-anchor="middle" font-size="11" fill="#66727e">Holding · 敌方</text>
+              <text x="460" y="30" text-anchor="middle" font-size="14" fill="#211f1a" font-weight="700">Armed</text>
+              <text x="460" y="48" text-anchor="middle" font-size="11" fill="#6a655c">Holding · 敌方</text>
               <rect x="400" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
               <polyline points="400,90 400,60 430,60" fill="none" stroke="#c84747" stroke-width="4"></polyline>
               <polyline points="490,60 520,60 520,90" fill="none" stroke="#c84747" stroke-width="4"></polyline>
               <polyline points="400,180 400,210 430,210" fill="none" stroke="#c84747" stroke-width="4"></polyline>
               <polyline points="490,210 520,210 520,180" fill="none" stroke="#c84747" stroke-width="4"></polyline>
-              <text x="460" y="240" text-anchor="middle" font-size="11" fill="#66727e">敌红 #c84747</text>
+              <text x="460" y="240" text-anchor="middle" font-size="11" fill="#6a655c">敌红 #c84747</text>
 
               <!-- SelfCast -->
-              <text x="630" y="30" text-anchor="middle" font-size="14" fill="#22272e" font-weight="700">SelfCast</text>
-              <text x="630" y="48" text-anchor="middle" font-size="11" fill="#66727e">Alt+键 / Fallback</text>
+              <text x="630" y="30" text-anchor="middle" font-size="14" fill="#211f1a" font-weight="700">SelfCast</text>
+              <text x="630" y="48" text-anchor="middle" font-size="11" fill="#6a655c">Alt+键 / Fallback</text>
               <rect x="570" y="60" width="120" height="150" fill="none" stroke="#999" stroke-width="2" stroke-dasharray="2,2" opacity="0.4"></rect>
               <polyline points="570,90 570,60 600,60" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
               <polyline points="660,60 690,60 690,90" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
               <polyline points="570,180 570,210 600,210" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
               <polyline points="660,210 690,210 690,180" fill="none" stroke="#3a7fc8" stroke-width="4"></polyline>
-              <text x="630" y="240" text-anchor="middle" font-size="11" fill="#66727e">自蓝 #3a7fc8</text>
+              <text x="630" y="240" text-anchor="middle" font-size="11" fill="#6a655c">自蓝 #3a7fc8</text>
             </svg>
             <div class="cap">图 8.1 · 三态色板：Soft 灰白 / Armed 队色 （友绿+敌红） / SelfCast 自蓝</div>
           </div>
@@ -744,8 +755,8 @@
           <div class="diagram" aria-label="服务器 300ms 容忍窗示意">
             <svg viewBox="0 0 800 200" role="img">
               <!-- 时间轴 -->
-              <line x1="50" y1="120" x2="750" y2="120" stroke="#66727e" stroke-width="2"></line>
-              <text x="400" y="155" text-anchor="middle" font-size="12" fill="#66727e">服务器时间轴</text>
+              <line x1="50" y1="120" x2="750" y2="120" stroke="#6a655c" stroke-width="2"></line>
+              <text x="400" y="155" text-anchor="middle" font-size="12" fill="#6a655c">服务器时间轴</text>
 
               <!-- 容忍窗 -->
               <rect x="500" y="80" width="120" height="40" fill="#e3f4e7" stroke="#bcdcc4" stroke-width="2" rx="4"></rect>
@@ -757,15 +768,15 @@
               <text x="500" y="48" text-anchor="middle" font-size="11" fill="#8d3b3b">目标 A 死亡</text>
 
               <!-- 事件:client 发送 cast on A -->
-              <line x1="580" y1="180" x2="580" y2="120" stroke="#22577a" stroke-width="2"></line>
-              <circle cx="580" cy="180" r="6" fill="#22577a"></circle>
-              <text x="580" y="200" text-anchor="middle" font-size="11" fill="#22577a">client RPC: cast on A</text>
+              <line x1="580" y1="180" x2="580" y2="120" stroke="#31597a" stroke-width="2"></line>
+              <circle cx="580" cy="180" r="6" fill="#31597a"></circle>
+              <text x="580" y="200" text-anchor="middle" font-size="11" fill="#31597a">client RPC: cast on A</text>
 
               <!-- 验证结果箭头 -->
               <path d="M580 180 Q 700 180 700 130" fill="none" stroke="#2c6e3f" stroke-width="2" marker-end="url(#arrow)"></path>
               <text x="720" y="105" font-size="11" fill="#2c6e3f" font-weight="700">放行</text>
-              <text x="720" y="120" font-size="10" fill="#66727e">(死亡 &lt; 300ms,</text>
-              <text x="720" y="132" font-size="10" fill="#66727e">静默 fail 落地)</text>
+              <text x="720" y="120" font-size="10" fill="#6a655c">(死亡 &lt; 300ms,</text>
+              <text x="720" y="132" font-size="10" fill="#6a655c">静默 fail 落地)</text>
 
               <!-- 事件超 300ms -->
               <line x1="700" y1="180" x2="700" y2="120" stroke="#a07a7a" stroke-width="1" opacity="0.4"></line>
@@ -964,5 +975,13 @@ UTargetSelectionComponent(挂 AMatchPlayerController)
       <p>版本 V2.1 · 2026/05/21 · 关联 ADR 0001 / 0002 / 0003 · 完成 M1-M5</p>
     </footer>
   </div>
+
+<style>
+  #siteFooter{margin:48px auto 76px;text-align:center;font:500 12px/1.8 "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;letter-spacing:.14em;color:var(--muted,#6a655c);}
+  #siteFooter a{color:var(--brass,#a98a4e);text-decoration:none;} #siteFooter a:hover{text-decoration:underline;}
+</style>
+
+<footer id="siteFooter">COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+<a id="homeBtn" href="../../../index.html" title="返回主页" aria-label="返回主页">⌂</a>
 </body>
 </html>

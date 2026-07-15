@@ -5,17 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Camera - 镜头动效层二期需求（程序对齐）</title>
 <style>
-  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #14161a; color: #d8dce2; max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; line-height: 1.75; }
-  h1 { font-size: 26px; color: #fff; border-bottom: 2px solid #3a7bd5; padding-bottom: 10px; }
-  h2 { font-size: 19px; color: #7ec3ff; margin-top: 34px; }
-  .meta { color: #8a93a2; font-size: 13px; }
-  .p0 { color: #ff8a65; font-weight: 600; } .p1 { color: #ffd54f; font-weight: 600; } .p2 { color: #9ccc65; font-weight: 600; }
+  body { font-family: "Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif; background: #14171c; color: #e6e2d8; max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; line-height: 1.75; }
+  h1 { font-size: 26px; color: #f3efe6; border-bottom: 2px solid #8ab4d4; padding-bottom: 10px; }
+  h2 { font-size: 19px; color: #93bdda; margin-top: 34px; }
+  .meta { color: #9a938a; font-size: 13px; }
+  .p0 { color: #d88478; font-weight: 600; } .p1 { color: #d8a751; font-weight: 600; } .p2 { color: #63b183; font-weight: 600; }
   table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 14px; }
   th, td { border: 1px solid #2c313a; padding: 8px 12px; text-align: left; vertical-align: top; }
-  th { background: #1d2128; color: #aeb8c6; }
-  code { background: #232830; color: #8fd3a7; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
-  .rule { background: #1b222d; border-left: 3px solid #3a7bd5; padding: 10px 16px; margin: 14px 0; border-radius: 0 6px 6px 0; }
+  th { background: #1b1f26; color: #9a938a; }
+  code { background: #222731; color: #a8c7dd; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  .rule { background: #1b1f26; border-left: 3px solid #8ab4d4; padding: 10px 16px; margin: 14px 0; border-radius: 0 6px 6px 0; }
   li { margin: 4px 0; }
+</style>
+
+<style>
+  /* 返回主页按钮：全站统一，左下角常驻 */
+  #homeBtn{position:fixed;left:26px;bottom:26px;z-index:60;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    border:1px solid #2c313a;background:#1b1f26;color:#9a938a;font-size:19px;line-height:1;
+    box-shadow:0 1px 2px rgba(0,0,0,.3);transition:color .15s,border-color .15s;}
+  #homeBtn:hover{color:#93bdda;border-color:#93bdda;}
+  @media(max-width:980px){#homeBtn{left:14px;bottom:14px;width:38px;height:38px;font-size:17px;}}
+  @media print{#homeBtn{display:none!important;}}
 </style>
 </head>
 <body>
@@ -24,7 +35,7 @@
 
 <div class="rule"><b>一页读懂</b>:一期解决了"演绎不污染弹道"(GameplayPOV 快照,已验证);二期解决三件事——①反馈链的最后一拍(命中位点),②演绎与瞄准的视觉矛盾(FOV 补偿 / Look-at 模式 / AimSafe 分类),③技能对 UI 的控制权(准心开关)。</div>
 
-<h2><span class="p0">P0-1</span> 技能命中镜头通道:Cue→镜头映射表 <span style="color:#8a93a2">【设计升级 2026-07-12:取代原"弹道命中触发位点"——受益面从弹道技能扩成一切命中,且不再逐管线开钩子】</span></h2>
+<h2><span class="p0">P0-1</span> 技能命中镜头通道:Cue→镜头映射表 <span style="color:#9a938a">【设计升级 2026-07-12:取代原"弹道命中触发位点"——受益面从弹道技能扩成一切命中,且不再逐管线开钩子】</span></h2>
 <table>
 <tr><th style="width:12%">现状</th><td>技能命中(弹道/近战/AOE)在施法者与受击者两端都没有镜头反馈位点;普攻命中确认已上线(伤害回执通道,见附注分工)。技能伤害落地统一走 Buff 的 <code>ExecuteCueTag</code> → 受击方 GameplayCue(命中特效即此路),cue 参数自带施法者与受击者。</td></tr>
 <tr><th>需求</th><td>在项目的 cue 执行集中处(<code>OnExecuteSkillParticles</code> 一族)加一个镜头监听:查<b>Cue→镜头映射表</b>(镜头域新配置资产,行 = CueTag → {施法者档 FCameraMotionEffectRef, 受击者档 FCameraMotionEffectRef});按 cue 参数判"施法者/受击者是否本地被观察者",命中哪端推哪端。</td></tr>
@@ -47,7 +58,7 @@
 <tr><th>验收</th><td>任意技能挂 tag 的 Buff 期间准心消失;Buff 结束/技能打断/死亡重生后恢复;观战切换视角无残留。</td></tr>
 </table>
 
-<h2><span class="p1">P1-2</span> Look-at 反解合成模式(OrbitAimLocked)——演绎自由度的钥匙 <span style="color:#7ec98f">【已实装 · CL 5643871,2026-07-11 Kallari 实测通过:"准星完全没有晃动感"】</span></h2>
+<h2><span class="p1">P1-2</span> Look-at 反解合成模式(OrbitAimLocked)——演绎自由度的钥匙 <span style="color:#63b183">【已实装 · CL 5643871,2026-07-11 Kallari 实测通过:"准星完全没有晃动感"】</span></h2>
 <table>
 <tr><th style="width:12%">现状</th><td>可瞄准窗口内的轨道旋转必然挪动屏幕中心与真实瞄准点的映射(几何必然,Kallari 蓄力 yaw 实测确认)。当前只能在"环绕感"与"准星诚实"间取舍。</td></tr>
 <tr><th>需求</th><td><code>ECameraMotionRotationSpace</code> 增加第三值 <code>OrbitAimLocked</code>:该空间下动效只驱动机位位置(沿轨道弧线平移),<b>旋转逐帧由 look-at 反解</b>——看向 GameplayPOV 瞄准射线上的参考点(取 min(技能射程, 固定截断距离) 处,防空旷方向视差不稳)。锁定镜头(魂系/塞尔达)的通用骨架,调研范围内唯一兼得"环绕演出 + 中心诚实"的方案。</td></tr>
@@ -70,5 +81,13 @@
 <p>大幅度演绎技能(大招级)启用:主准星淡化为"意图锚点",另画一个半透明<b>真值标记</b>投影在 GameplayPOV 射线落点(<code>ProjectWorldToScreen</code> 全套模式项目内已有先例:<code>HeroDamageNumberCanvas.cpp:236-243</code>,注意 DPI 除法与 UMG 上帧 POV 拖尾两个坑);分离-收敛全程平滑,0.15~0.3s 缓动回中。实证:WoT/War Thunder 双准星(官方为第三人称视差而做)、MH Wilds Focus Mode 准星归属设置项、CS2 Follow Recoil。成功律:<b>偏心必须钉住看得懂的真值,忌无语义漂移</b>。</p>
 
 <div class="rule"><b>验证工具已就绪</b>:以上每条的验收都可用 <code>GameProject/Scripts/camera_trace.py</code>(逐帧 POV/蒙太奇进度/投射物首现记录仪)出客观数据,不靠肉眼争论。</div>
+
+<style>
+  #siteFooter{margin:48px auto 76px;text-align:center;font:500 12px/1.8 "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;letter-spacing:.14em;color:#9a938a;}
+  #siteFooter a{color:#cbaa6e;text-decoration:none;} #siteFooter a:hover{text-decoration:underline;}
+</style>
+
+<footer id="siteFooter">COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+<a id="homeBtn" href="../../../index.html" title="返回主页" aria-label="返回主页">⌂</a>
 </body>
 </html>

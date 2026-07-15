@@ -6,26 +6,26 @@
   <title>TPS 实体弹道发射点与瞄准意图统一规范</title>
   <style>
     :root {
-      --bg: #f5f6f8;
-      --paper: #ffffff;
-      --ink: #22272e;
-      --muted: #66727e;
-      --line: #d9dee5;
-      --soft: #eef2f5;
-      --accent: #256f65;
-      --accent-soft: #e2f1ee;
-      --blue: #22577a;
-      --blue-soft: #e5f0f8;
-      --warn: #8a5b18;
-      --warn-soft: #fff4dd;
+      --bg: #f1eee7;
+      --paper: #fbfaf6;
+      --ink: #211f1a;
+      --muted: #6a655c;
+      --line: #ddd7c9;
+      --soft: #edeade;
+      --accent: #2e526f;
+      --accent-soft: #e9eff3;
+      --blue: #31597a;
+      --blue-soft: #e9eff3;
+      --warn: #96660a;
+      --warn-soft: #f8efd8;
       --bad: #9b3737;
       --bad-soft: #fdeaea;
       --good: #246b46;
       --good-soft: #e4f4e9;
       --code: #172530;
       --radius: 8px;
-      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      --mono: "Cascadia Code", Consolas, monospace;
+      --sans: "Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono: "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
     }
 
     * { box-sizing: border-box; }
@@ -61,7 +61,7 @@
     li + li { margin-top: 4px; }
     code, .mono {
       font-family: var(--mono);
-      color: #1d5f80;
+      color: #2a4d69;
       font-size: 0.94em;
       overflow-wrap: anywhere;
     }
@@ -137,10 +137,10 @@
     .note {
       margin-top: 16px;
       padding: 14px 16px;
-      border: 1px solid #ecd6ad;
+      border: 1px solid #ecdfc0;
       border-radius: var(--radius);
       background: var(--warn-soft);
-      color: #604219;
+      color: #96660a;
     }
     .danger {
       margin-top: 16px;
@@ -158,7 +158,7 @@
       border-left: 4px solid var(--good);
       border-radius: var(--radius);
       background: var(--good-soft);
-      color: #214f35;
+      color: #31734d;
     }
     .grid {
       display: grid;
@@ -173,7 +173,7 @@
       background: #fbfcfd;
     }
     .box.blue {
-      border-color: #c8dced;
+      border-color: #dbe4ec;
       background: var(--blue-soft);
     }
 
@@ -193,7 +193,7 @@
     }
     th {
       background: #f2f4f6;
-      color: #303740;
+      color: #211f1a;
       font-size: 13px;
       font-weight: 740;
     }
@@ -204,7 +204,7 @@
       padding: 14px 16px;
       border-radius: var(--radius);
       background: var(--code);
-      color: #e8f1f7;
+      color: #e9eff3;
       overflow: auto;
       font: 13px/1.65 var(--mono);
     }
@@ -231,9 +231,9 @@
       font-weight: 740;
       text-align: center;
     }
-    .tag.p0 { background: #dff2e5; color: #245a3a; }
-    .tag.p1 { background: #e5f0f8; color: #22577a; }
-    .tag.p2 { background: #fff4dd; color: #805516; }
+    .tag.p0 { background: #dff2e5; color: #31734d; }
+    .tag.p1 { background: #e9eff3; color: #31597a; }
+    .tag.p2 { background: #f8efd8; color: #805516; }
     .tag.no { background: #fdeaea; color: #8a2c2c; }
 
     @media (max-width: 960px) {
@@ -243,6 +243,17 @@
       .grid { grid-template-columns: 1fr; }
     }
   </style>
+
+<style>
+  /* 返回主页按钮：全站统一，左下角常驻 */
+  #homeBtn{position:fixed;left:26px;bottom:26px;z-index:60;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    border:1px solid var(--line,#ddd7c9);background:var(--paper,#fbfaf6);color:var(--muted,#6a655c);font-size:19px;line-height:1;
+    box-shadow:var(--shadow,0 1px 2px rgba(55,50,38,.05));transition:color .15s,border-color .15s;}
+  #homeBtn:hover{color:var(--accent-text,var(--accent,#2a4d69));border-color:var(--accent-text,var(--accent,#2a4d69));}
+  @media(max-width:980px){#homeBtn{left:14px;bottom:14px;width:38px;height:38px;font-size:17px;}}
+  @media print{#homeBtn{display:none!important;}}
+</style>
 </head>
 <body>
   <div class="page">
@@ -443,7 +454,7 @@
           <div class="diagram">
             <svg viewBox="0 0 920 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TPS 实体子弹发射流程图">
               <rect width="920" height="240" fill="#fff"/>
-              <g fill="#e2f1ee" stroke="#78aaa1" stroke-width="2">
+              <g fill="#e9eff3" stroke="#78aaa1" stroke-width="2">
                 <rect x="32" y="76" width="140" height="66" rx="8"/>
                 <rect x="220" y="76" width="140" height="66" rx="8"/>
                 <rect x="408" y="76" width="140" height="66" rx="8"/>
@@ -462,7 +473,7 @@
                 <text x="836" y="104">Spawn</text>
                 <text x="836" y="128">实体子弹</text>
               </g>
-              <g stroke="#66727e" stroke-width="3" fill="none" marker-end="url(#arrow)">
+              <g stroke="#6a655c" stroke-width="3" fill="none" marker-end="url(#arrow)">
                 <path d="M172 109 H220"/>
                 <path d="M360 109 H408"/>
                 <path d="M548 109 H596"/>
@@ -470,7 +481,7 @@
               </g>
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#66727e"/>
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#6a655c"/>
                 </marker>
               </defs>
             </svg>
@@ -799,5 +810,13 @@ LaunchVelocity = LaunchDirection * LaunchSpeed</pre>
       </main>
     </div>
   </div>
+
+<style>
+  #siteFooter{margin:48px auto 76px;text-align:center;font:500 12px/1.8 "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;letter-spacing:.14em;color:var(--muted,#6a655c);}
+  #siteFooter a{color:var(--brass,#a98a4e);text-decoration:none;} #siteFooter a:hover{text-decoration:underline;}
+</style>
+
+<footer id="siteFooter">COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+<a id="homeBtn" href="../../../index.html" title="返回主页" aria-label="返回主页">⌂</a>
 </body>
 </html>

@@ -6,24 +6,24 @@
   <title>技能释放关系语义系统（阻挡、打断、并行、缓存）</title>
   <style>
     :root {
-      --bg: #f6f7f9;
-      --paper: #fff;
-      --ink: #22272e;
-      --muted: #66727e;
-      --line: #d9dee5;
-      --soft: #f0f3f6;
-      --accent: #256f65;
-      --accent-soft: #e2f1ee;
-      --blue: #22577a;
-      --blue-soft: #e5f0f8;
-      --warn: #8a5b18;
-      --warn-soft: #fff4dd;
-      --bad: #9c3d30;
-      --bad-soft: #ffebe8;
+      --bg: #f1eee7;
+      --paper: #fbfaf6;
+      --ink: #211f1a;
+      --muted: #6a655c;
+      --line: #ddd7c9;
+      --soft: #edeade;
+      --accent: #2e526f;
+      --accent-soft: #e9eff3;
+      --blue: #31597a;
+      --blue-soft: #e9eff3;
+      --warn: #96660a;
+      --warn-soft: #f8efd8;
+      --bad: #a63d33;
+      --bad-soft: #f5e7e4;
       --code: #172530;
       --radius: 8px;
-      --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      --mono: "Cascadia Code", Consolas, monospace;
+      --sans: "Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+      --mono: "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
     }
 
     * { box-sizing: border-box; }
@@ -59,7 +59,7 @@
     li + li { margin-top: 4px; }
     code, .mono {
       font-family: var(--mono);
-      color: #1d5f80;
+      color: #2a4d69;
       font-size: 0.94em;
       overflow-wrap: anywhere;
     }
@@ -135,10 +135,10 @@
     .note {
       margin-top: 16px;
       padding: 14px 16px;
-      border: 1px solid #ecd6ad;
+      border: 1px solid #ecdfc0;
       border-radius: var(--radius);
       background: var(--warn-soft);
-      color: #604219;
+      color: #96660a;
     }
     .risk {
       margin-top: 16px;
@@ -146,7 +146,7 @@
       border: 1px solid #efc2bc;
       border-radius: var(--radius);
       background: var(--bad-soft);
-      color: #6a2d25;
+      color: #a63d33;
     }
     .grid {
       display: grid;
@@ -161,7 +161,7 @@
       background: #fbfcfd;
     }
     .box.blue {
-      border-color: #c8dced;
+      border-color: #dbe4ec;
       background: var(--blue-soft);
     }
 
@@ -181,7 +181,7 @@
     }
     th {
       background: #f2f4f6;
-      color: #303740;
+      color: #211f1a;
       font-size: 13px;
       font-weight: 740;
     }
@@ -195,14 +195,14 @@
       font-weight: 760;
       white-space: nowrap;
     }
-    .p0 { color: #fff; background: #1f6f62; }
-    .p1 { color: #273f5c; background: #dceaff; }
-    .p2 { color: #604219; background: #fff1d1; }
+    .p0 { color: #fff; background: #2e526f; }
+    .p1 { color: #2a4d69; background: #dceaff; }
+    .p2 { color: #96660a; background: #fff1d1; }
     .later { color: #69727b; background: #eceff2; }
     .block { color: #7a2d24; background: #ffded9; }
     .cancel { color: #6f3f08; background: #ffe9bf; }
-    .parallel { color: #1e604f; background: #dff2ec; }
-    .cache { color: #274d7d; background: #dfecff; }
+    .parallel { color: #31734d; background: #dff2ec; }
+    .cache { color: #31597a; background: #dfecff; }
     .protect { color: #584180; background: #eee6ff; }
 
     pre {
@@ -210,7 +210,7 @@
       padding: 14px 16px;
       border-radius: var(--radius);
       background: var(--code);
-      color: #e8f1f7;
+      color: #e9eff3;
       overflow: auto;
       font: 13px/1.65 var(--mono);
     }
@@ -230,6 +230,17 @@
       .grid { grid-template-columns: 1fr; }
     }
   </style>
+
+<style>
+  /* 返回主页按钮：全站统一，左下角常驻 */
+  #homeBtn{position:fixed;left:26px;bottom:26px;z-index:60;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-decoration:none;
+    border:1px solid var(--line,#ddd7c9);background:var(--paper,#fbfaf6);color:var(--muted,#6a655c);font-size:19px;line-height:1;
+    box-shadow:var(--shadow,0 1px 2px rgba(55,50,38,.05));transition:color .15s,border-color .15s;}
+  #homeBtn:hover{color:var(--accent-text,var(--accent,#2a4d69));border-color:var(--accent-text,var(--accent,#2a4d69));}
+  @media(max-width:980px){#homeBtn{left:14px;bottom:14px;width:38px;height:38px;font-size:17px;}}
+  @media print{#homeBtn{display:none!important;}}
+</style>
 </head>
 <body>
   <div class="page">
@@ -369,7 +380,7 @@
           <div class="diagram">
             <svg viewBox="0 0 980 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能语义判定流程图">
               <rect width="980" height="240" fill="#fff"/>
-              <g fill="#e2f1ee" stroke="#78aaa1" stroke-width="2">
+              <g fill="#e9eff3" stroke="#78aaa1" stroke-width="2">
                 <rect x="24" y="84" width="130" height="58" rx="8"/>
                 <rect x="188" y="84" width="130" height="58" rx="8"/>
                 <rect x="352" y="84" width="130" height="58" rx="8"/>
@@ -391,7 +402,7 @@
                 <text x="900" y="108">执行表现</text>
                 <text x="900" y="130">并行需验证</text>
               </g>
-              <g stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow)">
+              <g stroke="#6a655c" stroke-width="2" fill="none" marker-end="url(#arrow)">
                 <path d="M154 113 H188"/>
                 <path d="M318 113 H352"/>
                 <path d="M482 113 H516"/>
@@ -400,7 +411,7 @@
               </g>
               <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                  <path d="M0 0 L10 5 L0 10 z" fill="#6a655c"/>
                 </marker>
               </defs>
             </svg>
@@ -450,8 +461,8 @@
           <div class="diagram">
             <svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="技能窗口时间轴">
               <rect width="900" height="210" fill="#fff"/>
-              <line x1="70" y1="100" x2="820" y2="100" stroke="#66727e" stroke-width="3"/>
-              <g fill="#256f65">
+              <line x1="70" y1="100" x2="820" y2="100" stroke="#6a655c" stroke-width="3"/>
+              <g fill="#2e526f">
                 <circle cx="90" cy="100" r="6"/>
                 <circle cx="260" cy="100" r="6"/>
                 <circle cx="520" cy="100" r="6"/>
@@ -470,7 +481,7 @@
               <rect x="204" y="150" width="150" height="32" rx="16" fill="#eee6ff"/>
               <text x="279" y="171" text-anchor="middle" fill="#584180" font-family="Segoe UI, Microsoft YaHei" font-size="14">可配置不可打断</text>
               <rect x="455" y="150" width="130" height="32" rx="16" fill="#dff2ec"/>
-              <text x="520" y="171" text-anchor="middle" fill="#1e604f" font-family="Segoe UI, Microsoft YaHei" font-size="14">可配置并行</text>
+              <text x="520" y="171" text-anchor="middle" fill="#31734d" font-family="Segoe UI, Microsoft YaHei" font-size="14">可配置并行</text>
             </svg>
           </div>
         </section>
@@ -493,7 +504,7 @@
               <rect width="980" height="300" fill="#fff"/>
               <defs>
                 <marker id="arrow-config" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                  <path d="M0 0 L10 5 L0 10 z" fill="#6a655c"/>
                 </marker>
               </defs>
               <g font-family="Segoe UI, Microsoft YaHei" text-anchor="middle">
@@ -501,9 +512,9 @@
                 <text x="153" y="96" font-size="18" fill="#2f2a37" font-weight="700">当前技能 A</text>
                 <text x="153" y="121" font-size="14" fill="#584180">正在 Active，身上有 ATag</text>
 
-                <rect x="388" y="66" width="210" height="72" rx="8" fill="#e5f0f8" stroke="#8bb4d1" stroke-width="2"/>
+                <rect x="388" y="66" width="210" height="72" rx="8" fill="#e9eff3" stroke="#8bb4d1" stroke-width="2"/>
                 <text x="493" y="96" font-size="18" fill="#2f2a37" font-weight="700">来袭技能 B</text>
-                <text x="493" y="121" font-size="14" fill="#22577a">玩家此刻输入，尝试启动</text>
+                <text x="493" y="121" font-size="14" fill="#31597a">玩家此刻输入，尝试启动</text>
 
                 <rect x="722" y="42" width="210" height="56" rx="8" fill="#ffded9" stroke="#d69a91" stroke-width="2"/>
                 <text x="827" y="66" font-size="14" fill="#7a2d24">B.ActivationBlockedTags</text>
@@ -512,21 +523,21 @@
                 <text x="827" y="146" font-size="14" fill="#6f3f08">B.CancelAbilitiesWithTag</text>
                 <text x="827" y="164" font-size="14" fill="#6f3f08">包含 ATag</text>
                 <rect x="722" y="202" width="210" height="56" rx="8" fill="#dff2ec" stroke="#8dbfb1" stroke-width="2"/>
-                <text x="827" y="235" font-size="15" fill="#1e604f">两者都没有命中</text>
+                <text x="827" y="235" font-size="15" fill="#31734d">两者都没有命中</text>
 
-                <text x="322" y="104" font-size="14" fill="#66727e">输入关系看 B 的配置</text>
+                <text x="322" y="104" font-size="14" fill="#6a655c">输入关系看 B 的配置</text>
                 <text x="660" y="58" font-size="13" fill="#7a2d24">结果：阻挡 B</text>
                 <text x="660" y="138" font-size="13" fill="#6f3f08">结果：B 打断 A</text>
-                <text x="660" y="218" font-size="13" fill="#1e604f">结果：可能并行</text>
+                <text x="660" y="218" font-size="13" fill="#31734d">结果：可能并行</text>
               </g>
-              <g stroke="#66727e" stroke-width="2" fill="none" marker-end="url(#arrow-config)">
+              <g stroke="#6a655c" stroke-width="2" fill="none" marker-end="url(#arrow-config)">
                 <path d="M258 102 H388"/>
                 <path d="M598 102 C650 102 666 70 722 70"/>
                 <path d="M598 102 C650 102 666 150 722 150"/>
                 <path d="M598 102 C650 102 666 230 722 230"/>
               </g>
-              <g font-family="Segoe UI, Microsoft YaHei" font-size="14" fill="#604219">
-                <rect x="48" y="214" width="550" height="48" rx="8" fill="#fff4dd" stroke="#ecd6ad"/>
+              <g font-family="Segoe UI, Microsoft YaHei" font-size="14" fill="#96660a">
+                <rect x="48" y="214" width="550" height="48" rx="8" fill="#f8efd8" stroke="#ecdfc0"/>
                 <text x="70" y="244">示例：要让 Dash / Bomb 期间不能开火，配置点是 GA_Attack.ActivationBlockedTags += Dash / Bomb。</text>
               </g>
             </svg>
@@ -578,31 +589,31 @@
               <rect width="980" height="390" fill="#fff"/>
               <defs>
                 <marker id="arrow-window" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                  <path d="M0 0 L10 5 L0 10 z" fill="#66727e"/>
+                  <path d="M0 0 L10 5 L0 10 z" fill="#6a655c"/>
                 </marker>
               </defs>
               <g font-family="Segoe UI, Microsoft YaHei">
-                <text x="48" y="42" font-size="20" fill="#22272e" font-weight="760">当前技能 A：FastFire 时间轴</text>
+                <text x="48" y="42" font-size="20" fill="#211f1a" font-weight="760">当前技能 A：FastFire 时间轴</text>
                 <rect x="168" y="72" width="190" height="68" rx="8" fill="#eee6ff" stroke="#a492c9" stroke-width="2"/>
                 <rect x="358" y="72" width="310" height="68" rx="0" fill="#dff2ec" stroke="#8dbfb1" stroke-width="2"/>
-                <rect x="668" y="72" width="190" height="68" rx="8" fill="#fff4dd" stroke="#ecd6ad" stroke-width="2"/>
+                <rect x="668" y="72" width="190" height="68" rx="8" fill="#f8efd8" stroke="#ecdfc0" stroke-width="2"/>
                 <text x="263" y="100" font-size="17" fill="#584180" text-anchor="middle" font-weight="700">Startup</text>
                 <text x="263" y="124" font-size="13" fill="#584180" text-anchor="middle">起手，可保护/可被打断</text>
-                <text x="513" y="100" font-size="17" fill="#1e604f" text-anchor="middle" font-weight="700">Active</text>
-                <text x="513" y="124" font-size="13" fill="#1e604f" text-anchor="middle">持续开火，可能允许位移并行</text>
-                <text x="763" y="100" font-size="17" fill="#604219" text-anchor="middle" font-weight="700">Recovery</text>
-                <text x="763" y="124" font-size="13" fill="#604219" text-anchor="middle">收招，可接续/可缓存</text>
+                <text x="513" y="100" font-size="17" fill="#31734d" text-anchor="middle" font-weight="700">Active</text>
+                <text x="513" y="124" font-size="13" fill="#31734d" text-anchor="middle">持续开火，可能允许位移并行</text>
+                <text x="763" y="100" font-size="17" fill="#96660a" text-anchor="middle" font-weight="700">Recovery</text>
+                <text x="763" y="124" font-size="13" fill="#96660a" text-anchor="middle">收招，可接续/可缓存</text>
 
-                <line x1="110" y1="106" x2="168" y2="106" stroke="#66727e" stroke-width="2" marker-end="url(#arrow-window)"/>
-                <text x="48" y="110" font-size="14" fill="#66727e">时间推进</text>
+                <line x1="110" y1="106" x2="168" y2="106" stroke="#6a655c" stroke-width="2" marker-end="url(#arrow-window)"/>
+                <text x="48" y="110" font-size="14" fill="#6a655c">时间推进</text>
 
                 <g text-anchor="middle" font-size="13">
-                  <rect x="92" y="178" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
-                  <text x="140" y="203" fill="#22577a">输入 Attack</text>
-                  <rect x="92" y="238" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
-                  <text x="140" y="263" fill="#22577a">输入 Dash</text>
-                  <rect x="92" y="298" width="96" height="40" rx="8" fill="#e5f0f8" stroke="#8bb4d1"/>
-                  <text x="140" y="323" fill="#22577a">输入 Bomb</text>
+                  <rect x="92" y="178" width="96" height="40" rx="8" fill="#e9eff3" stroke="#8bb4d1"/>
+                  <text x="140" y="203" fill="#31597a">输入 Attack</text>
+                  <rect x="92" y="238" width="96" height="40" rx="8" fill="#e9eff3" stroke="#8bb4d1"/>
+                  <text x="140" y="263" fill="#31597a">输入 Dash</text>
+                  <rect x="92" y="298" width="96" height="40" rx="8" fill="#e9eff3" stroke="#8bb4d1"/>
+                  <text x="140" y="323" fill="#31597a">输入 Bomb</text>
                 </g>
 
                 <g font-size="13" text-anchor="middle">
@@ -616,7 +627,7 @@
                   <rect x="212" y="238" width="130" height="40" rx="6" fill="#ffe9bf"/>
                   <text x="277" y="263" fill="#6f3f08">打断或阻挡</text>
                   <rect x="442" y="238" width="150" height="40" rx="6" fill="#dff2ec"/>
-                  <text x="517" y="263" fill="#1e604f">并行 Dash + 开火</text>
+                  <text x="517" y="263" fill="#31734d">并行 Dash + 开火</text>
                   <rect x="704" y="238" width="130" height="40" rx="6" fill="#ffe9bf"/>
                   <text x="769" y="263" fill="#6f3f08">Dash 打断收招</text>
 
@@ -625,10 +636,10 @@
                   <rect x="442" y="298" width="150" height="40" rx="6" fill="#ffded9"/>
                   <text x="517" y="323" fill="#7a2d24">阻挡 Bomb</text>
                   <rect x="704" y="298" width="130" height="40" rx="6" fill="#dfecff"/>
-                  <text x="769" y="323" fill="#274d7d">接续/缓存例外</text>
+                  <text x="769" y="323" fill="#31597a">接续/缓存例外</text>
                 </g>
 
-                <g stroke="#66727e" stroke-width="1.5" fill="none" marker-end="url(#arrow-window)">
+                <g stroke="#6a655c" stroke-width="1.5" fill="none" marker-end="url(#arrow-window)">
                   <path d="M188 198 H212"/>
                   <path d="M188 258 H212"/>
                   <path d="M188 318 H212"/>
@@ -980,5 +991,13 @@ IncomingInputContext
       </main>
     </div>
   </div>
+
+<style>
+  #siteFooter{margin:48px auto 76px;text-align:center;font:500 12px/1.8 "Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;letter-spacing:.14em;color:var(--muted,#6a655c);}
+  #siteFooter a{color:var(--brass,#a98a4e);text-decoration:none;} #siteFooter a:hover{text-decoration:underline;}
+</style>
+
+<footer id="siteFooter">COMBAT 3C WORKFLOW · <a href="https://631082455.github.io/3C/">631082455.github.io/3C</a></footer>
+<a id="homeBtn" href="../../../index.html" title="返回主页" aria-label="返回主页">⌂</a>
 </body>
 </html>
