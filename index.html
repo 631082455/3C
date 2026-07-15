@@ -72,6 +72,16 @@
   .notice b{font-weight:600;color:var(--ink);}
   .notice a{color:var(--accent-text);}
 
+  /* ---- 前言 ---- */
+  .preface{margin-top:26px;padding:24px 32px 22px;border:1px solid var(--line);
+    border-top:3px solid var(--brass);border-radius:var(--radius);
+    background:var(--paper);box-shadow:var(--shadow);}
+  .preface::before{content:"前言";display:block;margin-bottom:12px;
+    font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
+  .preface p{margin:10px 0 0;font-size:14.5px;line-height:1.9;color:var(--ink);}
+  .preface p:first-of-type{margin-top:0;}
+  @media(max-width:760px){.preface{padding:20px 18px;}}
+
   /* ---- 编目区 ---- */
   .shelf{margin-top:26px;border:1px solid var(--line);border-radius:var(--radius);
     background:var(--paper);box-shadow:var(--shadow);}
@@ -128,6 +138,14 @@
   <div class="notice">
     <i>◆ 声明</i>
     <span><b>本站内容均已脱敏，展示均为商城素材，仅作个人 3C 工作流小站。</b>方法论与案例为个人复盘整理，不含项目资产原件，不涉及任何未公开的玩法与数值；若认为有不妥之处，通过<a href="https://github.com/631082455/3C">源仓库</a>联系我，即刻处理。</span>
+  </div>
+
+  <div class="preface">
+    <p>坦白说，3C 很难像技能模块那样，抽出一套模板交给 Agent，就得到一个足够好的结果。它最终呈现的是输入、移动、镜头、动画和网络共同形成的体验，高度依赖项目上下文，任何一处变化都可能打破原来的平衡。</p>
+    <p>因此，文档、规则和索引的作用，不是替人生成“正确的手感”，而是让 Agent 更快读懂项目、实现方案、收集证据和排除错误。最终是否跟手、稳定、舒服，仍然要靠人上手判断。</p>
+    <p>这个工作站首先服务于我自己的 3C 团队和 AI 工作流。我把问题、判断标准、验证过程和失败记录留在这里，让它们能够被下一次任务继续使用。AI 负责检索和执行，我负责体验验收与方案取舍。</p>
+    <p>行业里不缺成熟的方法和案例，缺的是一个具体问题如何在项目中逐步收敛的完整记录。这个站想留下的正是这一层：不只保留答案，也说明答案从哪里来、在哪些条件下成立。</p>
+    <p>具体方案和参数未必能够直接搬走。真正值得借鉴的，是判断体验的量尺，以及这套人与 AI 协作的方法。这里的文档因此会比一般作品集更厚；外部读者先看导读，再按需要继续往下翻就够了。</p>
   </div>
 
   <div class="shelf">
