@@ -72,15 +72,28 @@
   .notice b{font-weight:600;color:var(--ink);}
   .notice a{color:var(--accent-text);}
 
-  /* ---- 前言 ---- */
-  .preface{margin-top:26px;padding:24px 32px 22px;border:1px solid var(--line);
-    border-top:3px solid var(--brass);border-radius:var(--radius);
+  /* ---- 紧凑前言 ---- */
+  .preface-page{margin-top:26px;padding:26px 32px 28px;
+    display:grid;grid-template-columns:108px minmax(0,1fr);gap:28px;
+    border:1px solid var(--line);border-top:3px solid var(--brass);border-radius:var(--radius);
     background:var(--paper);box-shadow:var(--shadow);}
-  .preface::before{content:"前言";display:block;margin-bottom:12px;
-    font:700 11px/1 var(--mono);letter-spacing:.24em;color:var(--brass);}
-  .preface p{margin:10px 0 0;font-size:14.5px;line-height:1.9;color:var(--ink);}
-  .preface p:first-of-type{margin-top:0;}
-  @media(max-width:760px){.preface{padding:20px 18px;}}
+  .preface-head{align-self:start;}
+  .preface-no{font:700 11px/1 var(--mono);letter-spacing:.22em;color:var(--brass);}
+  .preface-head h2{display:block;margin:12px 0 0;font-size:25px;font-weight:760;
+    line-height:1.2;letter-spacing:.04em;color:var(--ink);}
+  .preface-head h2::after{content:"";display:block;width:36px;height:2px;margin-top:16px;background:var(--brass);}
+  .preface-body{column-count:2;column-gap:32px;column-rule:1px solid var(--line);}
+  .preface-body p{margin:11px 0 0;font-size:13.5px;line-height:1.78;color:var(--ink);
+    break-inside:avoid;}
+  .preface-body p:first-child{margin-top:0;}
+  @media(max-width:760px){
+    .preface-page{padding:22px 18px 24px;grid-template-columns:1fr;gap:18px;}
+    .preface-head{display:flex;align-items:baseline;gap:12px;}
+    .preface-head h2{margin:0;font-size:21px;}
+    .preface-head h2::after{display:none;}
+    .preface-body{column-count:1;column-rule:none;}
+    .preface-body p{font-size:13.5px;line-height:1.82;}
+  }
 
   /* ---- 编目区 ---- */
   .shelf{margin-top:26px;border:1px solid var(--line);border-radius:var(--radius);
@@ -140,16 +153,23 @@
     <span><b>本站内容均已脱敏，展示均为商城素材，仅作个人 3C 工作流小站。</b>方法论与案例为个人复盘整理，不含项目资产原件，不涉及任何未公开的玩法与数值；若认为有不妥之处，通过<a href="https://github.com/631082455/3C">源仓库</a>联系我，即刻处理。</span>
   </div>
 
-  <div class="preface">
-    <p>坦白说，3C 很难像战斗技能模块那样，抽出一套模板交给 Agent，就得到一个足够好的结果。3C 最终呈现的是输入、移动、镜头、动画共同形成的体验，高度依赖项目上下文，任何一处变化都可能打破原来的平衡。你会发现你做的每一个功能，输入给 AI 的都是全新的 Prompt。</p>
-    <p>站里这些规范的 Prompt、markdown 和上下文、足够精炼的元规则和 AI 索引层级，是让 Agent 更快理解项目、给出优雅的 3C 设计框架。至于最终是否符合战斗 Pillar、能够让玩家保持心流体验，仍然需要有人上手裁决。</p>
-    <p>这个工作站首先服务于我自己的 3C 团队和 AI 工作流。我把问题、判断标准、验证过程和失败记录留在这里，让它们能够被下一次任务继续使用。AI 负责检索和执行，我负责体验验收与方案取舍。</p>
-    <p>因此，这里的文档通常比较厚。不只是写给人从头读到尾的，也写给正在执行任务的 agent、相关上下游的同事，以及半年后已经忘记细节的我自己。外部读者不需要逐篇通读。每篇开头的速览和导读会说明问题、处理方式、当前进度与验证边界；对哪一部分感兴趣，再顺着证据和实录往下看。</p>
-    <p>还有一点需要提前说明：站里的具体方案和参数，很少能够原样搬进另一个项目。换一个项目，原来的平衡点通常就不存在了。能够借鉴的是怎么给团队、给自己，建立一套这样的工作站或者说知识库。如果想要单点看移动方案，库里的半身分层、叠加、Overlay 的体系会很有价值，这些启发性、业界未通用的思路是 AI 不会给你提供的。但如果你要一个很好的镜头索敌系统，这里提供的设计架构虽然也全面，我也让它提炼了大量 GDC 与业界案例，但你的 AI Agent 和你的判断也能做到大力出奇迹搓出来，剩下的依然是感官判断和调参手艺活。</p>
-    <p>行业里不缺成熟的方法和案例，缺的是一个具体问题如何在项目中逐步收敛的完整记录。这个站想留下的正是这一层：不只保留答案，也说明答案从哪里来、在哪些条件下成立。</p>
-  </div>
+  <section class="preface-page" aria-labelledby="preface-title">
+    <div class="preface-head">
+      <div class="preface-no">00 / FOREWORD</div>
+      <h2 id="preface-title">前言</h2>
+    </div>
+    <div class="preface-body">
+      <p>坦白说，3C 很难像战斗技能模块那样，抽出一套模板交给 Agent，就得到一个足够好的结果。3C 最终呈现的是输入、移动、镜头、动画共同形成的体验，高度依赖项目上下文，任何一处变化都可能打破原来的平衡。你会发现你做的每一个功能，输入给 AI 的都是全新的 Prompt。</p>
+      <p>站里这些规范的 Prompt、markdown 和上下文、足够精炼的元规则和 AI 索引层级，是让 Agent 更快理解项目、给出优雅的 3C 设计框架。至于最终是否符合战斗 Pillar、能够让玩家保持心流体验，仍然需要有人上手裁决。</p>
+      <p>这个工作站首先服务于我自己的 3C 团队和 AI 工作流。我把问题、判断标准、验证过程和失败记录留在这里，让它们能够被下一次任务继续使用。AI 负责检索和执行，我负责体验验收与方案取舍。</p>
+      <p>因此，这里的文档通常比较厚。不只是写给人从头读到尾的，也写给正在执行任务的 agent、相关上下游的同事，以及半年后已经忘记细节的我自己。外部读者不需要逐篇通读。每篇开头的速览和导读会说明问题、处理方式、当前进度与验证边界；对哪一部分感兴趣，再顺着证据和实录往下看。</p>
+      <p>还有一点需要提前说明：站里的具体方案和参数，很少能够原样搬进另一个项目。换一个项目，原来的平衡点通常就不存在了。能够借鉴的是怎么给团队、给自己，建立一套这样的工作站或者说知识库。如果想要单点看移动方案，库里的半身分层、叠加、Overlay 的体系会很有价值，这些启发性、业界未通用的思路是 AI 不会给你提供的。但如果你要一个很好的镜头索敌系统，这里提供的设计架构虽然也全面，我也让它提炼了大量 GDC 与业界案例，但你的 AI Agent 和你的判断也能做到大力出奇迹搓出来，剩下的依然是感官判断和调参手艺活。</p>
+      <p>行业里不缺成熟的方法和案例，缺的是一个具体问题如何在项目中逐步收敛的完整记录。这个站想留下的正是这一层：不只保留答案，也说明答案从哪里来、在哪些条件下成立。</p>
+      <a class="preface-enter" href="#library">进入书目 ↓</a>
+    </div>
+  </section>
 
-  <div class="shelf">
+  <div class="shelf" id="library">
 
     <section>
       <h2><i>01</i>Movement / 移动<em>13 DOCS</em></h2>
